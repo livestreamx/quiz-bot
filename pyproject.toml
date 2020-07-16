@@ -10,9 +10,9 @@ packages = [
     { include = "./manager" },
 ]
 
-#[[tool.poetry.source]]
-#name = "internal"
-#url = "https://registry.tcsbank.ru/repository/pypi-all/simple"
+[[tool.poetry.source]]
+name = "internal"
+url = "https://registry.tcsbank.ru/repository/pypi-all/simple"
 
 [tool.poetry.scripts]
 app = 'cli.cmd:app'
@@ -24,6 +24,7 @@ pydantic = ">=1.2"
 docker = "*"
 pyTelegramBotAPI = "^3.7.2"
 tenacity = "^6.2.0"
+yarl = "^1.4.2"
 
 [tool.poetry.dev-dependencies]
 black = "^19.3b0"
