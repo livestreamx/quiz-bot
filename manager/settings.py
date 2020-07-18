@@ -5,7 +5,7 @@ from pydantic import BaseSettings, validator
 from yarl import URL
 
 
-class ApplicationSettings(BaseSettings):
+class LoggingSettings(BaseSettings):
     log_level: str = logging.getLevelName(logging.INFO)
 
     class Config:
@@ -34,3 +34,8 @@ class RemoteClientSettings(BaseSettings):
 
     class Config:
         env_prefix = 'REMOTE_'
+
+
+class DialogSettings(BaseSettings):
+    empty_message: str = "Ответа нет " + r'¯\_(ツ)_/¯'
+    greetings: str = "Привет!"
