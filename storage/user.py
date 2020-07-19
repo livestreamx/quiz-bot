@@ -15,7 +15,7 @@ class User(BaseModel):
     last_name: Optional[str]
     nick_name: Optional[str] = Field(None, alias='username')
 
-    external_id: str = Field(..., alias='id')
+    external_id: int = Field(..., alias='id')
     internal_id: Optional[int]  # reserved for Database
     chitchat_id: str = str(uuid4())
 
@@ -35,13 +35,13 @@ class IUserStorage(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_user_by_external_id(self, external_id: str) -> Optional[User]:
+    def get_user_by_external_id(self, external_id: int) -> Optional[User]:
         pass
 
 
 class UserStorage(IUserStorage):
     def __init__(self) -> None:
-        self._users: Dict[str, User] = {}
+        self._users: Dict[int, User] = {}
 
     def get_or_create_user(self, user: telebot.types.User) -> User:
         internal_user = self._users.get(user.id)
@@ -55,5 +55,5 @@ class UserStorage(IUserStorage):
         logger.info("User %s successfully saved", internal_user)
         return internal_user
 
-    def get_user_by_external_id(self, external_id: str) -> Optional[User]:
+    def get_user_by_external_id(self, external_id: int) -> Optional[User]:
         return self._users.get(external_id)
