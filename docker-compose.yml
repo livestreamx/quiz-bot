@@ -1,0 +1,12 @@
+version: "2.4"
+
+services:
+  db:
+    image: postgres:11.6
+    command:
+      -c fsync=${FSYNC:-off}
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5432:5432

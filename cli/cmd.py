@@ -1,22 +1,26 @@
 import logging
 
-import click
 from storage import UserStorage
 
-from manager import Bot, ChitchatClient, ChitchatClientSettings, DialogSettings, LoggingSettings, RemoteClientSettings
+from cli.group import app
+from manager import (
+    Bot,
+    ChitchatClient,
+    ChitchatClientSettings,
+    DataBaseSettings,
+    DialogSettings,
+    LoggingSettings,
+    RemoteClientSettings,
+)
 
 logger = logging.getLogger(__name__)
-
-
-@click.group()
-def app() -> None:
-    pass
 
 
 @app.command()
 def start() -> None:
     logging_settings = LoggingSettings()
     logging_settings.setup_logging()
+    DataBaseSettings().setup_db()
     bot = Bot(
         user_storage=UserStorage(),
         chitchat_client=ChitchatClient(ChitchatClientSettings()),

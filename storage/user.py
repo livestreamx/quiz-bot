@@ -1,24 +1,19 @@
 import abc
 import logging
-from typing import Optional, Dict
+from typing import Optional, cast
 from uuid import uuid4
 
 import telebot
-from pydantic import BaseModel, Field
+import db
+
+import sqlalchemy.orm as so
+from pydantic_sqlalchemy import sqlalchemy_to_pydantic
 
 
 logger = logging.getLogger(__name__)
 
 
-class User(BaseModel):
-    first_name: Optional[str]
-    last_name: Optional[str]
-    nick_name: Optional[str] = Field(None, alias='username')
-
-    external_id: int = Field(..., alias='id')
-    internal_id: Optional[int]  # reserved for Database
-    chitchat_id: str = str(uuid4())
-
+class ContextUser(sqlalchemy_to_pydantic(db.User)):  # type: ignore
     @property
     def full_name(self) -> str:
         name = self.first_name or ''
@@ -31,29 +26,41 @@ class User(BaseModel):
 
 class IUserStorage(abc.ABC):
     @abc.abstractmethod
-    def get_or_create_user(self, user: telebot.types.User) -> User:
+    def get_or_create_user(self, user: telebot.types.User) -> ContextUser:
         pass
 
     @abc.abstractmethod
-    def get_user_by_external_id(self, external_id: int) -> Optional[User]:
+    def get_user(self, user: telebot.types.User) -> Optional[ContextUser]:
         pass
 
 
 class UserStorage(IUserStorage):
-    def __init__(self) -> None:
-        self._users: Dict[int, User] = {}
+    @staticmethod
+    def _get_db_user(session: so.Session, external_id: int) -> Optional[db.User]:
+        return cast(Optional[db.User], session.query(db.User).filter(db.User.external_id == external_id).one_or_none())
 
-    def get_or_create_user(self, user: telebot.types.User) -> User:
-        internal_user = self._users.get(user.id)
+    def get_user(self, user: telebot.types.User) -> Optional[ContextUser]:
+        with db.create_session() as session:
+            internal_user = self._get_db_user(session, external_id=user.id)
+            if internal_user is None:
+                return None
+            return cast(ContextUser, ContextUser.from_orm(internal_user))
+
+    def get_or_create_user(self, user: telebot.types.User) -> ContextUser:
+        with db.create_session() as session:
+            internal_user = self._get_db_user(session, external_id=user.id)
+            if internal_user is not None:
+                logger.info("User %s already exists!", internal_user)
+                return cast(ContextUser, ContextUser.from_orm(internal_user))
+
+            logger.info("User with external_id %s not found, try to save...", user.id)
+            internal_user = db.User(
+                external_id=user.id, chitchat_id=str(uuid4()), first_name=user.first_name, last_name=user.last_name,
+                nick_name=user.username
+            )
+            session.add(internal_user)
+        logger.info("User %s successfully saved.", internal_user)
+        internal_user = self.get_user(user)
         if internal_user is not None:
-            logger.info("User %s already exists", internal_user)
             return internal_user
-
-        logger.info("User with external_id %s not found, try to save...", user.id)
-        internal_user = User.parse_obj(user.to_dict())
-        self._users[internal_user.external_id] = internal_user
-        logger.info("User %s successfully saved", internal_user)
-        return internal_user
-
-    def get_user_by_external_id(self, external_id: int) -> Optional[User]:
-        return self._users.get(external_id)
+        raise RuntimeError("User has not been saved into database!")

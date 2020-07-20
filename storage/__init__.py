@@ -1,2 +1,2 @@
 # flake8: noqa
-from .user import User, IUserStorage, UserStorage
+from .user import ContextUser, IUserStorage, UserStorage
