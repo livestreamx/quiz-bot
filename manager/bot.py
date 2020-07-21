@@ -1,8 +1,7 @@
 import collections
-import enum
 import logging
 import threading
-from typing import Any, DefaultDict, Mapping
+from typing import Any, DefaultDict, Mapping, Optional
 from uuid import uuid4
 
 import requests
@@ -10,23 +9,11 @@ import telebot
 from storage import ContextUser, IUserStorage
 
 from manager.chitchat import ChitchatClient
-from manager.models import ChitChatRequest
+from manager.interface import InterfaceMaker
+from manager.objects import ApiCommand, ChitChatRequest, ContentType
 from manager.settings import DialogSettings, LoggingSettings, RemoteClientSettings
 
 logger = logging.getLogger(__name__)
-
-
-class ApiCommand(str, enum.Enum):
-    START = 'start'
-    HELP = 'help'
-
-    @property
-    def as_url(self) -> str:
-        return f"/{self.value}"
-
-
-class ContentType(str, enum.Enum):
-    TEXT = 'text'
 
 
 class Bot:
@@ -37,6 +24,7 @@ class Bot:
         logging_settings: LoggingSettings,
         remote_client_settings: RemoteClientSettings,
         dialog_settings: DialogSettings,
+        interface_maker: InterfaceMaker,
     ) -> None:
         self._locks: DefaultDict[Any, threading.Lock] = collections.defaultdict(threading.Lock)
         self._bot = telebot.TeleBot(remote_client_settings.api_key)
@@ -45,6 +33,7 @@ class Bot:
         self._chitchat_client = chitchat_client
         self._logging_settings = logging_settings
         self._dialog_settings = dialog_settings
+        self._interface_maker = interface_maker
 
         self._register_handlers()
 
@@ -57,21 +46,34 @@ class Bot:
         logger.info('Bot successfully started.')
         self._bot.polling(none_stop=True)
 
-    def _make_unknown_user(self, user: telebot.types.User) -> ContextUser:
+    @staticmethod
+    def _make_unknown_user(user: telebot.types.User) -> ContextUser:
         return ContextUser(id=0, external_id=user.id, chitchat_id=str(uuid4()), first_name="<unknown>")
+
+    def _get_markup_for_api_cmd(self, message: telebot.types.Message) -> Optional[telebot.types.InlineKeyboardMarkup]:
+        if message.text == ApiCommand.HELP.as_url:
+            return self._interface_maker.start_markup
+        return None
 
     def _register_handlers(self) -> None:
         @self._bot.message_handler(commands=[ApiCommand.START, ApiCommand.HELP], content_types=[ContentType.TEXT])
-        def _start_handler(message: telebot.types.Message) -> None:
+        def api_handler(message: telebot.types.Message) -> None:
             logger.info('Got %s message from chat #%s', ApiCommand.START.name, message.chat.id)
             with self._locks[message.chat.id]:
                 internal_user = self._user_storage.get_or_create_user(user=message.from_user)
                 self._send_answer(
-                    user=internal_user, message=message, answer=self._api_cmd_to_bot_answer_mapping[message.text]
+                    user=internal_user,
+                    message=message,
+                    answer=self._api_cmd_to_bot_answer_mapping[message.text],
+                    markup=self._get_markup_for_api_cmd(message),
                 )
 
+        @self._bot.callback_query_handler(func=lambda _: True)
+        def callback(query: telebot.types.CallbackQuery) -> None:
+            self._interface_maker.callback_from(bot=self._bot, query=query, func=api_handler)
+
         @self._bot.message_handler(content_types=[ContentType.TEXT])
-        def _default_handler(message: telebot.types.Message) -> None:
+        def default_handler(message: telebot.types.Message) -> None:
             logger.info('Got message from chat #%s', message.chat.id)
             with self._locks[message.chat.id]:
                 internal_user = self._user_storage.get_user(message.from_user)
@@ -88,8 +90,16 @@ class Bot:
 
         logger.info('Bot API handlers registered.')
 
-    def _send_answer(self, user: ContextUser, message: telebot.types.Message, answer: str) -> None:
-        self._bot.send_message(chat_id=message.chat.id, text=answer, parse_mode='html')
+    def _send_answer(
+        self,
+        user: ContextUser,
+        message: telebot.types.Message,
+        answer: str,
+        markup: Optional[telebot.types.InlineKeyboardMarkup] = None,
+    ) -> None:
+        self._bot.send_message(
+            chat_id=message.chat.id, text=answer, parse_mode='html', reply_markup=markup,
+        )
         logger.info(
             'Chat ID %s with %s: [user] %s -> [bot] %s', message.chat.id, user.full_name, message.text, answer,
         )

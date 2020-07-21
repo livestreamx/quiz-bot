@@ -3,7 +3,7 @@ import logging
 import requests
 import tenacity
 
-from manager.models import ChitChatRequest, ChitChatResponse
+from manager.objects import ChitChatRequest, ChitChatResponse
 from manager.settings import ChitchatClientSettings
 
 logger = logging.getLogger(__name__)

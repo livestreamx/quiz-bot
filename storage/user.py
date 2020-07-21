@@ -50,7 +50,7 @@ class UserStorage(IUserStorage):
         with db.create_session() as session:
             internal_user = self._get_db_user(session, external_id=user.id)
             if internal_user is not None:
-                logger.info("User %s already exists!", internal_user)
+                logger.info("User %s exists", internal_user)
                 return cast(ContextUser, ContextUser.from_orm(internal_user))
 
             logger.info("User with external_id %s not found, try to save...", user.id)

@@ -12,6 +12,7 @@ from manager import (
     LoggingSettings,
     RemoteClientSettings,
 )
+from manager.interface import InterfaceMaker
 
 logger = logging.getLogger(__name__)
 
@@ -27,5 +28,6 @@ def start() -> None:
         logging_settings=logging_settings,
         remote_client_settings=RemoteClientSettings(),
         dialog_settings=DialogSettings(),
+        interface_maker=InterfaceMaker(),
     )
     bot.run()
