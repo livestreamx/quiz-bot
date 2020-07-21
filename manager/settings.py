@@ -44,8 +44,13 @@ class RemoteClientSettings(BaseSettings):
 
 class DialogSettings(BaseSettings):
     empty_message: str = "Ответа нет " + r'¯\_(ツ)_/¯'
-    greetings: str = "Привет!"
-    unknown_warning: str = "Чтобы начать диалог, нужно выполнить команду '/start' ;)"
+    greetings: str = (
+        "Привет! Я T-Quiz Bot. @livestream_x создал меня для того, чтобы я выполнял функцию ведущего для проведения "
+        "викторин. Чтобы начать свой путь к вершине победы, отправь команду '/start'"
+    )
+    unknown_warning: str = "Чтобы начать викторину, отправь команду '/start'"
+
+    start_info: str = "Скоро здесь появится информация о викторине и условия определения победителей..."
 
 
 class DataBaseSettings(BaseSettings):
