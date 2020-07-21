@@ -21,4 +21,5 @@ class InterfaceMaker:
     def callback_from(bot: telebot.TeleBot, query: telebot.types.CallbackQuery, func: FunctionType) -> None:
         bot.answer_callback_query(query.id)
         query.message.text = query.data
+        query.message.from_user = query.from_user
         func(query.message)
