@@ -2,11 +2,21 @@ import logging
 
 import requests
 import tenacity
+from pydantic import BaseModel
 
-from manager.objects import ChitChatRequest, ChitChatResponse
 from manager.settings import ChitchatClientSettings
 
 logger = logging.getLogger(__name__)
+
+
+class ChitChatRequest(BaseModel):
+    text: str
+    user_id: str
+    force_full_mode: bool = True
+
+
+class ChitChatResponse(BaseModel):
+    text: str
 
 
 class ChitchatClient:

@@ -8,9 +8,9 @@ import requests
 import telebot
 from storage import ContextUser, IUserStorage
 
-from manager.chitchat import ChitchatClient
+from manager.chitchat import ChitchatClient, ChitChatRequest
 from manager.interface import InterfaceMaker
-from manager.objects import ApiCommand, ChitChatRequest, ContentType
+from manager.objects import ApiCommand, ContentType
 from manager.settings import DialogSettings, LoggingSettings, RemoteClientSettings
 
 logger = logging.getLogger(__name__)

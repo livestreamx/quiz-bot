@@ -1,6 +1,6 @@
 import logging
 import socket
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseSettings, validator
 from sqlalchemy.engine import Engine, engine_from_config
@@ -9,6 +9,8 @@ from sqlalchemy.engine.url import make_url
 from sqlalchemy.exc import ArgumentError
 from sqlalchemy.pool import SingletonThreadPool
 from yarl import URL
+
+from manager.objects import ChallengeModel
 
 
 class LoggingSettings(BaseSettings):
@@ -50,7 +52,22 @@ class DialogSettings(BaseSettings):
     )
     unknown_warning: str = "Чтобы начать викторину, отправь команду '/start'"
 
-    start_info: str = "Скоро здесь появится информация о викторине и условия определения победителей..."
+    start_info: str = "Итак, для тебя начинается викторина #{number} '{name}'."
+    winner_notification: str = "Мои поздравления - вы стали победителем в викторине {name} с результатом {result}!"
+    finish_notification: str = "Викторина {name} завершена! Победитель: @{nick_name} с результатом {result}."
+
+    def get_start_info(self, challenge_num: int, challenge_name: str) -> str:
+        return self.start_info.format(number=challenge_num, name=challenge_name)
+
+    def get_winner_notification(self, challenge_name: str, result: str) -> str:
+        return self.winner_notification.format(name=challenge_name, result=result)
+
+    def get_finish_notification(self, challenge_name: str, winner_nickname: str, winner_result: str) -> str:
+        return self.finish_notification.format(name=challenge_name, nick_name=winner_nickname, result=winner_result)
+
+
+class ChallengeSettings(BaseSettings):
+    challenges: List[ChallengeModel]
 
 
 class DataBaseSettings(BaseSettings):
