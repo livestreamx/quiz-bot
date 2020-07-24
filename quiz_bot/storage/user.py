@@ -3,10 +3,10 @@ import logging
 from typing import Optional, cast
 from uuid import uuid4
 
-import db
 import sqlalchemy.orm as so
 import telebot
-from storage.models import ContextUser
+from quiz_bot import db
+from quiz_bot.storage.context_models import ContextUser
 
 logger = logging.getLogger(__name__)
 
@@ -22,20 +22,16 @@ class IUserStorage(abc.ABC):
 
 
 class UserStorage(IUserStorage):
-    @staticmethod
-    def _get_db_user(session: so.Session, external_id: int) -> Optional[db.User]:
-        return cast(Optional[db.User], session.query(db.User).filter(db.User.external_id == external_id).one_or_none())
-
     def get_user(self, user: telebot.types.User) -> Optional[ContextUser]:
         with db.create_session() as session:
-            internal_user = self._get_db_user(session, external_id=user.id)
+            internal_user = session.query(db.User).get_by_external_id(value=user.id)
             if internal_user is None:
                 return None
             return cast(ContextUser, ContextUser.from_orm(internal_user))
 
     def get_or_create_user(self, user: telebot.types.User) -> ContextUser:
         with db.create_session() as session:
-            internal_user = self._get_db_user(session, external_id=user.id)
+            internal_user = session.query(db.User).get_by_external_id(value=user.id)
             if internal_user is not None:
                 logger.info("User %s exists", internal_user)
                 return cast(ContextUser, ContextUser.from_orm(internal_user))

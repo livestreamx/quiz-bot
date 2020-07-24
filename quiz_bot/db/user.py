@@ -1,13 +1,25 @@
-from typing import Optional
+from __future__ import annotations
+
+from typing import Optional, cast
 
 import sqlalchemy as sa
+import sqlalchemy.orm as so
 import sqlalchemy_utils as su
-from db.base import Base, PrimaryKeyMixin
+from quiz_bot.db.base import Base, PrimaryKeyMixin
+
+
+class UserQuery(so.Query):
+    def get_by_internal_id(self, *, value: int) -> User:
+        return cast(User, self.session.query(User).filter(User.id == value).one())
+
+    def get_by_external_id(self, *, value: int) -> Optional[User]:
+        return cast(Optional[User], self.session.query(User).filter(User.external_id == value).one_or_none())
 
 
 @su.generic_repr('id', 'first_name', 'last_name', 'external_id', 'nick_name')
 class User(PrimaryKeyMixin, Base):
     __tablename__ = 'users'  # type: ignore
+    __query_cls__ = UserQuery
 
     external_id = sa.Column(sa.Integer, nullable=False)
     chitchat_id = sa.Column(sa.String, nullable=False)

@@ -1,11 +1,10 @@
 import click
 import sqlalchemy_utils as sau
+from quiz_bot.cli import app
+from quiz_bot.manager import DataBaseSettings
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import OperationalError
-
-from cli.group import app
-from manager import DataBaseSettings
 
 
 def _ensure_database_exists(db_url: URL) -> None:
@@ -25,7 +24,7 @@ def _create_engine(context: click.Context, settings: DataBaseSettings) -> None:
 @click.command()
 @click.pass_obj
 def create_all(engine: Engine) -> None:
-    from db.base import metadata
+    from quiz_bot.db.base import metadata
 
     click.echo('Creating schema...')
     metadata.create_all(engine)

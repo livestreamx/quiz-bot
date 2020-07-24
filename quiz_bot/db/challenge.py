@@ -4,7 +4,7 @@ from typing import Optional, cast
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from db.base import Base, PrimaryKeyMixin
+from quiz_bot.db.base import Base, PrimaryKeyMixin
 
 
 class ChallengeQuery(so.Query):
@@ -28,7 +28,9 @@ class Challenge(PrimaryKeyMixin, Base):
     __query_cls__ = ChallengeQuery
 
     name = sa.Column(sa.String, nullable=False, unique=True)
+    phase_amount = sa.Column(sa.Integer, nullable=False)
     finished_at = sa.Column(sa.DateTime(timezone=True))
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, phase_amount: int) -> None:
         self.name = name
+        self.phase_amount = phase_amount

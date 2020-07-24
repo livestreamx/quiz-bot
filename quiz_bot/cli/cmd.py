@@ -1,18 +1,17 @@
 import logging
 
-from storage import UserStorage
-
-from cli.group import app
-from manager import (
+from quiz_bot.cli import app
+from quiz_bot.manager import (
     Bot,
     ChitchatClient,
     ChitchatClientSettings,
     DataBaseSettings,
     InfoSettings,
+    InterfaceMaker,
     LoggingSettings,
     RemoteClientSettings,
 )
-from manager.interface import InterfaceMaker
+from quiz_bot.storage import UserStorage
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,7 @@ def start() -> None:
         chitchat_client=ChitchatClient(ChitchatClientSettings()),
         logging_settings=logging_settings,
         remote_client_settings=RemoteClientSettings(),
-        dialog_settings=InfoSettings(),
+        info_settings=InfoSettings(),
         interface_maker=InterfaceMaker(),
     )
     bot.run()

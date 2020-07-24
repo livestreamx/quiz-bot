@@ -1,23 +1,11 @@
-import enum
-from typing import Any, Dict, List
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, conint, root_validator
+from quiz_bot.storage.context_models import ContextChallenge
 
 
-class ApiCommand(str, enum.Enum):
-    START = 'start'
-    HELP = 'help'
-
-    @property
-    def as_url(self) -> str:
-        return f"/{self.value}"
-
-
-class ContentType(str, enum.Enum):
-    TEXT = 'text'
-
-
-class ChallengeModel(BaseModel):
+class ChallengeInfo(BaseModel):
     name: str
     description: str
     questions: List[str]
@@ -33,3 +21,17 @@ class ChallengeModel(BaseModel):
         if len(questions) != len(answers):
             raise ValueError("Length of questions (%s) is not equal to length of answers (%s)!", questions, answers)
         return values
+
+
+@dataclass(frozen=True)
+class CurrentChallenge:
+    info: ChallengeInfo
+    data: ContextChallenge
+    number: int
+
+
+@dataclass(frozen=True)
+class ChallengeAnswerResult:
+    correct: bool
+    reply: str
+    post_reply: Optional[str] = None

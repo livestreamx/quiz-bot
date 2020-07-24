@@ -5,7 +5,7 @@ description = "Quiz Bot"
 authors = [
     "V. Mukhamatnurov <v.mukhamatnurov@tinkoff.ru>",
 ]
-repository = "https://stash.tcsbank.ru/users/v.mukhamatnurov/repos/chitchat_proxy"
+repository = "https://stash.tcsbank.ru/users/v.mukhamatnurov/repos/quiz-bot"
 packages = [
     { include = "./manager" },
 ]

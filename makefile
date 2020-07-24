@@ -1,4 +1,4 @@
-CODE = cli db manager storage
+CODE = quiz_bot
 
 VENV ?= .venv
 JOBS ?= 4

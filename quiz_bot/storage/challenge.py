@@ -2,24 +2,17 @@ import abc
 import logging
 from typing import Optional
 
-import db
-from storage.models import ContextChallenge
-from utils import get_now
+from quiz_bot import db
+from quiz_bot.storage.context_models import ContextChallenge
+from quiz_bot.storage.errors import NoActualChallengeError, StopChallengeIteration
+from quiz_bot.utils import get_now
 
 logger = logging.getLogger(__name__)
 
 
-class NoActualChallengeError(RuntimeError):
-    pass
-
-
-class StopChallengeIteration(StopIteration):
-    pass
-
-
 class IChallengeStorage(abc.ABC):
     @abc.abstractmethod
-    def create_challenge(self, name: str) -> None:
+    def create_challenge(self, name: str, phase_amount: int) -> None:
         pass
 
     @staticmethod
@@ -33,9 +26,9 @@ class IChallengeStorage(abc.ABC):
 
 
 class ChallengeStorage(IChallengeStorage):
-    def create_challenge(self, name: str) -> None:
+    def create_challenge(self, name: str, phase_amount: int) -> None:
         with db.create_session() as session:
-            session.add(db.Challenge(name=name))
+            session.add(db.Challenge(name=name, phase_amount=phase_amount))
 
     @staticmethod
     def get_actual_challenge() -> Optional[ContextChallenge]:

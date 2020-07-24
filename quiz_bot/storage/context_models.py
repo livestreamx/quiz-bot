@@ -1,5 +1,5 @@
-import db
 from pydantic_sqlalchemy import sqlalchemy_to_pydantic
+from quiz_bot import db
 
 
 class ContextUser(sqlalchemy_to_pydantic(db.User)):  # type: ignore

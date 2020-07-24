@@ -4,15 +4,14 @@ from datetime import datetime
 from typing import Dict, List, Optional, Sequence
 
 from pydantic import BaseSettings, validator
+from quiz_bot.storage import ChallengeInfo
+from quiz_bot.storage.errors import NotEqualChallengesAmount, UnexpectedChallengeNameError
 from sqlalchemy.engine import Engine, engine_from_config
 from sqlalchemy.engine.url import URL as SAURL
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.exc import ArgumentError
 from sqlalchemy.pool import SingletonThreadPool
 from yarl import URL
-
-from manager.errors import NotEqualChallengesAmount, UnexpectedChallengeNameError
-from manager.objects import ChallengeModel
 
 
 class LoggingSettings(BaseSettings):
@@ -56,17 +55,21 @@ class InfoSettings(BaseSettings):
 
 
 class ChallengeSettings(BaseSettings):
-    challenges: List[ChallengeModel]
+    challenges: List[ChallengeInfo]
 
     start_notification: str = "Начинается испытание #{number} '{name}'. {description}"
     finish_notification: str = "Завершено испытание #{number} '{name}'."
     winner_notification: str = "Мои поздравления - вы стали победителем в испытании {name}!"
-    progress_notification: str = "В испытании '{name}' есть победитель: @{nick_name} ({timestamp})."
+    progress_notification: str = "В испытании '{name}' - победитель @{nick_name} ({timestamp})."
+
+    correct_answer_notification: str = "Верно."
+    incorrect_answer_notification: str = "Нет, ответ неправильный."  # не используется
+    next_answer_notification: str = "Вопрос #{number}: {question}?"
 
     end_info: str = "Итоги викторины:\n{results}\n\nВикторина завершена, спасибо за участие!"
     results_row: str = "Испытание #{number} '{name}': "
 
-    def get_challenge_by_name(self, name: str) -> ChallengeModel:
+    def get_challenge_by_name(self, name: str) -> ChallengeInfo:
         for challenge in self.challenges:
             if challenge.name != name:
                 continue
@@ -87,8 +90,11 @@ class ChallengeSettings(BaseSettings):
             name=challenge_name, nick_name=winner_nickname, timestamp=timestamp.strftime("%H:%M:%S %d-%m-%Y")
         )
 
+    def get_next_answer_notification(self, question: str, question_num: int) -> str:
+        return self.next_answer_notification.format(question=question, question_num=question_num)
+
     def get_challenge_info(
-        self, challenges: Sequence[ChallengeModel], winners_dict: Dict[int, Sequence[ContextWinner]]
+        self, challenges: Sequence[ChallengeInfo], winners_dict: Dict[int, Sequence[ContextWinner]]
     ) -> str:
         results = ""
         for challenge_num in winners_dict:
@@ -96,7 +102,7 @@ class ChallengeSettings(BaseSettings):
         return results
 
     def get_end_info(
-        self, challenges: Sequence[ChallengeModel], winners_dict: Dict[int, Sequence[ContextWinner]]
+        self, challenges: Sequence[ChallengeInfo], winners_dict: Dict[int, Sequence[ContextWinner]]
     ) -> str:
         if len(challenges) != len(winners_dict.keys()):
             raise NotEqualChallengesAmount(
@@ -124,7 +130,7 @@ class DataBaseSettings(BaseSettings):
         env_prefix = 'DB_'
 
     def setup_db(self) -> Engine:
-        from db.base import metadata
+        from quiz_bot.db.base import metadata
 
         engine = engine_from_config(
             {

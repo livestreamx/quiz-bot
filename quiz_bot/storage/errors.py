@@ -8,3 +8,15 @@ class NotEqualChallengesAmount(RuntimeError):
 
 class UnexpectedChallengeNameError(RuntimeError):
     pass
+
+
+class NoActualChallengeError(RuntimeError):
+    pass
+
+
+class StopChallengeIteration(StopIteration):
+    pass
+
+
+class NoResultFoundError(RuntimeError):
+    pass
