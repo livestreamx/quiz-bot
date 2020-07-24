@@ -1,4 +1,4 @@
-from .group import app
+from quiz_bot.cli.group import app
 
 
 @app.group()

@@ -1,6 +1,6 @@
 import logging
 
-from quiz_bot.cli import app
+from quiz_bot.cli.group import app
 from quiz_bot.manager import Bot, ChallengeMaster, ChitchatClient, InterfaceMaker
 from quiz_bot.settings import (
     ChallengeSettings,

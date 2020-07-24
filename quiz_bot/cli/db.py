@@ -1,6 +1,6 @@
 import click
 import sqlalchemy_utils as sau
-from quiz_bot.cli import app
+from quiz_bot.cli.group import app
 from quiz_bot.settings import DataBaseSettings
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.url import URL
