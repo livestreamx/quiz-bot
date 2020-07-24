@@ -3,7 +3,6 @@ import logging
 from typing import Optional, cast
 from uuid import uuid4
 
-import sqlalchemy.orm as so
 import telebot
 from quiz_bot import db
 from quiz_bot.storage.context_models import ContextUser
@@ -46,7 +45,7 @@ class UserStorage(IUserStorage):
             )
             session.add(internal_user)
         logger.info("User %s successfully saved.", internal_user)
-        internal_user = self.get_user(user)
+        context_user = self.get_user(user)
         if internal_user is not None:
-            return internal_user
+            return cast(ContextUser, context_user)
         raise RuntimeError("User has not been saved into database!")

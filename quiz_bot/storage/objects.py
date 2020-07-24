@@ -10,7 +10,7 @@ class ChallengeInfo(BaseModel):
     description: str
     questions: List[str]
     answers: List[str]
-    max_winners: conint(ge=1) = 1
+    max_winners: conint(ge=1) = 1  # type: ignore
 
     @root_validator
     def validate_questions_and_answers(cls, values: Dict[str, Any]) -> Dict[str, Any]:
@@ -30,8 +30,9 @@ class CurrentChallenge:
     number: int
 
 
-@dataclass(frozen=True)
-class ChallengeAnswerResult:
-    correct: bool
-    reply: str
+class BaseAnswerResult(BaseModel):
     post_reply: Optional[str] = None
+
+
+class CorrectAnswerResult(BaseAnswerResult):
+    reply: str

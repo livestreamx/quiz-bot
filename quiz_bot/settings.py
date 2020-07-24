@@ -68,6 +68,7 @@ class ChallengeSettings(BaseSettings):
 
     end_info: str = "Итоги викторины:\n{results}\n\nВикторина завершена, спасибо за участие!"
     results_row: str = "Испытание #{number} '{name}': "
+    post_end_info: str = "Викторина завершена, спасибо за участие!"
 
     def get_challenge_by_name(self, name: str) -> ChallengeInfo:
         for challenge in self.challenges:
@@ -96,7 +97,10 @@ class ChallengeSettings(BaseSettings):
     def get_challenge_info(self, challenges: Sequence[ChallengeInfo], winners_dict: Dict[int, str]) -> str:
         results = ""
         for challenge_num in winners_dict:
-            results += f"{self.results_row.format(number=challenge_num, name=challenges[challenge_num].name)} @{', @'.join(winners_dict[challenge_num])}"
+            results += (
+                f"{self.results_row.format(number=challenge_num, name=challenges[challenge_num].name)} "
+                f"@{', @'.join(winners_dict[challenge_num])}"
+            )
         return results
 
     def get_end_info(self, challenges: Sequence[ChallengeInfo], winners_dict: Dict[int, str]) -> str:

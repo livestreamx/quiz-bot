@@ -1,17 +1,16 @@
 import logging
 
 from quiz_bot.cli import app
-from quiz_bot.manager import (
-    Bot,
-    ChitchatClient,
+from quiz_bot.manager import Bot, ChallengeMaster, ChitchatClient, InterfaceMaker
+from quiz_bot.settings import (
+    ChallengeSettings,
     ChitchatClientSettings,
     DataBaseSettings,
     InfoSettings,
-    InterfaceMaker,
     LoggingSettings,
     RemoteClientSettings,
 )
-from quiz_bot.storage import UserStorage
+from quiz_bot.storage import ChallengeStorage, ResultStorage, UserStorage
 
 logger = logging.getLogger(__name__)
 
@@ -28,5 +27,8 @@ def start() -> None:
         remote_client_settings=RemoteClientSettings(),
         info_settings=InfoSettings(),
         interface_maker=InterfaceMaker(),
+        challenge_master=ChallengeMaster(
+            challenge_storage=ChallengeStorage(), result_storage=ResultStorage(), settings=ChallengeSettings()
+        ),
     )
     bot.run()

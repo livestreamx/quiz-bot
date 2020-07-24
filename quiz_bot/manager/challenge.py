@@ -5,14 +5,15 @@ from typing import Optional
 import telebot
 from quiz_bot.settings import ChallengeSettings
 from quiz_bot.storage import (
-    ChallengeAnswerResult,
+    BaseAnswerResult,
     ContextChallenge,
     ContextUser,
+    CorrectAnswerResult,
+    CurrentChallenge,
     IChallengeStorage,
     IResultStorage,
     StopChallengeIteration,
 )
-from quiz_bot.storage.objects import CurrentChallenge
 
 logger = logging.getLogger(__name__)
 
@@ -23,26 +24,12 @@ class IChallengeMaster(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> ChallengeAnswerResult:
-        pass
-
-    @abc.abstractmethod
-    def post_answer_hook(self) -> Optional[str]:
+    def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> BaseAnswerResult:
         pass
 
     @property
     @abc.abstractmethod
     def start_info(self) -> str:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def winner_info(self) -> str:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def finish_info(self) -> str:
         pass
 
 
@@ -73,7 +60,9 @@ class ChallengeMaster(IChallengeMaster):
 
     def _synchronize_current_challenge_if_neccessary(self) -> None:
         if self._current_challenge is None:
-            self._resolve_current_state(challenge=self._challenge_storage.get_actual_challenge())
+            actual_challenge = self._challenge_storage.get_actual_challenge()
+            if actual_challenge is not None:
+                self._resolve_current_state(challenge=actual_challenge)
 
     def start_next_challenge(self) -> None:
         try:
@@ -85,22 +74,29 @@ class ChallengeMaster(IChallengeMaster):
     def _move_to_next_phase(self, user: ContextUser) -> None:
         pass
 
-    def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> ChallengeAnswerResult:
+    def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> BaseAnswerResult:
+        if self._current_challenge is None:
+            logger.error("Try to get answer result when challenge is not running!")
+            return BaseAnswerResult()
+
         is_answer_correct = (
             True  # TODO: здесь должен быть менеджер, куда передается ChallengeInfo и определяется правильность ответа
         )
         if not is_answer_correct:
-            return ChallengeAnswerResult(correct=False, reply=self._settings.incorrect_answer_notification)
+            return BaseAnswerResult()
+
         current_phase = 5  # TODO: здесь должно быть взаимодействие с ResultStorage
         if current_phase < self._current_challenge.number:
             self._move_to_next_phase(user)
         else:
             self.start_next_challenge()
-        return ChallengeAnswerResult(correct=True, reply=self._settings.correct_answer_notification)
+        return CorrectAnswerResult(reply=self._settings.correct_answer_notification)
 
     @property
     def start_info(self) -> str:
         self._synchronize_current_challenge_if_neccessary()
+        if self._current_challenge is None:
+            return self._settings.post_end_info
         return self._settings.get_start_notification(
             challenge_num=self._current_challenge.number,
             challenge_name=self._current_challenge.info.name,

@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import Optional
+from typing import Optional, cast
 
 from quiz_bot import db
 from quiz_bot.storage.context_models import ContextChallenge
@@ -36,7 +36,7 @@ class ChallengeStorage(IChallengeStorage):
             challenge: Optional[db.Challenge] = session.query(db.Challenge).get_actual()
             if challenge is None:
                 return None
-            return ContextChallenge.from_orm(challenge)
+            return cast(ContextChallenge, ContextChallenge.from_orm(challenge))
 
     @staticmethod
     def _finish_actual_challenge() -> ContextChallenge:
@@ -45,7 +45,7 @@ class ChallengeStorage(IChallengeStorage):
             if challenge is None:
                 raise NoActualChallengeError("Has not got any actual challenge!")
             challenge.finished_at = get_now()
-            return ContextChallenge.from_orm(challenge)
+            return cast(ContextChallenge, ContextChallenge.from_orm(challenge))
 
     def start_next_challenge(self) -> ContextChallenge:
         finished_actual_challenge = self._finish_actual_challenge()
@@ -55,4 +55,4 @@ class ChallengeStorage(IChallengeStorage):
             ).order_by(db.Challenge.id.asc()).first()
             if new_challenge is None:
                 raise StopChallengeIteration
-            return ContextChallenge.from_orm(new_challenge)
+            return cast(ContextChallenge, ContextChallenge.from_orm(new_challenge))

@@ -2,7 +2,7 @@ import collections
 import logging
 import threading
 from types import FunctionType
-from typing import Any, DefaultDict, Optional
+from typing import Any, DefaultDict, Optional, cast
 from uuid import uuid4
 
 import requests
@@ -13,7 +13,7 @@ from quiz_bot.manager.errors import NotSupportedCallbackError
 from quiz_bot.manager.interface import InterfaceMaker
 from quiz_bot.manager.objects import ApiCommand, ContentType
 from quiz_bot.settings import InfoSettings, LoggingSettings, RemoteClientSettings
-from quiz_bot.storage import ContextUser, IUserStorage
+from quiz_bot.storage import ContextUser, CorrectAnswerResult, IUserStorage
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class Bot:
 
     def _resolve_bot_answer(self, user: ContextUser, message: telebot.types.Message) -> str:
         challenge_master_answer = self._challenge_master.get_answer_result(user=user, message=message)
-        if challenge_master_answer.correct:
+        if isinstance(challenge_master_answer, CorrectAnswerResult):
             return challenge_master_answer.reply
         return self._get_chitchat_answer(user=user, message=message)
 
@@ -80,7 +80,7 @@ class Bot:
 
         def _get_api_handler_by_callback(query_data: str) -> FunctionType:
             if query_data == ApiCommand.START.as_url:
-                return start_handler
+                return cast(FunctionType, start_handler)
             raise NotSupportedCallbackError(f"Unsupported callback query data: {query_data}")
 
         @self._bot.callback_query_handler(func=lambda _: True)

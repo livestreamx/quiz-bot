@@ -3,7 +3,7 @@ import logging
 import requests
 import tenacity
 from pydantic import BaseModel
-from quiz_bot.manager import ChitchatClientSettings
+from quiz_bot.settings import ChitchatClientSettings
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,6 @@
 import abc
 import logging
+from typing import cast
 
 from quiz_bot import db
 from quiz_bot.storage.context_models import ContextChallenge, ContextResult, ContextUser
@@ -42,4 +43,4 @@ class ResultStorage(IResultStorage):
             result = session.query(db.Result).last_for_user(user_id=user.id)
             if result is None:
                 raise NoResultFoundError(f"Not found any Result for User={user}")
-            return ContextResult.from_orm(result)
+            return cast(ContextResult, ContextResult.from_orm(result))
