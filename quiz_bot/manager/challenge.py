@@ -41,14 +41,16 @@ class ChallengeMaster(IChallengeMaster):
         self._result_storage = result_storage
         self._settings = settings
 
-        self._current_challenge: Optional[CurrentChallenge]
+        self._current_challenge: Optional[CurrentChallenge] = None
         self._quiz_finished: bool = False
         self._resolve()
 
     def _resolve(self) -> None:
-        for challenge in self._settings.challenges:
-            self._challenge_storage.create_challenge(name=challenge.name, phase_amount=len(challenge.questions))
         self._synchronize_current_challenge_if_neccessary()
+        if self._current_challenge is None:
+            for challenge in self._settings.challenges:
+                self._challenge_storage.create_challenge(name=challenge.name, phase_amount=len(challenge.questions))
+            self._synchronize_current_challenge_if_neccessary()
 
     def _resolve_current_state(self, challenge: Optional[ContextChallenge]) -> None:
         if challenge is None:

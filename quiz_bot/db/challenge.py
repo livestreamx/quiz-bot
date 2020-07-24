@@ -8,19 +8,14 @@ from quiz_bot.db.base import Base, PrimaryKeyMixin
 
 
 class ChallengeQuery(so.Query):
-    def get_by_name(self, *, name: str) -> Optional[Challenge]:
-        with self.session.no_autoflush:
-            return cast(Optional[Challenge], self.session.query(Challenge).filter(Challenge.name == name).one_or_none())
+    def get_by_name(self, name: str) -> Optional[Challenge]:
+        return cast(Optional[Challenge], self.session.query(Challenge).filter(Challenge.name == name).one_or_none())
 
     def get_actual(self) -> Optional[Challenge]:
-        with self.session.no_autoflush:
-            return cast(
-                Optional[Challenge],
-                self.session.query(Challenge)
-                .filter(Challenge.finished_at.is_(None))
-                .order_by(Challenge.id.asc())
-                .first(),
-            )
+        return cast(
+            Optional[Challenge],
+            self.session.query(Challenge).filter(Challenge.finished_at.is_(None)).order_by(Challenge.id.asc()).first(),
+        )
 
 
 class Challenge(PrimaryKeyMixin, Base):

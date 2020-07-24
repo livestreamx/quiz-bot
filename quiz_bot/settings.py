@@ -55,7 +55,7 @@ class InfoSettings(BaseSettings):
 
 
 class ChallengeSettings(BaseSettings):
-    challenges: List[ChallengeInfo]
+    challenges: List[ChallengeInfo] = []
 
     start_notification: str = "Начинается испытание #{number} '{name}'. {description}"
     finish_notification: str = "Завершено испытание #{number} '{name}'."
@@ -112,7 +112,7 @@ class ChallengeSettings(BaseSettings):
 
 
 class DataBaseSettings(BaseSettings):
-    url: SAURL = 'postgresql://postgres:postgres@localhost/app'
+    url: SAURL = 'postgresql://postgres:postgres@localhost/quiz-bot'
     pool_recycle: int = 500
     pool_size: int = 6
     echo: bool = False

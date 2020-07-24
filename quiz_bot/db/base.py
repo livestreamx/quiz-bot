@@ -1,7 +1,9 @@
+from typing import Type
+
 import sqlalchemy as sa
+import sqlalchemy.orm as so
 from sqlalchemy import MetaData
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
-from sqlalchemy.orm import scoped_session, sessionmaker
 
 metadata = MetaData()
 
@@ -18,5 +20,21 @@ class PrimaryKeyMixin:
     created_at = sa.Column(sa.DateTime(timezone=True), nullable=True, server_default=sa.func.now())
 
 
-Session = sessionmaker()
-current_session = scoped_session(Session)
+def _get_query_cls(mapper: Type[Base], session: so.Session) -> so.Query:
+    if mapper:
+        m = mapper
+        if isinstance(m, tuple):
+            m = mapper[0]
+        if isinstance(m, so.Mapper):
+            m = m.entity
+
+        try:
+            return m.__query_cls__(mapper, session)  # type: ignore
+        except AttributeError:
+            pass
+
+    return so.Query(mapper, session)
+
+
+Session = so.sessionmaker(query_cls=_get_query_cls)
+current_session = so.scoped_session(Session)
