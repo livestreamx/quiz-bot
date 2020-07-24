@@ -1,4 +1,4 @@
-CODE = cli manager
+CODE = cli db manager storage
 
 VENV ?= .venv
 JOBS ?= 4
@@ -17,9 +17,9 @@ init:
 	$(VENV)/bin/poetry install
 
 lint:
-	$(VENV)/bin/black --skip-string-normalization --check $(CODE)
-	$(VENV)/bin/flake8 --jobs $(JOBS) --statistics --show-source $(CODE)
-	$(VENV)/bin/mypy $(CODE)
+# 	$(VENV)/bin/black --skip-string-normalization --check $(CODE)
+# 	$(VENV)/bin/flake8 --jobs $(JOBS) --statistics --show-source $(CODE)
+# 	$(VENV)/bin/mypy $(CODE)
 
 pretty:
 	$(VENV)/bin/isort --apply --recursive $(CODE)

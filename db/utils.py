@@ -2,7 +2,6 @@ from contextlib import contextmanager
 from typing import Any, Iterator
 
 import sqlalchemy.orm as so
-
 from db.base import Session
 
 

@@ -1,6 +1,7 @@
 import logging
 import socket
-from typing import List, Optional
+from datetime import datetime
+from typing import Dict, List, Optional, Sequence
 
 from pydantic import BaseSettings, validator
 from sqlalchemy.engine import Engine, engine_from_config
@@ -10,6 +11,7 @@ from sqlalchemy.exc import ArgumentError
 from sqlalchemy.pool import SingletonThreadPool
 from yarl import URL
 
+from manager.errors import NotEqualChallengesAmount, UnexpectedChallengeNameError
 from manager.objects import ChallengeModel
 
 
@@ -44,30 +46,63 @@ class RemoteClientSettings(BaseSettings):
         env_prefix = 'REMOTE_'
 
 
-class DialogSettings(BaseSettings):
+class InfoSettings(BaseSettings):
     empty_message: str = "Ответа нет " + r'¯\_(ツ)_/¯'
     greetings: str = (
         "Привет! Я T-Quiz Bot. @livestream_x создал меня для того, чтобы я выполнял функцию ведущего для проведения "
         "викторин. Чтобы начать свой путь к вершине победы, отправь команду '/start'"
     )
-    unknown_warning: str = "Чтобы начать викторину, отправь команду '/start'"
-
-    start_info: str = "Итак, для тебя начинается викторина #{number} '{name}'."
-    winner_notification: str = "Мои поздравления - вы стали победителем в викторине {name} с результатом {result}!"
-    finish_notification: str = "Викторина {name} завершена! Победитель: @{nick_name} с результатом {result}."
-
-    def get_start_info(self, challenge_num: int, challenge_name: str) -> str:
-        return self.start_info.format(number=challenge_num, name=challenge_name)
-
-    def get_winner_notification(self, challenge_name: str, result: str) -> str:
-        return self.winner_notification.format(name=challenge_name, result=result)
-
-    def get_finish_notification(self, challenge_name: str, winner_nickname: str, winner_result: str) -> str:
-        return self.finish_notification.format(name=challenge_name, nick_name=winner_nickname, result=winner_result)
+    unknown_info: str = "Чтобы начать викторину, отправь команду '/start'"
 
 
 class ChallengeSettings(BaseSettings):
     challenges: List[ChallengeModel]
+
+    start_notification: str = "Начинается испытание #{number} '{name}'. {description}"
+    finish_notification: str = "Завершено испытание #{number} '{name}'."
+    winner_notification: str = "Мои поздравления - вы стали победителем в испытании {name}!"
+    progress_notification: str = "В испытании '{name}' есть победитель: @{nick_name} ({timestamp})."
+
+    end_info: str = "Итоги викторины:\n{results}\n\nВикторина завершена, спасибо за участие!"
+    results_row: str = "Испытание #{number} '{name}': "
+
+    def get_challenge_by_name(self, name: str) -> ChallengeModel:
+        for challenge in self.challenges:
+            if challenge.name != name:
+                continue
+            return challenge
+        raise UnexpectedChallengeNameError(f"'{name}' not found in challenges: {[x.name for x in self.challenges]}")
+
+    def get_start_notification(self, challenge_num: int, challenge_name: str, description: str) -> str:
+        return self.start_notification.format(number=challenge_num, name=challenge_name, description=description)
+
+    def get_finish_notification(self, challenge_num: int, challenge_name: str) -> str:
+        return self.finish_notification.format(number=challenge_num, name=challenge_name)
+
+    def get_winner_notification(self, challenge_name: str) -> str:
+        return self.winner_notification.format(name=challenge_name)
+
+    def get_progress_notification(self, challenge_name: str, winner_nickname: str, timestamp: datetime) -> str:
+        return self.progress_notification.format(
+            name=challenge_name, nick_name=winner_nickname, timestamp=timestamp.strftime("%H:%M:%S %d-%m-%Y")
+        )
+
+    def get_challenge_info(
+        self, challenges: Sequence[ChallengeModel], winners_dict: Dict[int, Sequence[ContextWinner]]
+    ) -> str:
+        results = ""
+        for challenge_num in winners_dict:
+            results += f"{self.results_row.format(number=challenge_num, name=challenges[challenge_num].name)} @{', @'.join(winners_dict[challenge_num])}"
+        return results
+
+    def get_end_info(
+        self, challenges: Sequence[ChallengeModel], winners_dict: Dict[int, Sequence[ContextWinner]]
+    ) -> str:
+        if len(challenges) != len(winners_dict.keys()):
+            raise NotEqualChallengesAmount(
+                "Challenges list length is not equal to length of challenge numbers in winners_dict!"
+            )
+        return self.end_info.format(results=self.get_challenge_info(challenges=challenges, winners_dict=winners_dict))
 
 
 class DataBaseSettings(BaseSettings):

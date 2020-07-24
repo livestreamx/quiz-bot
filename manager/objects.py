@@ -1,7 +1,7 @@
 import enum
 from typing import Any, Dict, List
 
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, conint, root_validator
 
 
 class ApiCommand(str, enum.Enum):
@@ -22,6 +22,7 @@ class ChallengeModel(BaseModel):
     description: str
     questions: List[str]
     answers: List[str]
+    max_winners: conint(ge=1) = 1
 
     @root_validator
     def validate_questions_and_answers(cls, values: Dict[str, Any]) -> Dict[str, Any]:

@@ -8,7 +8,7 @@ from manager import (
     ChitchatClient,
     ChitchatClientSettings,
     DataBaseSettings,
-    DialogSettings,
+    InfoSettings,
     LoggingSettings,
     RemoteClientSettings,
 )
@@ -27,7 +27,7 @@ def start() -> None:
         chitchat_client=ChitchatClient(ChitchatClientSettings()),
         logging_settings=logging_settings,
         remote_client_settings=RemoteClientSettings(),
-        dialog_settings=DialogSettings(),
+        dialog_settings=InfoSettings(),
         interface_maker=InterfaceMaker(),
     )
     bot.run()

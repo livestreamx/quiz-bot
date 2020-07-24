@@ -8,10 +8,11 @@ import requests
 import telebot
 from storage import ContextUser, IUserStorage
 
+from manager.challenge import ChallengeMaster
 from manager.chitchat import ChitchatClient, ChitChatRequest
 from manager.interface import InterfaceMaker
 from manager.objects import ApiCommand, ContentType
-from manager.settings import DialogSettings, LoggingSettings, RemoteClientSettings
+from manager.settings import InfoSettings, LoggingSettings, RemoteClientSettings
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +24,9 @@ class Bot:
         chitchat_client: ChitchatClient,
         logging_settings: LoggingSettings,
         remote_client_settings: RemoteClientSettings,
-        dialog_settings: DialogSettings,
+        dialog_settings: InfoSettings,
         interface_maker: InterfaceMaker,
+        challenge_master: ChallengeMaster,
     ) -> None:
         self._locks: DefaultDict[Any, threading.Lock] = collections.defaultdict(threading.Lock)
         self._bot = telebot.TeleBot(remote_client_settings.api_key)
@@ -34,13 +36,10 @@ class Bot:
         self._logging_settings = logging_settings
         self._dialog_settings = dialog_settings
         self._interface_maker = interface_maker
+        self._challenge_master = challenge_master
 
         self._register_handlers()
-
-        self._api_cmd_to_bot_answer_mapping: Mapping[str, str] = {
-            ApiCommand.START.as_url: self._dialog_settings.start_info,
-            ApiCommand.HELP.as_url: self._dialog_settings.greetings,
-        }
+        self._challenge_master.start_next_challenge()
 
     def run(self) -> None:
         logger.info('Bot successfully started.')
@@ -49,6 +48,11 @@ class Bot:
     @staticmethod
     def _make_unknown_user(user: telebot.types.User) -> ContextUser:
         return ContextUser(id=0, external_id=user.id, chitchat_id=str(uuid4()), first_name="<unknown>")
+
+    def _get_bot_answer_for_api_cmd(self, message: telebot.types.Message) -> str:
+        if message.text == ApiCommand.START.as_url:
+            return self._challenge_master.start_info
+        return self._dialog_settings.greetings
 
     def _get_markup_for_api_cmd(self, message: telebot.types.Message) -> Optional[telebot.types.InlineKeyboardMarkup]:
         if message.text == ApiCommand.HELP.as_url:
@@ -64,7 +68,7 @@ class Bot:
                 self._send_answer(
                     user=internal_user,
                     message=message,
-                    answer=self._api_cmd_to_bot_answer_mapping[message.text],
+                    answer=self._get_bot_answer_for_api_cmd(message),
                     markup=self._get_markup_for_api_cmd(message),
                 )
 
@@ -82,7 +86,7 @@ class Bot:
                     self._send_answer(
                         user=self._make_unknown_user(message.from_user),
                         message=message,
-                        answer=self._dialog_settings.unknown_warning,
+                        answer=self._dialog_settings.unknown_info,
                     )
                     return
                 chitchat_answer = self._get_chitchat_answer(user=internal_user, message=message)

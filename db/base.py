@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from sqlalchemy import MetaData
-from sqlalchemy.ext.declarative import declared_attr, as_declarative
 import sqlalchemy as sa
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy import MetaData
+from sqlalchemy.ext.declarative import as_declarative, declared_attr
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 metadata = MetaData()
 
@@ -16,8 +16,8 @@ class Base:
 
 
 class PrimaryKeyMixin:
-    id: int = sa.Column(sa.Integer, primary_key=True)
-    created_at: datetime = sa.Column(sa.DateTime(timezone=True), nullable=True, server_default=sa.func.now())
+    id = sa.Column(sa.Integer, primary_key=True)
+    created_at = sa.Column(sa.DateTime(timezone=True), nullable=True, server_default=sa.func.now())
 
 
 Session = sessionmaker()

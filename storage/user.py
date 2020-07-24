@@ -3,25 +3,12 @@ import logging
 from typing import Optional, cast
 from uuid import uuid4
 
-import telebot
 import db
-
 import sqlalchemy.orm as so
-from pydantic_sqlalchemy import sqlalchemy_to_pydantic
-
+import telebot
+from storage.models import ContextUser
 
 logger = logging.getLogger(__name__)
-
-
-class ContextUser(sqlalchemy_to_pydantic(db.User)):  # type: ignore
-    @property
-    def full_name(self) -> str:
-        name = self.first_name or ''
-        if self.last_name:
-            name += f' {self.last_name}'
-        if self.nick_name:
-            name += f' @{self.nick_name}'
-        return name
 
 
 class IUserStorage(abc.ABC):
@@ -55,8 +42,11 @@ class UserStorage(IUserStorage):
 
             logger.info("User with external_id %s not found, try to save...", user.id)
             internal_user = db.User(
-                external_id=user.id, chitchat_id=str(uuid4()), first_name=user.first_name, last_name=user.last_name,
-                nick_name=user.username
+                external_id=user.id,
+                chitchat_id=str(uuid4()),
+                first_name=user.first_name,
+                last_name=user.last_name,
+                nick_name=user.username,
             )
             session.add(internal_user)
         logger.info("User %s successfully saved.", internal_user)

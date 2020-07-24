@@ -2,8 +2,6 @@ from typing import Optional
 
 import sqlalchemy as sa
 import sqlalchemy_utils as su
-import sqlalchemy.orm as so
-
 from db.base import Base, PrimaryKeyMixin
 
 
@@ -23,19 +21,10 @@ class User(PrimaryKeyMixin, Base):
         chitchat_id: str,
         first_name: Optional[str],
         last_name: Optional[str],
-        nick_name: Optional[str]
+        nick_name: Optional[str],
     ) -> None:
         self.external_id = external_id
         self.chitchat_id = chitchat_id
         self.first_name = first_name
         self.last_name = last_name
         self.nick_name = nick_name
-
-
-class Winner(PrimaryKeyMixin, Base):
-    __tablename__ = 'winners'  # type: ignore
-
-    challenge_id = sa.Column(sa.Integer, nullable=False)
-    user_id = sa.Column(sa.Integer, sa.ForeignKey(User.id), nullable=False)
-
-    user = so.relationship(User, backref=so.backref("winner", cascade="all, delete-orphan"))
