@@ -93,17 +93,13 @@ class ChallengeSettings(BaseSettings):
     def get_next_answer_notification(self, question: str, question_num: int) -> str:
         return self.next_answer_notification.format(question=question, question_num=question_num)
 
-    def get_challenge_info(
-        self, challenges: Sequence[ChallengeInfo], winners_dict: Dict[int, Sequence[ContextWinner]]
-    ) -> str:
+    def get_challenge_info(self, challenges: Sequence[ChallengeInfo], winners_dict: Dict[int, str]) -> str:
         results = ""
         for challenge_num in winners_dict:
             results += f"{self.results_row.format(number=challenge_num, name=challenges[challenge_num].name)} @{', @'.join(winners_dict[challenge_num])}"
         return results
 
-    def get_end_info(
-        self, challenges: Sequence[ChallengeInfo], winners_dict: Dict[int, Sequence[ContextWinner]]
-    ) -> str:
+    def get_end_info(self, challenges: Sequence[ChallengeInfo], winners_dict: Dict[int, str]) -> str:
         if len(challenges) != len(winners_dict.keys()):
             raise NotEqualChallengesAmount(
                 "Challenges list length is not equal to length of challenge numbers in winners_dict!"
