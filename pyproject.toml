@@ -7,7 +7,7 @@ authors = [
 ]
 repository = "https://stash.tcsbank.ru/users/v.mukhamatnurov/repos/quiz-bot"
 packages = [
-    { include = "./manager" },
+    { include = "./quiz_bot" },
 ]
 
 [[tool.poetry.source]]
@@ -15,7 +15,7 @@ name = "internal"
 url = "https://registry.tcsbank.ru/repository/pypi-all/simple"
 
 [tool.poetry.scripts]
-app = 'cli.group:app'
+app = 'quiz_bot.cli.group:app'
 
 [tool.poetry.dependencies]
 python = "^3.7"
