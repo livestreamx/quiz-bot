@@ -1,7 +1,3 @@
-class PreviousChallengeNotFinishedError(RuntimeError):
-    pass
-
-
 class NotEqualChallengesAmount(RuntimeError):
     pass
 

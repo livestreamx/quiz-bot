@@ -5,6 +5,7 @@ from typing import Optional
 import click
 from quiz_bot.cli.group import app
 from quiz_bot.manager import Bot, ChallengeMaster, ChitchatClient, InterfaceMaker
+from quiz_bot.manager.checker import ResultChecker
 from quiz_bot.settings import (
     ChallengeSettings,
     ChitchatClientSettings,
@@ -39,7 +40,9 @@ def start(challenge_settings_file: Optional[io.StringIO]) -> None:
         info_settings=InfoSettings(),
         interface_maker=InterfaceMaker(),
         challenge_master=ChallengeMaster(
-            challenge_storage=ChallengeStorage(), result_storage=ResultStorage(), settings=challenge_settings
+            challenge_storage=ChallengeStorage(),
+            settings=challenge_settings,
+            result_checker=ResultChecker(result_storage=ResultStorage(), challenge_settings=challenge_settings),
         ),
     )
     bot.run()

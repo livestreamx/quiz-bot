@@ -1,4 +1,5 @@
 import enum
+from dataclasses import dataclass
 
 
 class ApiCommand(str, enum.Enum):
@@ -12,3 +13,9 @@ class ApiCommand(str, enum.Enum):
 
 class ContentType(str, enum.Enum):
     TEXT = 'text'
+
+
+@dataclass(frozen=True)
+class CheckedResult:
+    correct: bool
+    challenge_finished: bool
