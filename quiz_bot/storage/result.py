@@ -1,40 +1,44 @@
 import abc
 import logging
-from typing import cast
+from datetime import datetime
+from typing import Sequence, cast
 
 from quiz_bot import db
 from quiz_bot.storage.context_models import ContextResult, ContextUser
 from quiz_bot.storage.errors import NoResultFoundError
-from quiz_bot.utils import get_now
 
 logger = logging.getLogger(__name__)
 
 
 class IResultStorage(abc.ABC):
     @abc.abstractmethod
-    def prepare_next_result(self, result: ContextResult) -> None:
+    def prepare_next_result(self, result: ContextResult, next_phase: int) -> None:
         pass
 
     @abc.abstractmethod
-    def finish_phase(self, result: ContextResult) -> None:
+    def finish_phase(self, result: ContextResult, finish_time: datetime) -> None:
         pass
 
     @abc.abstractmethod
     def get_last_result(self, user: ContextUser) -> ContextResult:
         pass
 
+    @abc.abstractmethod
+    def get_equal_results(self, result: ContextResult) -> Sequence[ContextResult]:
+        pass
+
 
 class ResultStorage(IResultStorage):
-    def prepare_next_result(self, result: ContextResult) -> None:
+    def prepare_next_result(self, result: ContextResult, next_phase: int) -> None:
         with db.create_session() as session:
-            session.add(db.Result(user_id=result.user.id, challenge_id=result.challenge.id, phase=result.phase + 1))
+            session.add(db.Result(user_id=result.user.id, challenge_id=result.challenge.id, phase=next_phase))
 
-    def finish_phase(self, result: ContextResult) -> None:
+    def finish_phase(self, result: ContextResult, finish_time: datetime) -> None:
         with db.create_session() as session:
             db_result = session.query(db.Result).get_by_ids(
                 user_id=result.user.id, challenge_id=result.challenge.id, phase=result.phase
             )
-            db_result.finished_at = get_now()
+            db_result.finished_at = finish_time
 
     def get_last_result(self, user: ContextUser) -> ContextResult:
         with db.create_session() as session:
@@ -42,3 +46,12 @@ class ResultStorage(IResultStorage):
             if result is None:
                 raise NoResultFoundError(f"Not found any Result for User={user}")
             return cast(ContextResult, ContextResult.from_orm(result))
+
+    def get_equal_results(self, result: ContextResult) -> Sequence[ContextResult]:
+        with db.create_session() as session:
+            return cast(
+                Sequence[ContextResult],
+                session.query(db.Result).get_equal_results(
+                    challenge_id=result.challenge.id, phase=result.phase, finished=bool(result.finished_at is not None)
+                ),
+            )

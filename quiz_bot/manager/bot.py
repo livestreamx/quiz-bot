@@ -7,6 +7,7 @@ from uuid import uuid4
 
 import requests
 import telebot
+import tenacity
 from quiz_bot.manager.challenge import ChallengeMaster
 from quiz_bot.manager.chitchat import ChitchatClient, ChitChatRequest
 from quiz_bot.manager.errors import NotSupportedCallbackError
@@ -93,11 +94,17 @@ class Bot:
                     logger.warning("Gotten message from unknown user: %s!", message)
                     self._reply_to_unknown_user(message=message)
                     return
-                bot_answer = self._resolve_bot_answer(user=internal_user, message=message)
-                self._send_answer(user=internal_user, message=message, answer=bot_answer)
+                self._resolve_and_reply(user=internal_user, message=message)
 
         logger.info('Bot API handlers registered.')
 
+    @tenacity.retry(
+        reraise=True,
+        retry=tenacity.retry_if_exception_type(requests.ConnectionError),
+        stop=tenacity.stop_after_attempt(3),
+        before_sleep=tenacity.before_sleep_log(logger, logger.level),
+        after=tenacity.after_log(logger, logger.level),
+    )
     def _send_answer(
         self,
         user: ContextUser,
@@ -122,11 +129,15 @@ class Bot:
             logger.exception("Error while making request to chitchat!")
             return self._info_settings.empty_message
 
-    def _resolve_bot_answer(self, user: ContextUser, message: telebot.types.Message) -> str:
+    def _resolve_and_reply(self, user: ContextUser, message: telebot.types.Message) -> None:
         challenge_master_answer = self._challenge_master.get_answer_result(user=user, message=message)
         if isinstance(challenge_master_answer, CorrectAnswerResult):
-            return challenge_master_answer.reply
-        return self._get_chitchat_answer(user=user, message=message)
+            bot_answer = challenge_master_answer.reply
+        else:
+            bot_answer = self._get_chitchat_answer(user=user, message=message)
+        self._send_answer(user=user, message=message, answer=bot_answer)
+        if challenge_master_answer.post_reply is not None:
+            self._send_answer(user=user, message=message, answer=challenge_master_answer.post_reply)
 
     def _reply_to_unknown_user(self, message: telebot.types.Message) -> None:
         unknown_user = self._make_unknown_user(message.from_user)

@@ -1,5 +1,8 @@
 import enum
-from dataclasses import dataclass
+from typing import List, Optional
+
+from pydantic.main import BaseModel
+from quiz_bot.storage import ContextResult
 
 
 class ApiCommand(str, enum.Enum):
@@ -15,7 +18,8 @@ class ContentType(str, enum.Enum):
     TEXT = 'text'
 
 
-@dataclass(frozen=True)
-class CheckedResult:
+class CheckedResult(BaseModel):
     correct: bool
     challenge_finished: bool
+    next_phase: Optional[int]
+    winner_results: Optional[List[ContextResult]]

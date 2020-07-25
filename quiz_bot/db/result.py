@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, cast
+from typing import Any, Optional, Sequence, cast
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
@@ -9,8 +9,14 @@ from quiz_bot.db.challenge import Challenge
 from quiz_bot.db.user import User
 
 
+def _get_finish_condition(finished: bool) -> Any:
+    if finished:
+        return Result.finished_at.isnot(None)
+    return Result.finished_at.is_(None)
+
+
 class ResultQuery(so.Query):
-    def get_by_ids(self, *, user_id: int, challenge_id: int, phase: int) -> Result:
+    def get_by_ids(self, user_id: int, challenge_id: int, phase: int) -> Result:
         return cast(
             Result,
             self.session.query(Result)
@@ -18,13 +24,21 @@ class ResultQuery(so.Query):
             .one(),
         )
 
-    def last_for_user(self, *, user_id: int) -> Optional[Result]:
+    def last_for_user(self, user_id: int) -> Optional[Result]:
         return cast(
             Optional[Result],
             self.session.query(Result)
             .filter(Result.user_id == user_id)
             .order_by(Result.challenge_id.desc(), Result.phase.desc())
             .first(),
+        )
+
+    def get_equal_results(self, challenge_id: int, phase: int, finished: bool) -> Sequence[Result]:
+        return cast(
+            Sequence[Result],
+            self.session.query(Result)
+            .filter(Result.challenge_id == challenge_id, Result.phase == phase, _get_finish_condition(finished))
+            .all(),
         )
 
 

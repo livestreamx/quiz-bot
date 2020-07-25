@@ -31,7 +31,9 @@ class ChallengeMaster:
 
     def _resolve(self) -> None:
         for challenge in self._settings.challenges:
-            self._challenge_storage.ensure_challenge_exists(name=challenge.name, phase_amount=len(challenge.questions))
+            self._challenge_storage.ensure_challenge_exists(
+                name=challenge.name, phase_amount=len(challenge.questions), winner_amount=challenge.max_winners
+            )
         self._synchronize_current_challenge_if_neccessary()
 
     def _resolve_current_state(self, challenge: Optional[ContextChallenge]) -> None:
@@ -68,7 +70,22 @@ class ChallengeMaster:
 
         if checked_result.challenge_finished:
             self.start_next_challenge()
-        return CorrectAnswerResult(reply=self._settings.correct_answer_notification)
+            return CorrectAnswerResult(
+                reply=self._settings.correct_answer_notification,
+                post_reply=self._settings.get_finish_notification(
+                    challenge_name=self._current_challenge.info.name, challenge_num=self._current_challenge.number
+                ),
+            )
+
+        if checked_result.next_phase is None:
+            raise ValueError("Correct result without challenge finish should have next phase!")
+        return CorrectAnswerResult(
+            reply=self._settings.correct_answer_notification,
+            post_reply=self._settings.get_next_answer_notification(
+                question=self._current_challenge.info.questions[checked_result.next_phase],
+                question_num=checked_result.next_phase,
+            ),
+        )
 
     @property
     def start_info(self) -> str:

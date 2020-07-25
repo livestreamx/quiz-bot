@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class IChallengeStorage(abc.ABC):
     @abc.abstractmethod
-    def ensure_challenge_exists(self, name: str, phase_amount: int) -> None:
+    def ensure_challenge_exists(self, name: str, phase_amount: int, winner_amount: int) -> None:
         pass
 
     @staticmethod
@@ -26,11 +26,11 @@ class IChallengeStorage(abc.ABC):
 
 
 class ChallengeStorage(IChallengeStorage):
-    def ensure_challenge_exists(self, name: str, phase_amount: int) -> None:
+    def ensure_challenge_exists(self, name: str, phase_amount: int, winner_amount: int) -> None:
         with db.create_session() as session:
             challenge: Optional[db.Challenge] = session.query(db.Challenge).get_by_name(name)
             if challenge is None:
-                session.add(db.Challenge(name=name, phase_amount=phase_amount))
+                session.add(db.Challenge(name=name, phase_amount=phase_amount, winner_amount=winner_amount))
 
     @staticmethod
     def get_actual_challenge() -> Optional[ContextChallenge]:
