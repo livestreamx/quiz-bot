@@ -48,10 +48,10 @@ class RemoteClientSettings(BaseSettings):
 class InfoSettings(BaseSettings):
     empty_message: str = "Ответа нет " + r'¯\_(ツ)_/¯'
     greetings: str = (
-        "Привет! Я T-Quiz Bot. @livestream_x создал меня для того, чтобы я выполнял функцию ведущего для проведения "
-        "викторин. Чтобы начать свой путь к вершине победы, отправь команду '/start'"
+        "Я T-Quiz Bot. @livestream_x создал меня для того, чтобы я выполнял функцию ведущего для проведения "
+        "викторин. Чтобы начать свой путь к вершине победы, нажми на кнопку старта."
     )
-    unknown_info: str = "Чтобы начать викторину, отправь команду '/start'"
+    unknown_info: str = "А еще могу рассказать, что я за бот такой. Нажми на кнопку помощи."
 
 
 class ChallengeSettings(BaseSettings):
