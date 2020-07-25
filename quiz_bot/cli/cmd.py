@@ -1,5 +1,8 @@
+import io
 import logging
+from typing import Optional
 
+import click
 from quiz_bot.cli.group import app
 from quiz_bot.manager import Bot, ChallengeMaster, ChitchatClient, InterfaceMaker
 from quiz_bot.settings import (
@@ -15,11 +18,19 @@ from quiz_bot.storage import ChallengeStorage, ResultStorage, UserStorage
 logger = logging.getLogger(__name__)
 
 
+def _get_challenge_settings(challenge_settings_file: Optional[io.StringIO]) -> ChallengeSettings:
+    if challenge_settings_file is not None:
+        return ChallengeSettings.parse_raw(challenge_settings_file.read())
+    return ChallengeSettings()
+
+
 @app.command()
-def start() -> None:
+@click.option('-csf', '--challenge-settings-file', type=click.File('r'))
+def start(challenge_settings_file: Optional[io.StringIO]) -> None:
     logging_settings = LoggingSettings()
     logging_settings.setup_logging()
     DataBaseSettings().setup_db()
+    challenge_settings = _get_challenge_settings(challenge_settings_file)
     bot = Bot(
         user_storage=UserStorage(),
         chitchat_client=ChitchatClient(ChitchatClientSettings()),
@@ -28,7 +39,7 @@ def start() -> None:
         info_settings=InfoSettings(),
         interface_maker=InterfaceMaker(),
         challenge_master=ChallengeMaster(
-            challenge_storage=ChallengeStorage(), result_storage=ResultStorage(), settings=ChallengeSettings()
+            challenge_storage=ChallengeStorage(), result_storage=ResultStorage(), settings=challenge_settings
         ),
     )
     bot.run()

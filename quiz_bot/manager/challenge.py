@@ -85,7 +85,7 @@ class ChallengeMaster(IChallengeMaster):
         if not is_answer_correct:
             return BaseAnswerResult()
 
-        current_phase = 5  # TODO: здесь должно быть взаимодействие с ResultStorage
+        current_phase = 0  # TODO: здесь должно быть взаимодействие с ResultStorage
         if current_phase < self._current_challenge.number:
             self._move_to_next_phase(user)
         else:

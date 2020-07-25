@@ -65,3 +65,6 @@ ENV/
 # Documentation
 _build/
 reference/
+
+# Work files
+*settings.json

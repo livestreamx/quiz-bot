@@ -55,7 +55,7 @@ class InfoSettings(BaseSettings):
 
 
 class ChallengeSettings(BaseSettings):
-    challenges: List[ChallengeInfo] = []
+    challenges: List[ChallengeInfo]
 
     start_notification: str = "Начинается испытание #{number} '{name}'. {description}"
     finish_notification: str = "Завершено испытание #{number} '{name}'."
