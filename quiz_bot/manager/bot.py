@@ -40,7 +40,6 @@ class Bot:
         self._challenge_master = challenge_master
 
         self._register_handlers()
-        self._challenge_master.start_next_challenge()
 
     def run(self) -> None:
         logger.info('Bot successfully started.')
