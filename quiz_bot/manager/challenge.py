@@ -26,7 +26,6 @@ class ChallengeMaster:
         self._result_checker = result_checker
 
         self._current_challenge: Optional[CurrentChallenge] = None
-        self._quiz_finished: bool = False
         self._resolve()
 
     def _resolve(self) -> None:
@@ -55,15 +54,12 @@ class ChallengeMaster:
             self._resolve_current_state(challenge=self._challenge_storage.start_next_challenge())
         except StopChallengeIteration:
             logger.warning("Quiz is finished - active challenge was not found!")
-            self._quiz_finished = True
+            self._current_challenge = None
 
     def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> BaseAnswerResult:
         if self._current_challenge is None:
             logger.error("Try to get answer result when challenge is not running!")
             return BaseAnswerResult()
-
-        if self._quiz_finished:
-            return BaseAnswerResult(post_reply=self._settings.post_end_info)
 
         checked_result = self._result_checker.check_answer(
             user=user, current_challenge=self._current_challenge, message=message

@@ -28,7 +28,7 @@ class LoggingSettings(BaseSettings):
 class ChitchatSettings(BaseSettings):
     url: URL
     read_timeout: int = 10
-    filter_phrases: List[str] = ["совет дня", "вопрос дня", "давай экономить", "деньги", "деньгах"]
+    filter_phrases: List[str] = ["совет дня", "вопрос дня", "давай экономить", "деньги", "деньгах", "Олег"]
 
     @validator('url', pre=True)
     def make_url(cls, v: Optional[str]) -> URL:
