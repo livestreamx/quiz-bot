@@ -60,7 +60,7 @@ class ResultChecker:
         current_result.finished_at = get_now()
         self._result_storage.finish_phase(result=current_result, finish_time=current_result.finished_at)
         if current_result.phase == current_challenge.data.phase_amount:
-            logger.info("User '%s' reached the end of challenge %s!", user.nick_name, current_challenge.info.name)
+            logger.info("User '%s' reached the end of challenge '%s!'", user.nick_name, current_challenge.info.name)
             equal_results = self._result_storage.get_equal_results(current_result)
             challenge_finished = self._resolve_challenge_finish(challenge=current_challenge, results=equal_results)
             if challenge_finished:

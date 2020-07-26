@@ -28,7 +28,7 @@ class LoggingSettings(BaseSettings):
 class ChitchatSettings(BaseSettings):
     url: URL
     read_timeout: int = 10
-    filter_phrases: List[str] = ["совет дня", "вопрос дня", "давай экономить"]
+    filter_phrases: List[str] = ["совет дня", "вопрос дня", "давай экономить", "деньги", "деньгах"]
 
     @validator('url', pre=True)
     def make_url(cls, v: Optional[str]) -> URL:
@@ -69,7 +69,7 @@ class ChallengeSettings(BaseSettings):
         "Неверно",
         "И, нет, ответ неправильный.",
         "И в этот раз не получилось попасть в ответ.",
-        "..В общем, не правильно 😔",
+        "...в общем, не правильно 😔",
     ]
     next_answer_notification: str = "Вопрос #{number}: {question}?"
 

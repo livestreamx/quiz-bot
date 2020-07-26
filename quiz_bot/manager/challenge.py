@@ -62,6 +62,9 @@ class ChallengeMaster:
             logger.error("Try to get answer result when challenge is not running!")
             return BaseAnswerResult()
 
+        if self._quiz_finished:
+            return BaseAnswerResult(post_reply=self._settings.post_end_info)
+
         checked_result = self._result_checker.check_answer(
             user=user, current_challenge=self._current_challenge, message=message
         )
@@ -95,11 +98,11 @@ class ChallengeMaster:
         return self._settings.get_start_notification(
             challenge_num=self._current_challenge.number,
             challenge_name=self._current_challenge.info.name,
-            description=self._current_challenge.info.description,
+            description=f"{self._current_challenge.info.description}\n\n{self._first_answer}",
         )
 
     @property
-    def first_answer(self) -> str:
+    def _first_answer(self) -> str:
         if self._current_challenge is None:
             raise RuntimeError("Challenge should be started before getting the first answer!")
         question_num = 1

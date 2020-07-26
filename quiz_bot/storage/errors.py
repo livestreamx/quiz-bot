@@ -10,7 +10,7 @@ class NoActualChallengeError(RuntimeError):
     pass
 
 
-class StopChallengeIteration(StopIteration):
+class StopChallengeIteration(RuntimeError):
     pass
 
 

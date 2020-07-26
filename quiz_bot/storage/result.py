@@ -54,9 +54,7 @@ class ResultStorage(IResultStorage):
 
     def get_equal_results(self, result: ContextResult) -> Sequence[ContextResult]:
         with db.create_session() as session:
-            return cast(
-                Sequence[ContextResult],
-                session.query(db.Result).get_equal_results(
-                    challenge_id=result.challenge.id, phase=result.phase, finished=bool(result.finished_at is not None)
-                ),
+            equal_results: Sequence[db.Result] = session.query(db.Result).get_equal_results(
+                challenge_id=result.challenge.id, phase=result.phase, finished=bool(result.finished_at is not None)
             )
+            return cast(Sequence[ContextResult], [ContextResult.from_orm(x) for x in equal_results])

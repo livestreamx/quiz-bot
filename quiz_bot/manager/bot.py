@@ -69,9 +69,7 @@ class Bot:
             with self._locks[message.chat.id]:
                 internal_user = self._user_storage.get_or_create_user(user=message.from_user)
                 self._send_answer(
-                    user=internal_user,
-                    message=message,
-                    answers=[self._challenge_master.start_info, self._challenge_master.first_answer],
+                    user=internal_user, message=message, answers=[self._challenge_master.start_info],
                 )
 
         def _get_api_handler_by_callback(query_data: str) -> FunctionType:
