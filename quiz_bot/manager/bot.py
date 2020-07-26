@@ -2,7 +2,7 @@ import collections
 import logging
 import threading
 from types import FunctionType
-from typing import Any, DefaultDict, Optional, cast
+from typing import Any, DefaultDict, List, Optional, cast
 from uuid import uuid4
 
 import requests
@@ -59,7 +59,7 @@ class Bot:
                 self._send_answer(
                     user=internal_user,
                     message=message,
-                    answer=self._info_settings.greetings,
+                    answers=[self._info_settings.greetings],
                     markup=self._interface_maker.start_markup,
                 )
 
@@ -69,7 +69,9 @@ class Bot:
             with self._locks[message.chat.id]:
                 internal_user = self._user_storage.get_or_create_user(user=message.from_user)
                 self._send_answer(
-                    user=internal_user, message=message, answer=self._challenge_master.start_info,
+                    user=internal_user,
+                    message=message,
+                    answers=[self._challenge_master.start_info, self._challenge_master.first_answer],
                 )
 
         def _get_api_handler_by_callback(query_data: str) -> FunctionType:
@@ -109,15 +111,16 @@ class Bot:
         self,
         user: ContextUser,
         message: telebot.types.Message,
-        answer: str,
+        answers: List[str],
         markup: Optional[telebot.types.InlineKeyboardMarkup] = None,
     ) -> None:
-        self._bot.send_message(
-            chat_id=message.chat.id, text=answer, parse_mode='html', reply_markup=markup,
-        )
-        logger.info(
-            'Chat ID %s with %s: [user] %s -> [bot] %s', message.chat.id, user.full_name, message.text, answer,
-        )
+        for answer in answers:
+            self._bot.send_message(
+                chat_id=message.chat.id, text=answer, parse_mode='html', reply_markup=markup,
+            )
+            logger.info(
+                'Chat ID %s with %s: [user] %s -> [bot] %s', message.chat.id, user.full_name, message.text, answer,
+            )
 
     def _get_chitchat_answer(self, user: ContextUser, message: telebot.types.Message) -> str:
         try:
@@ -131,22 +134,21 @@ class Bot:
 
     def _resolve_and_reply(self, user: ContextUser, message: telebot.types.Message) -> None:
         challenge_master_answer = self._challenge_master.get_answer_result(user=user, message=message)
+        replies: List[str] = []
         if isinstance(challenge_master_answer, CorrectAnswerResult):
-            bot_answer = challenge_master_answer.reply
+            replies.append(challenge_master_answer.reply)
         else:
-            bot_answer = self._get_chitchat_answer(user=user, message=message)
-        self._send_answer(user=user, message=message, answer=bot_answer)
+            replies.append(self._get_chitchat_answer(user=user, message=message))
         if challenge_master_answer.post_reply is not None:
-            self._send_answer(user=user, message=message, answer=challenge_master_answer.post_reply)
+            replies.append(challenge_master_answer.post_reply)
+        self._send_answer(user=user, message=message, answers=replies)
 
     def _reply_to_unknown_user(self, message: telebot.types.Message) -> None:
         unknown_user = self._make_unknown_user(message.from_user)
         chitchat_answer = self._get_chitchat_answer(user=unknown_user, message=message)
-        if chitchat_answer != self._info_settings.empty_message:
-            self._send_answer(user=unknown_user, message=message, answer=chitchat_answer)
         self._send_answer(
             user=unknown_user,
             message=message,
-            answer=self._info_settings.unknown_info,
+            answers=[chitchat_answer, self._info_settings.unknown_info],
             markup=self._interface_maker.help_markup,
         )

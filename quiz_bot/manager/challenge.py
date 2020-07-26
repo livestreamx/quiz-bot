@@ -97,3 +97,11 @@ class ChallengeMaster:
             challenge_name=self._current_challenge.info.name,
             description=self._current_challenge.info.description,
         )
+
+    @property
+    def first_answer(self) -> str:
+        if self._current_challenge is None:
+            raise RuntimeError("Challenge should be started before getting the first answer!")
+        return self._settings.get_next_answer_notification(
+            question=self._current_challenge.info.questions[0], question_num=1,
+        )

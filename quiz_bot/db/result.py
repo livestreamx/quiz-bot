@@ -16,14 +16,6 @@ def _get_finish_condition(finished: bool) -> Any:
 
 
 class ResultQuery(so.Query):
-    def get_by_ids(self, user_id: int, challenge_id: int, phase: int) -> Result:
-        return cast(
-            Result,
-            self.session.query(Result)
-            .filter(Result.user_id == user_id, Result.challenge_id == challenge_id, Result.phase == phase)
-            .one(),
-        )
-
     def last_for_user(self, user_id: int) -> Optional[Result]:
         return cast(
             Optional[Result],

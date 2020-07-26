@@ -1,9 +1,16 @@
-from collections import Sequence
+from typing import Sequence
 
 import telebot
 from quiz_bot.manager.objects import CheckedResult
 from quiz_bot.settings import ChallengeSettings
-from quiz_bot.storage import ContextResult, ContextUser, CurrentChallenge, IResultStorage
+from quiz_bot.storage import (
+    ContextChallenge,
+    ContextResult,
+    ContextUser,
+    CurrentChallenge,
+    IResultStorage,
+    NoResultFoundError,
+)
 from quiz_bot.utils import get_now
 
 
@@ -20,10 +27,17 @@ class ResultChecker:
     def _resolve_challenge_finish(challenge: CurrentChallenge, results: Sequence[ContextResult]) -> bool:
         return bool(len(results) == challenge.data.winner_amount)
 
+    def _get_actual_result(self, user: ContextUser, challenge: ContextChallenge) -> ContextResult:
+        try:
+            return self._result_storage.get_last_result(user=user)
+        except NoResultFoundError:
+            self._result_storage.create_result(user=user, challenge=challenge, phase=1)
+            return self._result_storage.get_last_result(user=user)
+
     def check_answer(
         self, user: ContextUser, current_challenge: CurrentChallenge, message: telebot.types.Message
     ) -> CheckedResult:
-        current_result = self._result_storage.get_last_result(user=user)
+        current_result = self._get_actual_result(user=user, challenge=current_challenge.data)
         expectation = current_challenge.info.answers[current_result.phase]
         if not self._match(answer=message.text, expectation=expectation):
             return CheckedResult(correct=False, challenge_finished=False)
