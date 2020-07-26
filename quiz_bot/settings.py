@@ -1,6 +1,7 @@
 import logging
 import socket
 from datetime import datetime
+from random import choice
 from typing import Dict, List, Optional, Sequence
 
 from pydantic import BaseSettings, validator
@@ -24,9 +25,10 @@ class LoggingSettings(BaseSettings):
         logging.basicConfig(level=self.log_level)
 
 
-class ChitchatClientSettings(BaseSettings):
+class ChitchatSettings(BaseSettings):
     url: URL
     read_timeout: int = 10
+    filter_phrases: List[str] = ["совет дня", "вопрос дня", "давай экономить"]
 
     @validator('url', pre=True)
     def make_url(cls, v: Optional[str]) -> URL:
@@ -48,10 +50,10 @@ class RemoteClientSettings(BaseSettings):
 class InfoSettings(BaseSettings):
     empty_message: str = "Ответа нет " + r'¯\_(ツ)_/¯'
     greetings: str = (
-        "Я T-Quiz Bot. @livestream_x создал меня для того, чтобы я выполнял функцию ведущего для проведения "
+        "Мое имя - T-Quiz Bot. @livestream_x создал меня для того, чтобы я выполнял функцию ведущего для проведения "
         "викторин. Чтобы начать свой путь к вершине победы, нажми на кнопку старта."
     )
-    unknown_info: str = "А еще могу рассказать, что я за бот такой. Нажми на кнопку помощи."
+    unknown_info: str = "Если хочешь узнать, что я за бот такой - нажми на кнопку помощи."
 
 
 class ChallengeSettings(BaseSettings):
@@ -62,20 +64,36 @@ class ChallengeSettings(BaseSettings):
     winner_notification: str = "Мои поздравления - вы стали победителем в испытании {name}!"
     progress_notification: str = "В испытании '{name}' - победитель @{nick_name} ({timestamp})."
 
-    correct_answer_notification: str = "Верно."
-    incorrect_answer_notification: str = "Нет, ответ неправильный."  # не используется
+    correct_answer_notifications: List[str] = ["Верно.", "Молодец!", "Так держать!", "И, правда, так."]
+    incorrect_answer_notifications: List[str] = [
+        "Неверно",
+        "И, нет, ответ неправильный.",
+        "И в этот раз не получилось попасть в ответ.",
+        "..В общем, не правильно 😔",
+    ]
     next_answer_notification: str = "Вопрос #{number}: {question}?"
 
     end_info: str = "Итоги викторины:\n{results}\n\nВикторина завершена, спасибо за участие!"
     results_row: str = "Испытание #{number} '{name}': "
     post_end_info: str = "Викторина завершена, спасибо за участие!"
 
+    @property
+    def random_correct_answer_notification(self) -> str:
+        return choice(self.correct_answer_notifications)
+
+    @property
+    def random_incorrect_answer_notification(self) -> str:
+        return choice(self.incorrect_answer_notifications)
+
     def get_challenge_by_name(self, name: str) -> ChallengeInfo:
         for challenge in self.challenges:
             if challenge.name != name:
                 continue
             return challenge
-        raise UnexpectedChallengeNameError(f"'{name}' not found in challenges: {[x.name for x in self.challenges]}")
+        raise UnexpectedChallengeNameError(
+            f"'{name}' not found in challenges: {[x.name for x in self.challenges]}"
+            "If you want to change challenges - please, clear database and start application again."
+        )
 
     def get_start_notification(self, challenge_num: int, challenge_name: str, description: str) -> str:
         return self.start_notification.format(number=challenge_num, name=challenge_name, description=description)
@@ -92,7 +110,7 @@ class ChallengeSettings(BaseSettings):
         )
 
     def get_next_answer_notification(self, question: str, question_num: int) -> str:
-        return self.next_answer_notification.format(question=question, question_num=question_num)
+        return self.next_answer_notification.format(question=question, number=question_num)
 
     def get_challenge_info(self, challenges: Sequence[ChallengeInfo], winners_dict: Dict[int, str]) -> str:
         results = ""

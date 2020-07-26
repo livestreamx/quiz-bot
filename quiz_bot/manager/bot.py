@@ -115,8 +115,12 @@ class Bot:
         markup: Optional[telebot.types.InlineKeyboardMarkup] = None,
     ) -> None:
         for answer in answers:
+            markup_to_send = None
+            if answer == answers[-1]:
+                markup_to_send = markup
+
             self._bot.send_message(
-                chat_id=message.chat.id, text=answer, parse_mode='html', reply_markup=markup,
+                chat_id=message.chat.id, text=answer, parse_mode='html', reply_markup=markup_to_send,
             )
             logger.info(
                 'Chat ID %s with %s: [user] %s -> [bot] %s', message.chat.id, user.full_name, message.text, answer,
@@ -127,6 +131,8 @@ class Bot:
             response = self._chitchat_client.make_request(
                 data=ChitChatRequest(text=message.text, user_id=user.chitchat_id)
             )
+            if response.prewritten:
+                return self._info_settings.empty_message
             return response.text
         except requests.RequestException:
             logger.exception("Error while making request to chitchat!")

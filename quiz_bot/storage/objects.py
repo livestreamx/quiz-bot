@@ -12,6 +12,12 @@ class ChallengeInfo(BaseModel):
     answers: List[str]
     max_winners: conint(ge=1) = 1  # type: ignore
 
+    def get_question(self, number: int) -> str:
+        return self.questions[number - 1]
+
+    def get_answer(self, number: int) -> str:
+        return self.answers[number - 1]
+
     @root_validator
     def validate_questions_and_answers(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         questions = values.get('questions')

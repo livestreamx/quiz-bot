@@ -8,7 +8,7 @@ from quiz_bot.manager import Bot, ChallengeMaster, ChitchatClient, InterfaceMake
 from quiz_bot.manager.checker import ResultChecker
 from quiz_bot.settings import (
     ChallengeSettings,
-    ChitchatClientSettings,
+    ChitchatSettings,
     DataBaseSettings,
     InfoSettings,
     LoggingSettings,
@@ -34,7 +34,7 @@ def start(challenge_settings_file: Optional[io.StringIO]) -> None:
     challenge_settings = _get_challenge_settings(challenge_settings_file)
     bot = Bot(
         user_storage=UserStorage(),
-        chitchat_client=ChitchatClient(ChitchatClientSettings()),
+        chitchat_client=ChitchatClient(ChitchatSettings()),
         logging_settings=logging_settings,
         remote_client_settings=RemoteClientSettings(),
         info_settings=InfoSettings(),

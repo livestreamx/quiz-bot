@@ -66,12 +66,12 @@ class ChallengeMaster:
             user=user, current_challenge=self._current_challenge, message=message
         )
         if not checked_result.correct:
-            return BaseAnswerResult()
+            return BaseAnswerResult(post_reply=self._settings.random_incorrect_answer_notification)
 
         if checked_result.challenge_finished:
             self.start_next_challenge()
             return CorrectAnswerResult(
-                reply=self._settings.correct_answer_notification,
+                reply=self._settings.random_correct_answer_notification,
                 post_reply=self._settings.get_finish_notification(
                     challenge_name=self._current_challenge.info.name, challenge_num=self._current_challenge.number
                 ),
@@ -80,9 +80,9 @@ class ChallengeMaster:
         if checked_result.next_phase is None:
             raise ValueError("Correct result without challenge finish should have next phase!")
         return CorrectAnswerResult(
-            reply=self._settings.correct_answer_notification,
+            reply=self._settings.random_correct_answer_notification,
             post_reply=self._settings.get_next_answer_notification(
-                question=self._current_challenge.info.questions[checked_result.next_phase],
+                question=self._current_challenge.info.get_question(checked_result.next_phase),
                 question_num=checked_result.next_phase,
             ),
         )
@@ -102,6 +102,7 @@ class ChallengeMaster:
     def first_answer(self) -> str:
         if self._current_challenge is None:
             raise RuntimeError("Challenge should be started before getting the first answer!")
+        question_num = 1
         return self._settings.get_next_answer_notification(
-            question=self._current_challenge.info.questions[0], question_num=1,
+            question=self._current_challenge.info.get_question(question_num), question_num=question_num,
         )
