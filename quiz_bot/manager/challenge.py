@@ -88,11 +88,15 @@ class ChallengeMaster:
         if checked_result.challenge_finished:
             previous_challenge = deepcopy(self._current_challenge)
             self.start_next_challenge()
+            next_challenge_question = self.start_challenge_for_user(user)
+
+            post_reply = None
+            if isinstance(next_challenge_question, CorrectAnswerResult):
+                post_reply = next_challenge_question.reply
+
             return CorrectAnswerResult(
                 reply=self._settings.get_winner_notification(challenge_name=previous_challenge.info.name),
-                post_reply=self._settings.get_finish_notification(
-                    challenge_name=previous_challenge.info.name, challenge_num=previous_challenge.number
-                ),
+                post_reply=post_reply,
             )
 
         if checked_result.next_phase is None:
