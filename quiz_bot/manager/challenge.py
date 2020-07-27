@@ -12,6 +12,7 @@ from quiz_bot.storage import (
     CorrectAnswerResult,
     CurrentChallenge,
     IChallengeStorage,
+    NoResultFoundError,
     StopChallengeIteration,
 )
 
@@ -57,14 +58,30 @@ class ChallengeMaster:
             logger.warning("Quiz is finished - active challenge was not found!")
             self._current_challenge = None
 
+    def start_challenge_for_user(self, user: ContextUser) -> BaseAnswerResult:
+        if self._current_challenge is None:
+            logger.warning("Try to start challenge for User @%s result when challenge is not running!", user.nick_name)
+            return BaseAnswerResult()
+        result = self._result_checker.prepare_user_result(user=user, challenge=self._current_challenge.data)
+        logger.warning("Started challenge for user @%s", user.nick_name)
+        return CorrectAnswerResult(
+            reply=self._settings.get_next_answer_notification(
+                question=self._current_challenge.info.get_question(result.phase), question_num=result.phase,
+            )
+        )
+
     def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> BaseAnswerResult:
         if self._current_challenge is None:
-            logger.error("Try to get answer result when challenge is not running!")
+            logger.warning("Try to get answer result when challenge is not running!")
             return BaseAnswerResult()
 
-        checked_result = self._result_checker.check_answer(
-            user=user, current_challenge=self._current_challenge, message=message
-        )
+        try:
+            checked_result = self._result_checker.check_answer(
+                user=user, current_challenge=self._current_challenge, message=message
+            )
+        except NoResultFoundError:
+            logger.info("Not found any Result for User @%s. Maybe, challenge not started yet for him?", user.nick_name)
+            return BaseAnswerResult()
         if not checked_result.correct:
             return BaseAnswerResult(post_reply=self._settings.random_incorrect_answer_notification)
 
@@ -96,14 +113,5 @@ class ChallengeMaster:
         return self._settings.get_start_notification(
             challenge_num=self._current_challenge.number,
             challenge_name=self._current_challenge.info.name,
-            description=f"{self._current_challenge.info.description}\n\n{self._first_answer}",
-        )
-
-    @property
-    def _first_answer(self) -> str:
-        if self._current_challenge is None:
-            raise RuntimeError("Challenge should be started before getting the first answer!")
-        question_num = 1
-        return self._settings.get_next_answer_notification(
-            question=self._current_challenge.info.get_question(question_num), question_num=question_num,
+            description=f"{self._current_challenge.info.description}",
         )

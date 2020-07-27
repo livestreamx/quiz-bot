@@ -24,7 +24,7 @@ class IResultStorage(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_last_result(self, user: ContextUser) -> ContextResult:
+    def get_last_result(self, user: ContextUser, challenge: ContextChallenge) -> ContextResult:
         pass
 
     @abc.abstractmethod
@@ -45,9 +45,9 @@ class ResultStorage(IResultStorage):
             db_result = session.query(db.Result).filter(db.Result.id == result.id).one()
             db_result.finished_at = finish_time
 
-    def get_last_result(self, user: ContextUser) -> ContextResult:
+    def get_last_result(self, user: ContextUser, challenge: ContextChallenge) -> ContextResult:
         with db.create_session() as session:
-            result = session.query(db.Result).last_for_user(user_id=user.id)
+            result = session.query(db.Result).last_for_user(user_id=user.id, challenge_id=challenge.id)
             if result is None:
                 raise NoResultFoundError(f"Not found any Result for User={user}")
             return cast(ContextResult, ContextResult.from_orm(result))

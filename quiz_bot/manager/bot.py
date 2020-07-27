@@ -67,10 +67,16 @@ class Bot:
         def start_handler(message: telebot.types.Message) -> None:
             logger.info('Got %s message from chat #%s', ApiCommand.START.name, message.chat.id)
             with self._locks[message.chat.id]:
-                internal_user = self._user_storage.get_or_create_user(user=message.from_user)
-                self._send_answer(
-                    user=internal_user, message=message, answers=[self._challenge_master.start_info],
-                )
+                internal_user = self._user_storage.get_or_create_user(message.from_user)
+                first_answer = self._challenge_master.start_challenge_for_user(internal_user)
+
+                replies: List[str] = []
+                if isinstance(first_answer, CorrectAnswerResult):
+                    replies.extend([self._challenge_master.start_info, first_answer.reply])
+                else:
+                    chitchat_answer = self._get_chitchat_answer(user=internal_user, message=message)
+                    replies.append(chitchat_answer)
+                self._send_answer(user=internal_user, message=message, answers=replies)
 
         def _get_api_handler_by_callback(query_data: str) -> FunctionType:
             if query_data == ApiCommand.HELP.as_url:
@@ -134,6 +140,7 @@ class Bot:
                 data=ChitChatRequest(text=message.text, user_id=user.chitchat_id)
             )
             if response.prewritten:
+                logger.info("Detected chitchat prewritten, skip text.")
                 return self._info_settings.empty_message
             return response.text
         except requests.RequestException:

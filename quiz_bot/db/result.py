@@ -16,12 +16,12 @@ def _get_finish_condition(finished: bool) -> Any:
 
 
 class ResultQuery(so.Query):
-    def last_for_user(self, user_id: int) -> Optional[Result]:
+    def last_for_user(self, user_id: int, challenge_id: int) -> Optional[Result]:
         return cast(
             Optional[Result],
             self.session.query(Result)
-            .filter(Result.user_id == user_id)
-            .order_by(Result.challenge_id.desc(), Result.phase.desc())
+            .filter(Result.user_id == user_id, Result.challenge_id == challenge_id)
+            .order_by(Result.phase.desc())
             .first(),
         )
 
