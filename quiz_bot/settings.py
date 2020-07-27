@@ -31,12 +31,16 @@ class ChitchatSettings(BaseSettings):
     filter_phrases: List[str] = [
         "совет дня",
         "вопрос дня",
-        "давай экономить",
         "деньги",
         "деньгах",
-        "Олег",
+        "олег",
         "позвать человека",
         "сделает вашу жизнь проще",
+        "учусь",
+        "скажите",
+        "не знаю",
+        "спросите",
+        "отвечать на любые вопросы",
     ]
 
     @validator('url', pre=True)
@@ -57,12 +61,23 @@ class RemoteClientSettings(BaseSettings):
 
 
 class InfoSettings(BaseSettings):
-    empty_message: str = "Нечего сказать " + r'¯\_(ツ)_/¯'
+    empty_messages: List[str] = [
+        "Нечего сказать " + r'¯\_(ツ)_/¯',
+        "Действительно так думаете?",
+        "Может быть, в другой раз повезет.",
+        "Хмм...",
+        "Это, конечно, интересно.",
+        "Интересно.",
+    ]
     greetings: str = (
         "Мое имя - T-Quiz Bot. @livestream_x создал меня для того, чтобы я выполнял функцию ведущего для проведения "
         "викторин. Чтобы начать свой путь к вершине победы, нажми на кнопку старта."
     )
     unknown_info: str = "Если хочешь узнать, что я за бот такой - нажми на кнопку помощи."
+
+    @property
+    def random_empty_message(self) -> str:
+        return choice(self.empty_messages)
 
 
 class ChallengeSettings(BaseSettings):

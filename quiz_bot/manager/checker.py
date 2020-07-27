@@ -18,7 +18,7 @@ class AnswerMatchingMixin:
 
     @classmethod
     def _match(cls, answer: str, expectation: str) -> bool:
-        return bool(re.match(rf"({cls._prepare_for_matching(expectation)})+", cls._prepare_for_matching(answer)))
+        return bool(re.search(rf"({cls._prepare_for_matching(expectation)})+", cls._prepare_for_matching(answer)))
 
 
 class ResultChecker(AnswerMatchingMixin):

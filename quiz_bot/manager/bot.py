@@ -10,7 +10,7 @@ import telebot
 import tenacity
 from quiz_bot.manager.challenge import ChallengeMaster
 from quiz_bot.manager.chitchat import ChitchatClient, ChitChatRequest
-from quiz_bot.manager.errors import NotSupportedCallbackError
+from quiz_bot.manager.errors import ChitchatPrewrittenDetectedError, NotSupportedCallbackError
 from quiz_bot.manager.interface import InterfaceMaker
 from quiz_bot.manager.objects import ApiCommand, ContentType
 from quiz_bot.settings import InfoSettings, LoggingSettings, RemoteClientSettings
@@ -139,13 +139,13 @@ class Bot:
             response = self._chitchat_client.make_request(
                 data=ChitChatRequest(text=message.text, user_id=user.chitchat_id)
             )
-            if response.prewritten:
-                logger.info("Detected chitchat prewritten, skip text.")
-                return self._info_settings.empty_message
             return response.text
         except requests.RequestException:
             logger.exception("Error while making request to chitchat!")
-            return self._info_settings.empty_message
+            return self._info_settings.random_empty_message
+        except ChitchatPrewrittenDetectedError as e:
+            logger.info(e)  # noqa: G200
+            return self._info_settings.random_empty_message
 
     def _resolve_and_reply(self, user: ContextUser, message: telebot.types.Message) -> None:
         challenge_master_answer = self._challenge_master.get_answer_result(user=user, message=message)
