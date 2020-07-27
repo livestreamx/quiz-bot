@@ -71,7 +71,7 @@ class ChallengeSettings(BaseSettings):
         "И в этот раз не получилось попасть в ответ.",
         "...в общем, не правильно 😔",
     ]
-    next_answer_notification: str = "Вопрос #{number}: {question}?"
+    next_answer_notification: str = "Вопрос #{number}: {question}"
 
     end_info: str = "Итоги викторины:\n{results}\n\nВикторина завершена, спасибо за участие!"
     results_row: str = "Испытание #{number} '{name}': "
