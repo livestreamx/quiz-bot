@@ -17,7 +17,7 @@ class AnswerMatchingMixin:
 
     @classmethod
     def _match(cls, answer: str, expectation: str) -> bool:
-        return cls._prepare_for_matching(answer) == cls._prepare_for_matching(expectation)
+        return cls._prepare_for_matching(expectation) in cls._prepare_for_matching(answer)
 
 
 class ResultChecker(AnswerMatchingMixin):
