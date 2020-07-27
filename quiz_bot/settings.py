@@ -139,7 +139,7 @@ class ChallengeSettings(BaseSettings):
 
 
 class DataBaseSettings(BaseSettings):
-    url: SAURL = 'postgresql://postgres:postgres@localhost/quiz-bot'
+    url: SAURL = 'postgresql://postgres:postgres@localhost:6432/quiz-bot'
     pool_recycle: int = 500
     pool_size: int = 6
     echo: bool = False
