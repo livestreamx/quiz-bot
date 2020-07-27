@@ -4,7 +4,8 @@ from typing import Optional
 
 import click
 from quiz_bot.cli.group import app
-from quiz_bot.manager import Bot, ChallengeMaster, ChitchatClient, InterfaceMaker
+from quiz_bot.clients import ChitchatClient
+from quiz_bot.manager import Bot, ChallengeMaster, InterfaceMaker
 from quiz_bot.manager.checker import ResultChecker
 from quiz_bot.settings import (
     ChallengeSettings,

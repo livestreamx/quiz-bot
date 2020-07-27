@@ -1,0 +1,2 @@
+class RemoteBotClient:
+    pass

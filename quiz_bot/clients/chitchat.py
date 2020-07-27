@@ -4,10 +4,13 @@ import re
 import requests
 import tenacity
 from pydantic import BaseModel
-from quiz_bot.manager.errors import ChitchatPrewrittenDetectedError
 from quiz_bot.settings import ChitchatSettings
 
 logger = logging.getLogger(__name__)
+
+
+class ChitchatPrewrittenDetectedError(RuntimeError):
+    pass
 
 
 class ChitChatRequest(BaseModel):

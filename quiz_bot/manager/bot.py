@@ -8,9 +8,9 @@ from uuid import uuid4
 import requests
 import telebot
 import tenacity
+from quiz_bot.clients import ChitchatClient, ChitchatPrewrittenDetectedError, ChitChatRequest
 from quiz_bot.manager.challenge import ChallengeMaster
-from quiz_bot.manager.chitchat import ChitchatClient, ChitChatRequest
-from quiz_bot.manager.errors import ChitchatPrewrittenDetectedError, NotSupportedCallbackError
+from quiz_bot.manager.errors import NotSupportedCallbackError
 from quiz_bot.manager.interface import InterfaceMaker
 from quiz_bot.manager.objects import ApiCommand, ContentType
 from quiz_bot.settings import InfoSettings, LoggingSettings, RemoteClientSettings
