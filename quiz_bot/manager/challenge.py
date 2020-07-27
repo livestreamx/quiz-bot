@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 from typing import Optional
 
 import telebot
@@ -68,11 +69,12 @@ class ChallengeMaster:
             return BaseAnswerResult(post_reply=self._settings.random_incorrect_answer_notification)
 
         if checked_result.challenge_finished:
+            previous_challenge = deepcopy(self._current_challenge)
             self.start_next_challenge()
             return CorrectAnswerResult(
-                reply=self._settings.random_correct_answer_notification,
+                reply=self._settings.get_winner_notification(challenge_name=previous_challenge.info.name),
                 post_reply=self._settings.get_finish_notification(
-                    challenge_name=self._current_challenge.info.name, challenge_num=self._current_challenge.number
+                    challenge_name=previous_challenge.info.name, challenge_num=previous_challenge.number
                 ),
             )
 

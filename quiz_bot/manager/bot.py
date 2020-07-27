@@ -120,9 +120,13 @@ class Bot:
             self._bot.send_message(
                 chat_id=message.chat.id, text=answer, parse_mode='html', reply_markup=markup_to_send,
             )
-            logger.info(
-                'Chat ID %s with %s: [user] %s -> [bot] %s', message.chat.id, user.full_name, message.text, answer,
-            )
+        logger.info(
+            'Chat ID %s with %s: [user] %s -> [bot] %s',
+            message.chat.id,
+            user.full_name,
+            message.text,
+            f"[{'; '.join(answers)}]",
+        )
 
     def _get_chitchat_answer(self, user: ContextUser, message: telebot.types.Message) -> str:
         try:

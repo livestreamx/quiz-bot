@@ -48,7 +48,7 @@ class RemoteClientSettings(BaseSettings):
 
 
 class InfoSettings(BaseSettings):
-    empty_message: str = "Ответа нет " + r'¯\_(ツ)_/¯'
+    empty_message: str = "Нечего сказать " + r'¯\_(ツ)_/¯'
     greetings: str = (
         "Мое имя - T-Quiz Bot. @livestream_x создал меня для того, чтобы я выполнял функцию ведущего для проведения "
         "викторин. Чтобы начать свой путь к вершине победы, нажми на кнопку старта."
@@ -61,7 +61,7 @@ class ChallengeSettings(BaseSettings):
 
     start_notification: str = "Начинается испытание #{number} '{name}'. {description}"
     finish_notification: str = "Завершено испытание #{number} '{name}'."
-    winner_notification: str = "Мои поздравления - вы стали победителем в испытании {name}!"
+    winner_notification: str = "Мои поздравления - вы стали победителем в испытании '{name}'!"
     progress_notification: str = "В испытании '{name}' - победитель @{nick_name} ({timestamp})."
 
     correct_answer_notifications: List[str] = ["Верно.", "Молодец!", "Так держать!", "И, правда, так."]

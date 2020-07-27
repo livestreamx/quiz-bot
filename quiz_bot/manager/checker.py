@@ -17,14 +17,20 @@ from quiz_bot.utils import get_now
 logger = logging.getLogger(__name__)
 
 
-class ResultChecker:
+class AnswerMatchingMixin:
+    @staticmethod
+    def _prepare_for_matching(text: str) -> str:
+        return text.strip().lower()
+
+    @classmethod
+    def _match(cls, answer: str, expectation: str) -> bool:
+        return cls._prepare_for_matching(answer) == cls._prepare_for_matching(expectation)
+
+
+class ResultChecker(AnswerMatchingMixin):
     def __init__(self, result_storage: IResultStorage, challenge_settings: ChallengeSettings):
         self._result_storage = result_storage
         self._challenge_settings = challenge_settings
-
-    @staticmethod
-    def _match(answer: str, expectation: str) -> bool:
-        return answer.lower() == expectation.lower()  # TODO: сделать умное сравнение
 
     @staticmethod
     def _resolve_challenge_finish(challenge: CurrentChallenge, results: Sequence[ContextResult]) -> bool:
