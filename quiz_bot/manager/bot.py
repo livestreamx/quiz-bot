@@ -97,7 +97,7 @@ class Bot:
             with self._locks[message.chat.id]:
                 internal_user = self._user_storage.get_user(message.from_user)
                 if internal_user is None:
-                    logger.warning("Gotten message from unknown user: %s!", message)
+                    logger.warning("Gotten message '%s' from unknown user: %s!", message.text, message.from_user)
                     self._reply_to_unknown_user(message=message)
                     return
                 self._resolve_and_reply(user=internal_user, message=message)
