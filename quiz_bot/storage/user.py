@@ -19,6 +19,11 @@ class IUserStorage(abc.ABC):
     def get_user(self, user: telebot.types.User) -> Optional[ContextUser]:
         pass
 
+    @staticmethod
+    @abc.abstractmethod
+    def make_unknown_context_user(user: telebot.types.User) -> ContextUser:
+        pass
+
 
 class UserStorage(IUserStorage):
     def get_user(self, user: telebot.types.User) -> Optional[ContextUser]:
@@ -49,3 +54,7 @@ class UserStorage(IUserStorage):
         if internal_user is not None:
             return cast(ContextUser, context_user)
         raise RuntimeError("User has not been saved into database!")
+
+    @staticmethod
+    def make_unknown_context_user(user: telebot.types.User) -> ContextUser:
+        return ContextUser(id=0, external_id=user.id, chitchat_id=str(uuid4()), first_name="<unknown>")

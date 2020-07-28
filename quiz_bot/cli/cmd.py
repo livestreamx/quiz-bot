@@ -4,8 +4,8 @@ from typing import Optional
 
 import click
 from quiz_bot.cli.group import app
-from quiz_bot.clients import ChitchatClient
-from quiz_bot.manager import Bot, ChallengeMaster, InterfaceMaker
+from quiz_bot.clients import ChitchatClient, RemoteBotClient
+from quiz_bot.manager import ChallengeMaster, InterfaceMaker, QuizBot
 from quiz_bot.manager.checker import ResultChecker
 from quiz_bot.settings import (
     ChallengeSettings,
@@ -33,11 +33,11 @@ def start(challenge_settings_file: Optional[io.StringIO]) -> None:
     logging_settings.setup_logging()
     DataBaseSettings().setup_db()
     challenge_settings = _get_challenge_settings(challenge_settings_file)
-    bot = Bot(
+    bot = QuizBot(
         user_storage=UserStorage(),
         chitchat_client=ChitchatClient(ChitchatSettings()),
+        remote_client=RemoteBotClient(RemoteClientSettings()),
         logging_settings=logging_settings,
-        remote_client_settings=RemoteClientSettings(),
         info_settings=InfoSettings(),
         interface_maker=InterfaceMaker(),
         challenge_master=ChallengeMaster(
