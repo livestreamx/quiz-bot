@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class RemoteBotClient:
     def __init__(self, settings: RemoteClientSettings) -> None:
         self._locks: DefaultDict[Any, threading.Lock] = collections.defaultdict(threading.Lock)
-        self._telebot = telebot.TeleBot(settings.api_key)
+        self._telebot = telebot.TeleBot(token=settings.api_key)
 
     @property
     def bot(self) -> telebot.TeleBot:
