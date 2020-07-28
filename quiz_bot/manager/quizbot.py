@@ -38,7 +38,7 @@ class QuizBot:
         self._register_handlers(remote_client.bot)
 
     def run(self) -> None:
-        logger.info('QuizBot is starting up...')
+        logger.info('QuizBot is started.')
         self._remote_client.run_loop()
 
     def _register_handlers(self, bot: telebot.TeleBot) -> None:  # noqa: C901
