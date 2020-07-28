@@ -4,7 +4,7 @@ from datetime import datetime
 from random import choice
 from typing import Dict, List, Optional, Sequence
 
-from pydantic import BaseSettings, validator
+from pydantic import BaseSettings, conint, validator
 from quiz_bot.storage import ChallengeInfo
 from quiz_bot.storage.errors import NotEqualChallengesAmount, UnexpectedChallengeNameError
 from sqlalchemy.engine import Engine, engine_from_config
@@ -60,7 +60,8 @@ class ChitchatSettings(BaseSettings):
 
 
 class RemoteClientSettings(BaseSettings):
-    api_key: str
+    token: str
+    threads_num: conint(ge=1) = 2  # type: ignore
 
     class Config:
         env_prefix = 'REMOTE_'
