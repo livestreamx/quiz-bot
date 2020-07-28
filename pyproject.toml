@@ -3,7 +3,7 @@ name = "quiz-bot"
 version = "0.1.0"
 description = "Quiz Bot"
 authors = [
-    "V. Mukhamatnurov <v.mukhamatnurov@tinkoff.ru>",
+    "livestreamx <livestreamepidemz@yandex.ru>",
 ]
 repository = "https://stash.tcsbank.ru/users/v.mukhamatnurov/repos/quiz-bot"
 packages = [
