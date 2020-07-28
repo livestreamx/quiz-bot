@@ -5,14 +5,10 @@ description = "Quiz Bot"
 authors = [
     "livestreamx <livestreamepidemz@yandex.ru>",
 ]
-repository = "https://stash.tcsbank.ru/users/v.mukhamatnurov/repos/quiz-bot"
+repository = "https://github.com/livestreamx/quiz-bot"
 packages = [
     { include = "./quiz_bot" },
 ]
-
-[[tool.poetry.source]]
-name = "internal"
-url = "https://registry.tcsbank.ru/repository/pypi-all/simple"
 
 [tool.poetry.scripts]
 app = 'quiz_bot.cli.group:app'
