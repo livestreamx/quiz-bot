@@ -26,8 +26,9 @@ class LoggingSettings(BaseSettings):
 
 
 class ChitchatSettings(BaseSettings):
-    url: URL
-    read_timeout: int = 10
+    url: Optional[URL]
+    read_timeout: int = 3
+
     filter_phrases: List[str] = [
         "совет дня",
         "дать совет",
@@ -50,10 +51,10 @@ class ChitchatSettings(BaseSettings):
     ]
 
     @validator('url', pre=True)
-    def make_url(cls, v: Optional[str]) -> URL:
-        if isinstance(v, str):
+    def make_url(cls, v: Optional[str]) -> Optional[URL]:
+        if v is not None and isinstance(v, str):
             return URL(v)
-        raise ValueError
+        return v
 
     class Config:
         env_prefix = 'CHITCHAT_'

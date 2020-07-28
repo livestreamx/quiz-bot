@@ -96,15 +96,16 @@ class QuizBot:
         logger.info("QuizBot API handlers registered.")
 
     def _get_chitchat_answer(self, user: ContextUser, message: telebot.types.Message) -> str:
-        try:
-            response = self._chitchat_client.make_request(
-                data=ChitChatRequest(text=message.text, user_id=user.chitchat_id)
-            )
-            return response.text
-        except requests.RequestException:
-            logger.exception("Error while making request to chitchat!")
-        except ChitchatPrewrittenDetectedError as e:
-            logger.info(e)  # noqa: G200
+        if self._chitchat_client.enabled:
+            try:
+                response = self._chitchat_client.make_request(
+                    data=ChitChatRequest(text=message.text, user_id=user.chitchat_id)
+                )
+                return response.text
+            except requests.RequestException:
+                logger.exception("Error while making request to chitchat!")
+            except ChitchatPrewrittenDetectedError as e:
+                logger.info(e)  # noqa: G200
         return self._info_settings.random_empty_message
 
     def _resolve_and_reply(self, user: ContextUser, message: telebot.types.Message) -> None:

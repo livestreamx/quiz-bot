@@ -1,5 +1,6 @@
 import logging
 import re
+from functools import cached_property
 
 import requests
 import tenacity
@@ -31,6 +32,10 @@ class ChitchatClient:
     def _detect_prewritten(self, text: str) -> bool:
         return bool(self._prewritten.search(text))
 
+    @cached_property
+    def enabled(self) -> bool:
+        return self._settings.url is not None
+
     @tenacity.retry(
         reraise=True,
         retry=tenacity.retry_if_exception_type(requests.RequestException),
@@ -39,6 +44,8 @@ class ChitchatClient:
         after=tenacity.after_log(logger, logger.level),
     )
     def make_request(self, data: ChitChatRequest) -> ChitChatResponse:
+        if self._settings.url is None:
+            raise RuntimeError("Chitchat is disabled, so should not be here!")
         response = requests.post(
             self._settings.url.human_repr(), json=data.dict(), timeout=self._settings.read_timeout,
         )
