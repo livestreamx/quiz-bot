@@ -31,8 +31,21 @@ def create_all(engine: Engine) -> None:
     click.echo('Schema successfully created')
 
 
+@click.command()
+@click.pass_obj
+def drop_all(engine: Engine) -> None:
+    from quiz_bot.db.base import metadata
+
+    click.echo('Dropping schema...')
+    for table in metadata.tables:
+        engine.execute(f'DROP TABLE IF EXISTS "{table}" CASCADE')
+    metadata.drop_all()
+    click.echo('Schema successfully dropped!')
+
+
 def db_commands(group: click.Group) -> click.Group:
     group.add_command(create_all)
+    group.add_command(drop_all)
     return group
 
 
