@@ -6,7 +6,7 @@ import click
 from quiz_bot.cli.group import app
 from quiz_bot.clients import ChitchatClient, RemoteBotClient
 from quiz_bot.manager import ChallengeMaster, InterfaceMaker, QuizBot
-from quiz_bot.manager.checker import ResultChecker
+from quiz_bot.manager.checkers.classic import ClassicResultChecker
 from quiz_bot.settings import (
     ChallengeSettings,
     ChitchatSettings,
@@ -43,7 +43,7 @@ def start(challenge_settings_file: Optional[io.StringIO]) -> None:
         challenge_master=ChallengeMaster(
             challenge_storage=ChallengeStorage(),
             settings=challenge_settings,
-            result_checker=ResultChecker(result_storage=ResultStorage(), challenge_settings=challenge_settings),
+            result_checker=ClassicResultChecker(result_storage=ResultStorage(), challenge_settings=challenge_settings),
         ),
     )
     bot.run()

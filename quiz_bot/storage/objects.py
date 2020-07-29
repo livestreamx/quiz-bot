@@ -1,8 +1,14 @@
+import enum
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, conint, root_validator
 from quiz_bot.storage.context_models import ContextChallenge
+
+
+class ChallengeType(str, enum.Enum):
+    CLASSIC = "classic"
+    SCRIPT = "script"
 
 
 class ChallengeInfo(BaseModel):
@@ -11,6 +17,7 @@ class ChallengeInfo(BaseModel):
     questions: List[str]
     answers: List[str]
     max_winners: conint(ge=1) = 1  # type: ignore
+    type: ChallengeType = ChallengeType.CLASSIC
 
     def get_question(self, number: int) -> str:
         return self.questions[number - 1]

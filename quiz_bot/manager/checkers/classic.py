@@ -3,9 +3,9 @@ import re
 from typing import Sequence
 
 import telebot
+from quiz_bot.manager.checkers.base import BaseResultChecker
 from quiz_bot.manager.objects import CheckedResult
-from quiz_bot.settings import ChallengeSettings
-from quiz_bot.storage import ContextChallenge, ContextResult, ContextUser, CurrentChallenge, IResultStorage
+from quiz_bot.storage import ContextChallenge, ContextResult, ContextUser, CurrentChallenge
 from quiz_bot.utils import get_now
 
 logger = logging.getLogger(__name__)
@@ -21,11 +21,7 @@ class AnswerMatchingMixin:
         return bool(re.search(rf"({cls._prepare_for_matching(expectation)})+", cls._prepare_for_matching(answer)))
 
 
-class ResultChecker(AnswerMatchingMixin):
-    def __init__(self, result_storage: IResultStorage, challenge_settings: ChallengeSettings):
-        self._result_storage = result_storage
-        self._challenge_settings = challenge_settings
-
+class ClassicResultChecker(AnswerMatchingMixin, BaseResultChecker):
     @staticmethod
     def _resolve_challenge_finish(challenge: CurrentChallenge, results: Sequence[ContextResult]) -> bool:
         return bool(len(results) == challenge.data.winner_amount)

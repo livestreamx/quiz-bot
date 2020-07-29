@@ -3,7 +3,7 @@ from copy import deepcopy
 from typing import Optional
 
 import telebot
-from quiz_bot.manager.checker import ResultChecker
+from quiz_bot.manager.checkers import IResultChecker
 from quiz_bot.settings import ChallengeSettings
 from quiz_bot.storage import (
     BaseAnswerResult,
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class ChallengeMaster:
     def __init__(
-        self, challenge_storage: IChallengeStorage, settings: ChallengeSettings, result_checker: ResultChecker,
+        self, challenge_storage: IChallengeStorage, settings: ChallengeSettings, result_checker: IResultChecker,
     ) -> None:
         self._challenge_storage = challenge_storage
         self._settings = settings
