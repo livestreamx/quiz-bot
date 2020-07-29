@@ -1,8 +1,9 @@
 import enum
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from functools import cached_property
+from typing import Any, Dict, List
 
-from pydantic import BaseModel, conint, root_validator
+from pydantic import BaseModel, conint, root_validator, validator
 from quiz_bot.storage.context_models import ContextChallenge
 
 
@@ -43,9 +44,16 @@ class CurrentChallenge:
     number: int
 
 
-class BaseAnswerResult(BaseModel):
-    post_reply: Optional[str] = None
+class AnswerResult(BaseModel):
+    correct: bool = False
+    replies: List[str] = []
 
+    @validator('replies')
+    def validate_replies(cls, v: List[str], values: Dict[str, Any]) -> List[str]:
+        if values.get('correct') is True and not v:
+            raise ValueError("Correct answer should contain at least one reply!")
+        return v
 
-class CorrectAnswerResult(BaseAnswerResult):
-    reply: str
+    @cached_property
+    def split_replies(self) -> bool:
+        return self.correct

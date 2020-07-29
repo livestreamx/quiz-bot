@@ -28,6 +28,12 @@ class RemoteBotClient:
     def thread_lock(self) -> DefaultDict[Any, threading.Lock]:
         return self._locks
 
+    @staticmethod
+    def _get_grouped_replies(answers: List[str], split_answers: bool) -> List[str]:
+        if split_answers:
+            return answers
+        return [" ".join(answers)]
+
     @tenacity.retry(
         reraise=True,
         retry=tenacity.retry_if_exception_type(requests.ConnectionError),
@@ -40,10 +46,11 @@ class RemoteBotClient:
         user: ContextUser,
         message: telebot.types.Message,
         answers: List[str],
+        split_answers: bool = False,
         markup: Optional[telebot.types.InlineKeyboardMarkup] = None,
     ) -> None:
-        bot_reply = " ".join(answers)
-        self._telebot.send_message(chat_id=message.chat.id, text=bot_reply, parse_mode='html', reply_markup=markup)
-        logger.info(
-            'Chat ID %s with %s: [user] %s -> [bot] %s', message.chat.id, user.full_name, message.text, bot_reply,
-        )
+        for reply in self._get_grouped_replies(answers=answers, split_answers=split_answers):
+            self._telebot.send_message(chat_id=message.chat.id, text=reply, parse_mode='html', reply_markup=markup)
+            logger.info(
+                'Chat ID %s with %s: [user] %s -> [bot] %s', message.chat.id, user.full_name, message.text, reply,
+            )

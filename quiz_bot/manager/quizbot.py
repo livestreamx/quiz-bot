@@ -1,6 +1,6 @@
 import logging
 from types import FunctionType
-from typing import List, cast
+from typing import cast
 
 import requests
 import telebot
@@ -10,7 +10,7 @@ from quiz_bot.manager.errors import NotSupportedCallbackError
 from quiz_bot.manager.interface import InterfaceMaker
 from quiz_bot.manager.objects import ApiCommand, ContentType
 from quiz_bot.settings import InfoSettings, LoggingSettings
-from quiz_bot.storage import ContextUser, CorrectAnswerResult, IUserStorage
+from quiz_bot.storage import ContextUser, IUserStorage
 
 logger = logging.getLogger(__name__)
 
@@ -61,13 +61,13 @@ class QuizBot:
                 internal_user = self._user_storage.get_or_create_user(message.from_user)
                 first_question = self._challenge_master.start_challenge_for_user(internal_user)
 
-                replies: List[str] = []
-                if isinstance(first_question, CorrectAnswerResult):
-                    replies.extend([self._challenge_master.start_info, first_question.reply])
+                if first_question.correct:
+                    replies = first_question.replies
                 else:
-                    chitchat_answer = self._get_chitchat_answer(user=internal_user, message=message)
-                    replies.append(chitchat_answer)
-                self._remote_client.send(user=internal_user, message=message, answers=replies)
+                    replies = [self._get_chitchat_answer(user=internal_user, message=message)]
+                self._remote_client.send(
+                    user=internal_user, message=message, answers=replies, split_answers=first_question.split_replies
+                )
 
         def _get_api_handler_by_callback(query_data: str) -> FunctionType:
             if query_data == ApiCommand.HELP.as_url:
@@ -110,14 +110,14 @@ class QuizBot:
 
     def _resolve_and_reply(self, user: ContextUser, message: telebot.types.Message) -> None:
         challenge_master_answer = self._challenge_master.get_answer_result(user=user, message=message)
-        replies: List[str] = []
-        if isinstance(challenge_master_answer, CorrectAnswerResult):
-            replies.append(challenge_master_answer.reply)
-        else:
-            replies.append(self._get_chitchat_answer(user=user, message=message))
-        if challenge_master_answer.post_reply is not None:
-            replies.append(challenge_master_answer.post_reply)
-        self._remote_client.send(user=user, message=message, answers=replies)
+        if not challenge_master_answer.correct:
+            challenge_master_answer.replies.insert(0, self._get_chitchat_answer(user=user, message=message))
+        self._remote_client.send(
+            user=user,
+            message=message,
+            answers=challenge_master_answer.replies,
+            split_answers=challenge_master_answer.split_replies,
+        )
 
     def _reply_to_unknown_user(self, message: telebot.types.Message) -> None:
         unknown_user = self._user_storage.make_unknown_context_user(message.from_user)

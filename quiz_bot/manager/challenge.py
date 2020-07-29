@@ -6,10 +6,9 @@ import telebot
 from quiz_bot.manager.checkers import IResultChecker
 from quiz_bot.settings import ChallengeSettings
 from quiz_bot.storage import (
-    BaseAnswerResult,
+    AnswerResult,
     ContextChallenge,
     ContextUser,
-    CorrectAnswerResult,
     CurrentChallenge,
     IChallengeStorage,
     NoResultFoundError,
@@ -58,22 +57,26 @@ class ChallengeMaster:
             logger.warning("Quiz is finished - active challenge was not found!")
             self._current_challenge = None
 
-    def start_challenge_for_user(self, user: ContextUser) -> BaseAnswerResult:
+    def start_challenge_for_user(self, user: ContextUser) -> AnswerResult:
         if self._current_challenge is None:
             logger.warning("Try to start challenge for User @%s result when challenge is not running!", user.nick_name)
-            return BaseAnswerResult()
+            return AnswerResult()
         result = self._result_checker.prepare_user_result(user=user, challenge=self._current_challenge.data)
         logger.warning("Started challenge for user @%s", user.nick_name)
-        return CorrectAnswerResult(
-            reply=self._settings.get_next_answer_notification(
-                question=self._current_challenge.info.get_question(result.phase), question_num=result.phase,
-            )
+        return AnswerResult(
+            correct=True,
+            replies=[
+                self.start_info,
+                self._settings.get_next_answer_notification(
+                    question=self._current_challenge.info.get_question(result.phase), question_num=result.phase,
+                ),
+            ],
         )
 
-    def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> BaseAnswerResult:
+    def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> AnswerResult:
         if self._current_challenge is None:
             logger.warning("Try to get answer result when challenge is not running!")
-            return BaseAnswerResult()
+            return AnswerResult()
 
         try:
             checked_result = self._result_checker.check_answer(
@@ -81,32 +84,38 @@ class ChallengeMaster:
             )
         except NoResultFoundError:
             logger.info("Not found any Result for User @%s. Maybe, challenge not started yet for him?", user.nick_name)
-            return BaseAnswerResult()
+            return AnswerResult()
         if not checked_result.correct:
-            return BaseAnswerResult(post_reply=self._settings.random_incorrect_answer_notification)
+            return AnswerResult(replies=[self._settings.random_incorrect_answer_notification])
 
         if checked_result.challenge_finished:
             previous_challenge = deepcopy(self._current_challenge)
             self.start_next_challenge()
             next_challenge_question = self.start_challenge_for_user(user)
 
-            post_reply = None
-            if isinstance(next_challenge_question, CorrectAnswerResult):
-                post_reply = next_challenge_question.reply
+            next_challenge_reply = None
+            if next_challenge_question.correct:
+                next_challenge_reply = " ".join(next_challenge_question.replies)
 
-            return CorrectAnswerResult(
-                reply=self._settings.get_winner_notification(challenge_name=previous_challenge.info.name),
-                post_reply=post_reply,
+            return AnswerResult(
+                correct=True,
+                replies=[
+                    self._settings.get_winner_notification(challenge_name=previous_challenge.info.name),
+                    next_challenge_reply,
+                ],
             )
 
         if checked_result.next_phase is None:
             raise ValueError("Correct result without challenge finish should have next phase!")
-        return CorrectAnswerResult(
-            reply=self._settings.random_correct_answer_notification,
-            post_reply=self._settings.get_next_answer_notification(
-                question=self._current_challenge.info.get_question(checked_result.next_phase),
-                question_num=checked_result.next_phase,
-            ),
+        return AnswerResult(
+            correct=True,
+            replies=[
+                self._settings.random_correct_answer_notification,
+                self._settings.get_next_answer_notification(
+                    question=self._current_challenge.info.get_question(checked_result.next_phase),
+                    question_num=checked_result.next_phase,
+                ),
+            ],
         )
 
     @property
