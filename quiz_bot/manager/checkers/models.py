@@ -2,7 +2,6 @@ from datetime import datetime
 from functools import cached_property
 from typing import Optional
 
-from pydantic.dataclasses import dataclass
 from pydantic.main import BaseModel
 from quiz_bot.storage import ContextUser
 
@@ -17,8 +16,7 @@ class CheckedResult(BaseModel):
         return self.correct is True and self.next_phase is None
 
 
-@dataclass(frozen=True)
-class WinnerResult:
+class WinnerResult(BaseModel):
     user: ContextUser
     position: int
     finished_at: datetime
