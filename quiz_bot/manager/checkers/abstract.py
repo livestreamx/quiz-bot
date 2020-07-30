@@ -2,7 +2,7 @@ import abc
 import logging
 
 import telebot
-from quiz_bot.manager.objects import CheckedResult
+from quiz_bot.manager.checkers.models import CheckedResult
 from quiz_bot.storage import ContextChallenge, ContextResult, ContextUser, CurrentChallenge
 
 logger = logging.getLogger(__name__)

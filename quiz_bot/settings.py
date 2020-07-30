@@ -5,7 +5,7 @@ from random import choice
 from typing import Dict, List, Optional, Sequence
 
 from pydantic import BaseSettings, conint, validator
-from quiz_bot.storage import ChallengeInfo
+from quiz_bot.models import ChallengeInfo
 from quiz_bot.storage.errors import NotEqualChallengesAmount, UnexpectedChallengeNameError
 from sqlalchemy.engine import Engine, engine_from_config
 from sqlalchemy.engine.url import URL as SAURL
