@@ -48,6 +48,7 @@ class ChitchatSettings(BaseSettings):
         "я в тупике",
         "уйти от ответа",
         "не знаю как",
+        "отвечу на это",
     ]
 
     @validator('url', pre=True)
