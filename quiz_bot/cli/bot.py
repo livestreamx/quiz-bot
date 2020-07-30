@@ -1,8 +1,9 @@
 import io
 import logging
-from typing import Optional
+from typing import Optional, Type
 
 import click
+from pydantic import BaseSettings
 from quiz_bot.cli.group import app
 from quiz_bot.clients import ChitchatClient, RemoteBotClient
 from quiz_bot.manager import ChallengeMaster, InterfaceMaker, QuizBot
@@ -20,22 +21,28 @@ from quiz_bot.storage import ChallengeStorage, ResultStorage, UserStorage
 logger = logging.getLogger(__name__)
 
 
-def _get_challenge_settings(challenge_settings_file: Optional[io.StringIO]) -> ChallengeSettings:
-    if challenge_settings_file is not None:
-        return ChallengeSettings.parse_raw(challenge_settings_file.read())
-    return ChallengeSettings()
+def _get_settings(file: Optional[io.StringIO], settings_type: Type[BaseSettings]) -> BaseSettings:
+    if file is not None:
+        return settings_type.parse_raw(file.read())
+    return settings_type()
 
 
 @app.command()
-@click.option('-csf', '--challenge-settings-file', type=click.File('r'))
-def start(challenge_settings_file: Optional[io.StringIO]) -> None:
+@click.option('-challenges', '--challenge-settings-file', type=click.File('r'))
+@click.option('-chitchat', '--chitchat-settings-file', type=click.File('r'))
+def start(challenge_settings_file: Optional[io.StringIO], chitchat_settings_file: Optional[io.StringIO]) -> None:
     logging_settings = LoggingSettings()
     logging_settings.setup_logging()
     DataBaseSettings().setup_db()
-    challenge_settings = _get_challenge_settings(challenge_settings_file)
+    challenge_settings: ChallengeSettings = _get_settings(
+        file=challenge_settings_file, settings_type=ChallengeSettings  # type: ignore
+    )
+    chitchat_settings: ChitchatSettings = _get_settings(
+        file=chitchat_settings_file, settings_type=ChitchatSettings  # type: ignore
+    )
     bot = QuizBot(
         user_storage=UserStorage(),
-        chitchat_client=ChitchatClient(ChitchatSettings()),
+        chitchat_client=ChitchatClient(chitchat_settings),
         remote_client=RemoteBotClient(RemoteClientSettings()),
         logging_settings=logging_settings,
         info_settings=InfoSettings(),
