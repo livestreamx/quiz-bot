@@ -1,8 +1,9 @@
 import abc
 import logging
+from typing import List
 
 import telebot
-from quiz_bot.manager.checkers.models import CheckedResult
+from quiz_bot.manager.checkers.models import CheckedResult, WinnerResult
 from quiz_bot.storage import ContextChallenge, ContextResult, ContextUser, CurrentChallenge
 
 logger = logging.getLogger(__name__)
@@ -22,4 +23,8 @@ class IResultChecker(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def _match(cls, answer: str, expectation: str) -> bool:
+        pass
+
+    @abc.abstractmethod
+    def get_winners(self, challenge: ContextChallenge) -> List[WinnerResult]:
         pass
