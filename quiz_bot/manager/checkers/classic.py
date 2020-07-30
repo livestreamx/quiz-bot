@@ -56,13 +56,7 @@ class ClassicResultChecker(AnswerMatchingMixin, BaseResultChecker):
             logger.info("User '%s' reached the end of challenge '%s!'", user.nick_name, current_challenge.info.name)
             equal_results = self._result_storage.get_equal_results(current_result)
             challenge_finished = self._resolve_challenge_finish(challenge=current_challenge, results=equal_results)
-            if challenge_finished:
-                logger.info(
-                    "Challenge #%s '%s' finished with all winners resolution!",
-                    current_challenge.number,
-                    current_challenge.info.name,
-                )
-                return CheckedResult(correct=True, challenge_finished=True, winner_results=equal_results)
+            return CheckedResult(correct=True, challenge_finished=challenge_finished, winner_results=equal_results)
 
         next_phase = current_result.phase + 1
         self._result_storage.prepare_next_result(result=current_result, next_phase=next_phase)

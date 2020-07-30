@@ -1,5 +1,4 @@
 import logging
-from copy import deepcopy
 from typing import List, Optional
 
 import telebot
@@ -73,7 +72,7 @@ class ChallengeMaster:
             ],
         )
 
-    def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> AnswerResult:
+    def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> AnswerResult:  # noqa: C901
         if self._current_challenge is None:
             logger.warning("Try to get answer result when challenge is not running!")
             return AnswerResult()
@@ -88,28 +87,34 @@ class ChallengeMaster:
         if not checked_result.correct:
             return AnswerResult(replies=[self._settings.random_incorrect_answer_notification])
 
+        replies: List[str] = []
+        if checked_result.finished_for_user:
+            replies.append(self._settings.get_winner_notification(challenge_name=self._current_challenge.info.name))
+        else:
+            if checked_result.next_phase is None:
+                raise RuntimeError(
+                    "Next phase should be defined for correct result, if challenge is not finished for user!"
+                )
+            replies.extend(
+                [
+                    self._settings.random_correct_answer_notification,
+                    self._settings.get_next_answer_notification(
+                        question=self._current_challenge.info.get_question(checked_result.next_phase),
+                        question_num=checked_result.next_phase,
+                    ),
+                ]
+            )
         if checked_result.challenge_finished:
-            previous_challenge = deepcopy(self._current_challenge)
+            logger.info(
+                "Challenge #%s '%s' finished with all winners resolution!",
+                self._current_challenge.number,
+                self._current_challenge.info.name,
+            )
             self.start_next_challenge()
             next_challenge_question = self.start_challenge_for_user(user)
-
-            replies: List[str] = [self._settings.get_winner_notification(challenge_name=previous_challenge.info.name)]
             if next_challenge_question.correct:
                 replies.extend(next_challenge_question.replies)
-            return AnswerResult(correct=True, replies=replies,)
-
-        if checked_result.next_phase is None:
-            raise ValueError("Correct result without challenge finish should have next phase!")
-        return AnswerResult(
-            correct=True,
-            replies=[
-                self._settings.random_correct_answer_notification,
-                self._settings.get_next_answer_notification(
-                    question=self._current_challenge.info.get_question(checked_result.next_phase),
-                    question_num=checked_result.next_phase,
-                ),
-            ],
-        )
+        return AnswerResult(correct=True, replies=replies)
 
     @property
     def start_info(self) -> str:
