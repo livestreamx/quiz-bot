@@ -1,3 +1,4 @@
+import click
 from quiz_bot.cli.group import app
 
 
@@ -7,5 +8,6 @@ def challenge() -> None:
 
 
 @challenge.command()
-def go_to_next() -> None:
+@click.option('--challenge-id', help='Database challenge ID for finish notification')
+def finish_notification() -> None:
     pass
