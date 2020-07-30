@@ -2,7 +2,8 @@ import logging
 from typing import List, Optional
 
 import telebot
-from quiz_bot.manager.checkers import IResultChecker
+from quiz_bot.manager.checkers import IResultChecker, WinnerResult
+from quiz_bot.manager.errors import UserIsNotWinnerError
 from quiz_bot.settings import ChallengeSettings
 from quiz_bot.storage import (
     AnswerResult,
@@ -72,6 +73,14 @@ class ChallengeMaster:
             ],
         )
 
+    def _get_winner_result(self, user: ContextUser, challenge: ContextChallenge) -> WinnerResult:
+        winner_results = self._result_checker.get_winners(challenge)
+        for result in winner_results:
+            if user.id != result.user.id:
+                continue
+            return result
+        raise UserIsNotWinnerError("User @%s is not a winner!", user.nick_name)
+
     def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> AnswerResult:  # noqa: C901
         if self._current_challenge is None:
             logger.warning("Try to get answer result when challenge is not running!")
@@ -101,7 +110,12 @@ class ChallengeMaster:
                 ],
             )
 
-        replies: List[str] = [self._settings.get_winner_notification(challenge_name=self._current_challenge.info.name)]
+        winner_result = self._get_winner_result(user=user, challenge=self._current_challenge.data)
+        replies: List[str] = [
+            self._settings.get_winner_notification(
+                challenge_name=self._current_challenge.info.name, winner_pos=winner_result.position
+            )
+        ]
         if not checked_result.challenge_finished:
             return AnswerResult(correct=True, replies=replies)
 

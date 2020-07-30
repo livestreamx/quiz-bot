@@ -96,6 +96,7 @@ class ChallengeSettings(BaseSettings):
     start_notification: str = "Начинается испытание #<b>{number}</b> <b>{name}</b>. <i>{description}</i>"
     finish_notification: str = "Завершено испытание #<b>{number}</b>: <b>{name}</b>."
     winner_notification: str = "Мои поздравления - вы стали победителем в испытании '<b>{name}</b>'!"
+    prizer_notification: str = "Ура! Вы - призер (#{number} место) в испытании '<b>{name}</b>'."
     progress_notification: str = "В испытании '{name}' - победитель @{nick_name} ({timestamp})."
 
     correct_answer_notifications: List[str] = ["Верно.", "Молодец!", "Так держать!", "И, правда, так."]
@@ -140,7 +141,9 @@ class ChallengeSettings(BaseSettings):
     def get_finish_notification(self, challenge_num: int, challenge_name: str) -> str:
         return self.finish_notification.format(number=challenge_num, name=challenge_name)
 
-    def get_winner_notification(self, challenge_name: str) -> str:
+    def get_winner_notification(self, challenge_name: str, winner_pos: int) -> str:
+        if winner_pos > 1:
+            return self.prizer_notification.format(name=challenge_name, number=winner_pos)
         return self.winner_notification.format(name=challenge_name)
 
     def get_progress_notification(self, challenge_name: str, winner_nickname: str, timestamp: datetime) -> str:
