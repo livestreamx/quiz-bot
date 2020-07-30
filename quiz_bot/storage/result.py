@@ -31,6 +31,10 @@ class IResultStorage(abc.ABC):
     def get_equal_results(self, result: ContextResult) -> Sequence[ContextResult]:
         pass
 
+    @abc.abstractmethod
+    def get_finished_results(self, challenge: ContextChallenge) -> Sequence[ContextResult]:
+        pass
+
 
 class ResultStorage(IResultStorage):
     def create_result(self, user: ContextUser, challenge: ContextChallenge, phase: int) -> None:
@@ -56,5 +60,12 @@ class ResultStorage(IResultStorage):
         with db.create_session() as session:
             equal_results: Sequence[db.Result] = session.query(db.Result).get_equal_results(
                 challenge_id=result.challenge.id, phase=result.phase, finished=bool(result.finished_at is not None)
+            )
+            return cast(Sequence[ContextResult], [ContextResult.from_orm(x) for x in equal_results])
+
+    def get_finished_results(self, challenge: ContextChallenge) -> Sequence[ContextResult]:
+        with db.create_session() as session:
+            equal_results: Sequence[db.Result] = session.query(db.Result).get_equal_results(
+                challenge_id=challenge.id, phase=challenge.phase_amount, finished=True, sort=True
             )
             return cast(Sequence[ContextResult], [ContextResult.from_orm(x) for x in equal_results])

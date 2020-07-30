@@ -16,4 +16,10 @@ class BaseResultChecker(IResultChecker, abc.ABC):
         self._challenge_settings = challenge_settings
 
     def get_winners(self, challenge: ContextChallenge) -> List[WinnerResult]:
-        pass
+        finished_results = self._result_storage.get_finished_results(challenge)
+        winner_list: List[WinnerResult] = []
+        position = 0
+        for result in finished_results:
+            position += 1
+            winner_list.append(WinnerResult(user=result.user, position=position, finished_at=result.finished_at))
+        return winner_list

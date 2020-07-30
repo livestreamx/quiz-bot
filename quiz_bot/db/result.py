@@ -25,11 +25,11 @@ class ResultQuery(so.Query):
             .first(),
         )
 
-    def get_equal_results(self, challenge_id: int, phase: int, finished: bool) -> Sequence[Result]:
+    def get_equal_results(self, challenge_id: int, phase: int, finished: bool, sort: bool = False) -> Sequence[Result]:
         query = self.session.query(Result).filter(
             Result.challenge_id == challenge_id, Result.phase == phase, _get_finish_condition(finished)
         )
-        if finished:
+        if sort:
             query = query.order_by(Result.finished_at.asc())
         return cast(Sequence[Result], query.all())
 
