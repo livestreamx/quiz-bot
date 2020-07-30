@@ -26,12 +26,12 @@ class ResultQuery(so.Query):
         )
 
     def get_equal_results(self, challenge_id: int, phase: int, finished: bool) -> Sequence[Result]:
-        return cast(
-            Sequence[Result],
-            self.session.query(Result)
-            .filter(Result.challenge_id == challenge_id, Result.phase == phase, _get_finish_condition(finished))
-            .all(),
+        query = self.session.query(Result).filter(
+            Result.challenge_id == challenge_id, Result.phase == phase, _get_finish_condition(finished)
         )
+        if finished:
+            query = query.order_by(Result.finished_at.asc())
+        return cast(Sequence[Result], query.all())
 
 
 class Result(PrimaryKeyMixin, Base):
