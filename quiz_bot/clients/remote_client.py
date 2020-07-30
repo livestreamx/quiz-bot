@@ -50,7 +50,7 @@ class RemoteBotClient:
         markup: Optional[telebot.types.InlineKeyboardMarkup] = None,
     ) -> None:
         for reply in self._get_grouped_replies(answers=answers, split_answers=split_answers):
-            self._telebot.send_message(chat_id=message.chat.id, text=reply, parse_mode='html', reply_markup=markup)
+            self._telebot.send_message(chat_id=message.chat.id, text=reply, parse_mode='Markdown', reply_markup=markup)
             logger.info(
                 'Chat ID %s with %s: [user] %s -> [bot] %s', message.chat.id, user.full_name, message.text, reply,
             )

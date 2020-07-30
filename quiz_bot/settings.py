@@ -78,10 +78,10 @@ class InfoSettings(BaseSettings):
         "Интересно.",
     ]
     greetings: str = (
-        "Мое имя - T-Quiz QuizBot. @livestream_x создал меня для того, чтобы я выполнял функцию ведущего для "
+        "Мое имя - *T-Quiz QuizBot*. @livestream_x создал меня для того, чтобы я выполнял функцию ведущего для "
         "проведения викторин. Чтобы начать свой путь к вершине победы, нажми на кнопку старта."
     )
-    unknown_info: str = "Если хочешь узнать, что я за бот такой - нажми на кнопку помощи."
+    unknown_info: str = "Если хочешь узнать, что я за бот такой - нажми на *кнопку помощи*."
 
     @property
     def random_empty_message(self) -> str:
@@ -91,9 +91,9 @@ class InfoSettings(BaseSettings):
 class ChallengeSettings(BaseSettings):
     challenges: List[ChallengeInfo]
 
-    start_notification: str = "Начинается испытание #{number} '{name}'. {description}"
-    finish_notification: str = "Завершено испытание #{number} '{name}'."
-    winner_notification: str = "Мои поздравления - вы стали победителем в испытании '{name}'!"
+    start_notification: str = "Начинается испытание #*{number}* '*{name}*'. __{description}__"
+    finish_notification: str = "Завершено испытание #*{number}* '*{name}*'."
+    winner_notification: str = "Мои поздравления - вы стали победителем в испытании '*{name}*'!"
     progress_notification: str = "В испытании '{name}' - победитель @{nick_name} ({timestamp})."
 
     correct_answer_notifications: List[str] = ["Верно.", "Молодец!", "Так держать!", "И, правда, так."]
@@ -111,7 +111,7 @@ class ChallengeSettings(BaseSettings):
     next_answer_notification: str = "Вопрос #{number}: {question}"
 
     end_info: str = "Итоги викторины:\n{results}\n\nВикторина завершена, спасибо за участие!"
-    results_row: str = "Испытание #{number} '{name}': "
+    results_row: str = "Испытание #*{number}* '*{name}*': "
     post_end_info: str = "Викторина завершена, спасибо за участие!"
 
     @property
