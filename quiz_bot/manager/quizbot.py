@@ -9,7 +9,7 @@ from quiz_bot.manager.challenge import ChallengeMaster
 from quiz_bot.manager.errors import NotSupportedCallbackError
 from quiz_bot.manager.interface import InterfaceMaker
 from quiz_bot.manager.objects import ApiCommand, ContentType
-from quiz_bot.settings import InfoSettings, LoggingSettings
+from quiz_bot.settings import InfoSettings
 from quiz_bot.storage import ContextUser, IUserStorage
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,6 @@ class QuizBot:
         user_storage: IUserStorage,
         chitchat_client: ChitchatClient,
         remote_client: RemoteBotClient,
-        logging_settings: LoggingSettings,
         info_settings: InfoSettings,
         interface_maker: InterfaceMaker,
         challenge_master: ChallengeMaster,
@@ -30,7 +29,6 @@ class QuizBot:
 
         self._user_storage = user_storage
         self._chitchat_client = chitchat_client
-        self._logging_settings = logging_settings
         self._info_settings = info_settings
         self._interface_maker = interface_maker
         self._challenge_master = challenge_master

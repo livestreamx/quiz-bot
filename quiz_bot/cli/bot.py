@@ -31,8 +31,7 @@ def _get_settings(file: Optional[io.StringIO], settings_type: Type[BaseSettings]
 @click.option('-challenges', '--challenge-settings-file', type=click.File('r'))
 @click.option('-chitchat', '--chitchat-settings-file', type=click.File('r'))
 def start(challenge_settings_file: Optional[io.StringIO], chitchat_settings_file: Optional[io.StringIO]) -> None:
-    logging_settings = LoggingSettings()
-    logging_settings.setup_logging()
+    LoggingSettings().setup_logging()
     DataBaseSettings().setup_db()
     challenge_settings: ChallengeSettings = _get_settings(
         file=challenge_settings_file, settings_type=ChallengeSettings  # type: ignore
@@ -44,7 +43,6 @@ def start(challenge_settings_file: Optional[io.StringIO], chitchat_settings_file
         user_storage=UserStorage(),
         chitchat_client=ChitchatClient(chitchat_settings),
         remote_client=RemoteBotClient(RemoteClientSettings()),
-        logging_settings=logging_settings,
         info_settings=InfoSettings(),
         interface_maker=InterfaceMaker(),
         challenge_master=ChallengeMaster(
