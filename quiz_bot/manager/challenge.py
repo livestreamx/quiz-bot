@@ -1,6 +1,6 @@
 import logging
 from copy import deepcopy
-from typing import Optional
+from typing import List, Optional
 
 import telebot
 from quiz_bot.manager.checkers import IResultChecker
@@ -93,17 +93,10 @@ class ChallengeMaster:
             self.start_next_challenge()
             next_challenge_question = self.start_challenge_for_user(user)
 
-            next_challenge_reply = None
+            replies: List[str] = [self._settings.get_winner_notification(challenge_name=previous_challenge.info.name)]
             if next_challenge_question.correct:
-                next_challenge_reply = " ".join(next_challenge_question.replies)
-
-            return AnswerResult(
-                correct=True,
-                replies=[
-                    self._settings.get_winner_notification(challenge_name=previous_challenge.info.name),
-                    next_challenge_reply,
-                ],
-            )
+                replies.extend(next_challenge_question.replies)
+            return AnswerResult(correct=True, replies=replies,)
 
         if checked_result.next_phase is None:
             raise ValueError("Correct result without challenge finish should have next phase!")

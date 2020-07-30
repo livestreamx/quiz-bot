@@ -1,6 +1,5 @@
 import enum
 from dataclasses import dataclass
-from functools import cached_property
 from typing import Any, Dict, List
 
 from pydantic import BaseModel, conint, root_validator, validator
@@ -54,6 +53,6 @@ class AnswerResult(BaseModel):
             raise ValueError("Correct answer should contain at least one reply!")
         return v
 
-    @cached_property
+    @property
     def split_replies(self) -> bool:
         return self.correct
