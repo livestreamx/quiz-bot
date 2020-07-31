@@ -121,7 +121,7 @@ class QuizBot:
         )
 
     def _reply_to_unknown_user(self, message: telebot.types.Message) -> None:
-        unknown_user = self._user_storage.make_unknown_context_user(message.from_user)
+        unknown_user = self._user_storage.make_unknown_context_user(message)
         chitchat_answer = self._get_chitchat_answer(user=unknown_user, message=message)
         self._remote_client.send(
             user=unknown_user,

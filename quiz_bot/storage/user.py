@@ -66,9 +66,13 @@ class UserStorage(IUserStorage):
         raise RuntimeError("User has not been saved into database!")
 
     @staticmethod
-    def make_unknown_context_user(user: telebot.types.User) -> ContextUser:
+    def make_unknown_context_user(message: telebot.types.Message) -> ContextUser:
         return ContextUser(
-            id=0, remote_chat_id=0, external_id=user.id, chitchat_id=str(uuid4()), first_name="<unknown>"
+            id=0,
+            remote_chat_id=message.chat.id,
+            external_id=message.from_user.id,
+            chitchat_id=str(uuid4()),
+            nick_name=message.from_user.username,
         )
 
     @property
