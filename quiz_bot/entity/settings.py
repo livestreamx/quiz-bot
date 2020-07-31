@@ -90,9 +90,9 @@ class ChallengeSettings(BaseSettings):
     next_answer_notification: str = "Вопрос #<b>{number}</b>: {question}"
 
     challenge_info: str = "Испытание #<b>{number}</b>: <b>{name}</b>\n\n{results}"
-    results_row: str = "#{winner_pos} место: @{nick_name} ({timestamp})"
-    time_info: str = "Минут до окончания: {minutes}"
-    time_over_info: str = "Испытание завершено в {timestamp}."
+    results_row: str = "#{winner_pos} место: @{nick_name} (<code>{timestamp}</code>)"
+    time_info: str = "Минут до окончания: <code>{minutes}</code>"
+    time_over_info: str = "Испытание завершено в <code>{timestamp}</code>."
 
     post_end_info: str = "Викторина завершена, спасибо за участие!"
 
@@ -135,7 +135,7 @@ class ChallengeSettings(BaseSettings):
                 self.results_row.format(
                     winner_pos=winner.position,
                     nick_name=winner.user.nick_name,
-                    timestamp=winner.finished_at.strftime("%H:%M:%S %d-%m-%Y"),
+                    timestamp=winner.finished_at.strftime("%H:%M:%S, %d-%m-%Y"),
                 )
             )
         return results
