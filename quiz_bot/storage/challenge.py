@@ -65,7 +65,7 @@ class ChallengeStorage(IChallengeStorage):
 
     def get_challenge(self, challenge_id: int) -> Optional[ContextChallenge]:
         with db.create_session() as session:
-            return cast(
-                Optional[ContextChallenge],
-                session.query(db.Challenge).filter(db.Challenge.id == challenge_id).one_or_none(),
-            )
+            challenge = session.query(db.Challenge).filter(db.Challenge.id == challenge_id).one_or_none()
+            if challenge is None:
+                return None
+            return cast(ContextChallenge, ContextChallenge.from_orm(challenge))

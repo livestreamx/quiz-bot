@@ -1,41 +1,27 @@
 import io
 import logging
-from typing import Optional, Type
+from typing import Optional
 
 import click
-from pydantic import BaseSettings
 from quiz_bot.cli.group import app
+from quiz_bot.cli.utils import get_settings, set_basic_settings
 from quiz_bot.clients import ChitchatClient, RemoteBotClient
-from quiz_bot.entity import (
-    ChallengeSettings,
-    ChitchatSettings,
-    DataBaseSettings,
-    InfoSettings,
-    LoggingSettings,
-    RemoteClientSettings,
-)
+from quiz_bot.entity import ChallengeSettings, ChitchatSettings, InfoSettings, RemoteClientSettings
 from quiz_bot.manager import ChallengeMaster, ClassicResultChecker, InterfaceMaker, QuizBot
 from quiz_bot.storage import ChallengeStorage, ResultStorage, UserStorage
 
 logger = logging.getLogger(__name__)
 
 
-def _get_settings(file: Optional[io.StringIO], settings_type: Type[BaseSettings]) -> BaseSettings:
-    if file is not None:
-        return settings_type.parse_raw(file.read())
-    return settings_type()
-
-
 @app.command()
-@click.option('-challenges', '--challenge-settings-file', type=click.File('r'))
-@click.option('-chitchat', '--chitchat-settings-file', type=click.File('r'))
+@click.option('-challenges', '--challenge-settings-file', type=click.File('r'), help='Challenge settings JSON file')
+@click.option('-chitchat', '--chitchat-settings-file', type=click.File('r'), help='Chitchat settings JSON file')
 def start(challenge_settings_file: Optional[io.StringIO], chitchat_settings_file: Optional[io.StringIO]) -> None:
-    LoggingSettings().setup_logging()
-    DataBaseSettings().setup_db()
-    challenge_settings: ChallengeSettings = _get_settings(
+    set_basic_settings()
+    challenge_settings: ChallengeSettings = get_settings(
         file=challenge_settings_file, settings_type=ChallengeSettings  # type: ignore
     )
-    chitchat_settings: ChitchatSettings = _get_settings(
+    chitchat_settings: ChitchatSettings = get_settings(
         file=chitchat_settings_file, settings_type=ChitchatSettings  # type: ignore
     )
     bot = QuizBot(
