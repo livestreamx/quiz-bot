@@ -67,7 +67,9 @@ class UserStorage(IUserStorage):
 
     @staticmethod
     def make_unknown_context_user(user: telebot.types.User) -> ContextUser:
-        return ContextUser(id=0, external_id=user.id, chitchat_id=str(uuid4()), first_name="<unknown>")
+        return ContextUser(
+            id=0, remote_chat_id=0, external_id=user.id, chitchat_id=str(uuid4()), first_name="<unknown>"
+        )
 
     @property
     def users(self) -> Iterator[ContextUser]:

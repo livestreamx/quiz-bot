@@ -16,7 +16,7 @@ class UserQuery(so.Query):
         return cast(Optional[User], self.session.query(User).filter(User.external_id == value).one_or_none())
 
     def get_all_user_ids(self) -> List[int]:
-        return cast(List[int], self.session.query(User.id).all())
+        return cast(List[int], self.session.query(User).with_entities(User.id).all())
 
 
 @su.generic_repr('id', 'first_name', 'last_name', 'external_id', 'nick_name')
