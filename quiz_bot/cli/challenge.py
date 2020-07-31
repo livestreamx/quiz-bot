@@ -8,6 +8,6 @@ def challenge() -> None:
 
 
 @challenge.command()
-@click.option('--challenge-id', help='Database challenge ID for finish notification')
-def finish_notification() -> None:
+@click.option('-i', '--id', help='Database challenge ID for notification')
+def notification() -> None:
     pass

@@ -2,6 +2,7 @@ import enum
 from typing import Any, Dict, List
 
 from pydantic import BaseModel, conint, root_validator
+from pydantic.datetime_parse import timedelta
 
 
 class ChallengeType(str, enum.Enum):
@@ -15,7 +16,9 @@ class ChallengeInfo(BaseModel):
     questions: List[str]
     answers: List[str]
     max_winners: conint(ge=1) = 1  # type: ignore
+
     type: ChallengeType = ChallengeType.CLASSIC
+    duration: timedelta = timedelta(days=1)
 
     def get_question(self, number: int) -> str:
         return self.questions[number - 1]

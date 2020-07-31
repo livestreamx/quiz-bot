@@ -3,13 +3,13 @@ from typing import List, Optional
 
 import telebot
 from quiz_bot.manager.checkers import IResultChecker, WinnerResult
-from quiz_bot.manager.errors import UserIsNotWinnerError
+from quiz_bot.manager.errors import ChallengeNotFoundError, UserIsNotWinnerError
 from quiz_bot.settings import ChallengeSettings
 from quiz_bot.storage import (
     AnswerResult,
     ContextChallenge,
     ContextUser,
-    CurrentChallenge,
+    ExtendedChallenge,
     IChallengeStorage,
     NoResultFoundError,
     StopChallengeIteration,
@@ -26,7 +26,7 @@ class ChallengeMaster:
         self._settings = settings
         self._result_checker = result_checker
 
-        self._current_challenge: Optional[CurrentChallenge] = None
+        self._current_challenge: Optional[ExtendedChallenge] = None
         self._resolve()
 
     def _resolve(self) -> None:
@@ -36,13 +36,16 @@ class ChallengeMaster:
             )
         self._synchronize_current_challenge_if_neccessary()
 
+    def _make_extended_model(self, challenge: ContextChallenge) -> ExtendedChallenge:
+        return ExtendedChallenge(
+            info=self._settings.get_challenge_info_by_name(challenge.name), data=challenge, number=challenge.id
+        )
+
     def _resolve_current_state(self, challenge: Optional[ContextChallenge]) -> None:
         if challenge is None:
             self._current_challenge = None
             return
-        self._current_challenge = CurrentChallenge(
-            info=self._settings.get_challenge_by_name(challenge.name), data=challenge, number=challenge.id
-        )
+        self._current_challenge = self._make_extended_model(challenge)
 
     def _synchronize_current_challenge_if_neccessary(self) -> None:
         if self._current_challenge is None:
@@ -140,3 +143,11 @@ class ChallengeMaster:
             challenge_name=self._current_challenge.info.name,
             description=f"{self._current_challenge.info.description}",
         )
+
+    def get_challenge_info(self, challenge_id: int) -> str:
+        context_challenge = self._challenge_storage.get_challenge(challenge_id)
+        if context_challenge is None:
+            raise ChallengeNotFoundError("Challenge with ID '%s' was not found!", challenge_id)
+        challenge = self._make_extended_model(context_challenge)
+        winner_results = self._result_checker.get_winners(challenge.data)
+        return self._settings.get_challenge_info(challenge=challenge, winner_results=winner_results)

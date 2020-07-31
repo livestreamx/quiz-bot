@@ -24,6 +24,10 @@ class IChallengeStorage(abc.ABC):
     def start_next_challenge(self) -> ContextChallenge:
         pass
 
+    @abc.abstractmethod
+    def get_challenge(self, challenge_id: int) -> Optional[ContextChallenge]:
+        pass
+
 
 class ChallengeStorage(IChallengeStorage):
     def ensure_challenge_exists(self, name: str, phase_amount: int, winner_amount: int) -> None:
@@ -58,3 +62,10 @@ class ChallengeStorage(IChallengeStorage):
             if new_challenge is None:
                 raise StopChallengeIteration
             return cast(ContextChallenge, ContextChallenge.from_orm(new_challenge))
+
+    def get_challenge(self, challenge_id: int) -> Optional[ContextChallenge]:
+        with db.create_session() as session:
+            return cast(
+                Optional[ContextChallenge],
+                session.query(db.Challenge).filter(db.Challenge.id == challenge_id).one_or_none(),
+            )

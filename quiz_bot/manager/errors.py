@@ -4,3 +4,7 @@ class NotSupportedCallbackError(RuntimeError):
 
 class UserIsNotWinnerError(RuntimeError):
     pass
+
+
+class ChallengeNotFoundError(RuntimeError):
+    pass

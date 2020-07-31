@@ -4,7 +4,7 @@ from typing import List
 
 import telebot
 from quiz_bot.manager.checkers.models import CheckedResult, WinnerResult
-from quiz_bot.storage import ContextChallenge, ContextResult, ContextUser, CurrentChallenge
+from quiz_bot.storage import ContextChallenge, ContextResult, ContextUser, ExtendedChallenge
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class IResultChecker(abc.ABC):
 
     @abc.abstractmethod
     def check_answer(
-        self, user: ContextUser, current_challenge: CurrentChallenge, message: telebot.types.Message
+        self, user: ContextUser, current_challenge: ExtendedChallenge, message: telebot.types.Message
     ) -> CheckedResult:
         pass
 

@@ -1,12 +1,13 @@
 import logging
 import socket
-from datetime import datetime
 from random import choice
-from typing import Dict, List, Optional, Sequence
+from typing import List, Optional
 
 from pydantic import BaseSettings, conint, validator
+from quiz_bot.manager.checkers import WinnerResult
 from quiz_bot.models import ChallengeInfo
-from quiz_bot.storage.errors import NotEqualChallengesAmount, UnexpectedChallengeNameError
+from quiz_bot.storage.errors import UnexpectedChallengeNameError
+from quiz_bot.storage.objects import ExtendedChallenge
 from sqlalchemy.engine import Engine, engine_from_config
 from sqlalchemy.engine.url import URL as SAURL
 from sqlalchemy.engine.url import make_url
@@ -75,7 +76,6 @@ class ChallengeSettings(BaseSettings):
     finish_notification: str = "Завершено испытание #<b>{number}</b>: <b>{name}</b>."
     winner_notification: str = "Мои поздравления - вы стали победителем в испытании '<b>{name}</b>'!"
     prizer_notification: str = "Ура! Вы - призер (#{number} место) в испытании '<b>{name}</b>'."
-    progress_notification: str = "В испытании '{name}' - победитель @{nick_name} ({timestamp})."
 
     correct_answer_notifications: List[str] = ["Верно.", "Молодец!", "Так держать!", "И, правда, так."]
     incorrect_answer_notifications: List[str] = [
@@ -91,8 +91,11 @@ class ChallengeSettings(BaseSettings):
     ]
     next_answer_notification: str = "Вопрос #<b>{number}</b>: {question}"
 
-    end_info: str = "Итоги викторины:\n{results}\n\nВикторина завершена, спасибо за участие!"
-    results_row: str = "Испытание #<b>{number}</b> '<b>{name}</b>': "
+    challenge_info: str = "Испытание #<b>{number}</b>: <b>{name}</b>\n\n{results}"
+    results_row: str = "#{winner_pos} место: @{nick_name} ({timestamp})"
+    time_info: str = "Минут до окончания: {minutes}"
+    time_over_info: str = "Испытание завершено в {timestamp}."
+
     post_end_info: str = "Викторина завершена, спасибо за участие!"
 
     @property
@@ -103,7 +106,7 @@ class ChallengeSettings(BaseSettings):
     def random_incorrect_answer_notification(self) -> str:
         return choice(self.incorrect_answer_notifications)
 
-    def get_challenge_by_name(self, name: str) -> ChallengeInfo:
+    def get_challenge_info_by_name(self, name: str) -> ChallengeInfo:
         for challenge in self.challenges:
             if challenge.name != name:
                 continue
@@ -124,29 +127,30 @@ class ChallengeSettings(BaseSettings):
             return self.prizer_notification.format(name=challenge_name, number=winner_pos)
         return self.winner_notification.format(name=challenge_name)
 
-    def get_progress_notification(self, challenge_name: str, winner_nickname: str, timestamp: datetime) -> str:
-        return self.progress_notification.format(
-            name=challenge_name, nick_name=winner_nickname, timestamp=timestamp.strftime("%H:%M:%S %d-%m-%Y")
-        )
-
     def get_next_answer_notification(self, question: str, question_num: int) -> str:
         return self.next_answer_notification.format(question=question, number=question_num)
 
-    def get_challenge_info(self, challenges: Sequence[ChallengeInfo], winners_dict: Dict[int, str]) -> str:
-        results = ""
-        for challenge_num in winners_dict:
-            results += (
-                f"{self.results_row.format(number=challenge_num, name=challenges[challenge_num].name)} "
-                f"@{', @'.join(winners_dict[challenge_num])}"
+    def get_results_info(self, winner_results: List[WinnerResult]) -> List[str]:
+        results: List[str] = []
+        for winner in winner_results:
+            results.append(
+                self.results_row.format(
+                    winner_pos=winner.position,
+                    nick_name=winner.user.nick_name,
+                    timestamp=winner.finished_at.strftime("%H:%M:%S %d-%m-%Y"),
+                )
             )
         return results
 
-    def get_end_info(self, challenges: Sequence[ChallengeInfo], winners_dict: Dict[int, str]) -> str:
-        if len(challenges) != len(winners_dict.keys()):
-            raise NotEqualChallengesAmount(
-                "Challenges list length is not equal to length of challenge numbers in winners_dict!"
-            )
-        return self.end_info.format(results=self.get_challenge_info(challenges=challenges, winners_dict=winners_dict))
+    def get_challenge_info(self, challenge: ExtendedChallenge, winner_results: List[WinnerResult]) -> str:
+        info = ""
+        if winner_results:
+            info += "\n".join(self.get_results_info(winner_results)) + "\n\n"
+        if challenge.data.finished_at is None:
+            info += self.time_info.format(minutes=challenge.finish_after.total_seconds() / 60)
+        else:
+            info += self.time_over_info.format(timestamp=challenge.data.finished_at.strftime("%H:%M:%S %d-%m-%Y"))
+        return self.challenge_info.format(number=challenge.number, name=challenge.info.name, results=info)
 
 
 class DataBaseSettings(BaseSettings):

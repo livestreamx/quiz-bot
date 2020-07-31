@@ -1,7 +1,3 @@
-class NotEqualChallengesAmount(RuntimeError):
-    pass
-
-
 class UnexpectedChallengeNameError(RuntimeError):
     pass
 

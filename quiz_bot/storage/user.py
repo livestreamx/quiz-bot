@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import Optional, cast
+from typing import Iterator, Optional, cast
 from uuid import uuid4
 
 import telebot
@@ -22,6 +22,11 @@ class IUserStorage(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def make_unknown_context_user(user: telebot.types.User) -> ContextUser:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def users(self) -> Iterator[ContextUser]:
         pass
 
 
@@ -58,3 +63,13 @@ class UserStorage(IUserStorage):
     @staticmethod
     def make_unknown_context_user(user: telebot.types.User) -> ContextUser:
         return ContextUser(id=0, external_id=user.id, chitchat_id=str(uuid4()), first_name="<unknown>")
+
+    @property
+    def users(self) -> Iterator[ContextUser]:
+        with db.create_session() as session:
+            user_ids = session.query(db.User).get_all_user_ids()
+        for user_id in user_ids:
+            with db.create_session() as session:
+                db_user = session.query(db.User).get_by_internal_id(user_id)
+                context_user = ContextUser.from_orm(db_user)
+            yield context_user

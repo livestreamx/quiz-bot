@@ -5,7 +5,7 @@ from typing import Sequence
 import telebot
 from quiz_bot.manager.checkers.base import BaseResultChecker
 from quiz_bot.manager.checkers.models import CheckedResult
-from quiz_bot.storage import ContextChallenge, ContextResult, ContextUser, CurrentChallenge
+from quiz_bot.storage import ContextChallenge, ContextResult, ContextUser, ExtendedChallenge
 from quiz_bot.utils import get_now
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ class AnswerMatchingMixin:
 
 class ClassicResultChecker(AnswerMatchingMixin, BaseResultChecker):
     @staticmethod
-    def _resolve_challenge_finish(challenge: CurrentChallenge, results: Sequence[ContextResult]) -> bool:
+    def _resolve_challenge_finish(challenge: ExtendedChallenge, results: Sequence[ContextResult]) -> bool:
         return bool(len(results) == challenge.data.winner_amount)
 
     def prepare_user_result(self, user: ContextUser, challenge: ContextChallenge) -> ContextResult:
@@ -31,7 +31,7 @@ class ClassicResultChecker(AnswerMatchingMixin, BaseResultChecker):
         return self._result_storage.get_last_result(user=user, challenge=challenge)
 
     def check_answer(
-        self, user: ContextUser, current_challenge: CurrentChallenge, message: telebot.types.Message
+        self, user: ContextUser, current_challenge: ExtendedChallenge, message: telebot.types.Message
     ) -> CheckedResult:
         current_result = self._result_storage.get_last_result(user=user, challenge=current_challenge.data)
         expectation = current_challenge.info.get_answer(current_result.phase)

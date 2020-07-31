@@ -1,16 +1,22 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from datetime import timedelta
+from typing import Any, Dict, List, cast
 
 from pydantic import BaseModel, validator
 from quiz_bot.models import ChallengeInfo
 from quiz_bot.storage.context_models import ContextChallenge
+from quiz_bot.utils import get_now
 
 
 @dataclass(frozen=True)
-class CurrentChallenge:
+class ExtendedChallenge:
     info: ChallengeInfo
     data: ContextChallenge
     number: int
+
+    @property
+    def finish_after(self) -> timedelta:
+        return cast(timedelta, self.data.created_at + self.info.duration - (self.data.created_at + get_now()))
 
 
 class AnswerResult(BaseModel):
