@@ -1,0 +1,2 @@
+class UnexpectedChallengeNameError(RuntimeError):
+    pass

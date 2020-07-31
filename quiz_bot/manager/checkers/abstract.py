@@ -3,8 +3,7 @@ import logging
 from typing import List
 
 import telebot
-from quiz_bot.manager.checkers.models import CheckedResult, WinnerResult
-from quiz_bot.storage import ContextChallenge, ContextResult, ContextUser, ExtendedChallenge
+from quiz_bot.entity import CheckedResult, ContextChallenge, ContextResult, ContextUser, ExtendedChallenge, WinnerResult
 
 logger = logging.getLogger(__name__)
 

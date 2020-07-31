@@ -4,10 +4,8 @@ from random import choice
 from typing import List, Optional
 
 from pydantic import BaseSettings, conint, validator
-from quiz_bot.manager.checkers import WinnerResult
-from quiz_bot.models import ChallengeInfo
-from quiz_bot.storage.errors import UnexpectedChallengeNameError
-from quiz_bot.storage.objects import ExtendedChallenge
+from quiz_bot.entity.errors import UnexpectedChallengeNameError
+from quiz_bot.entity.objects import ChallengeInfo, ExtendedChallenge, WinnerResult
 from sqlalchemy.engine import Engine, engine_from_config
 from sqlalchemy.engine.url import URL as SAURL
 from sqlalchemy.engine.url import make_url

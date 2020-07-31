@@ -6,9 +6,7 @@ import click
 from pydantic import BaseSettings
 from quiz_bot.cli.group import app
 from quiz_bot.clients import ChitchatClient, RemoteBotClient
-from quiz_bot.manager import ChallengeMaster, InterfaceMaker, QuizBot
-from quiz_bot.manager.checkers.classic import ClassicResultChecker
-from quiz_bot.settings import (
+from quiz_bot.entity import (
     ChallengeSettings,
     ChitchatSettings,
     DataBaseSettings,
@@ -16,6 +14,7 @@ from quiz_bot.settings import (
     LoggingSettings,
     RemoteClientSettings,
 )
+from quiz_bot.manager import ChallengeMaster, ClassicResultChecker, InterfaceMaker, QuizBot
 from quiz_bot.storage import ChallengeStorage, ResultStorage, UserStorage
 
 logger = logging.getLogger(__name__)

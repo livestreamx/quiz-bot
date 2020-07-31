@@ -2,18 +2,17 @@ import logging
 from typing import List, Optional
 
 import telebot
-from quiz_bot.manager.checkers import IResultChecker, WinnerResult
-from quiz_bot.manager.errors import ChallengeNotFoundError, UserIsNotWinnerError
-from quiz_bot.settings import ChallengeSettings
-from quiz_bot.storage import (
-    AnswerResult,
+from quiz_bot.entity import (
+    ChallengeEvaluation,
+    ChallengeSettings,
     ContextChallenge,
     ContextUser,
     ExtendedChallenge,
-    IChallengeStorage,
-    NoResultFoundError,
-    StopChallengeIteration,
+    WinnerResult,
 )
+from quiz_bot.manager.checkers import IResultChecker
+from quiz_bot.manager.errors import ChallengeNotFoundError, UserIsNotWinnerError
+from quiz_bot.storage import IChallengeStorage, NoResultFoundError, StopChallengeIteration
 
 logger = logging.getLogger(__name__)
 
@@ -60,13 +59,13 @@ class ChallengeMaster:
             logger.warning("Quiz is finished - active challenge was not found!")
             self._current_challenge = None
 
-    def start_challenge_for_user(self, user: ContextUser) -> AnswerResult:
+    def start_challenge_for_user(self, user: ContextUser) -> ChallengeEvaluation:
         if self._current_challenge is None:
             logger.warning("Try to start challenge for User @%s result when challenge is not running!", user.nick_name)
-            return AnswerResult()
+            return ChallengeEvaluation()
         result = self._result_checker.prepare_user_result(user=user, challenge=self._current_challenge.data)
         logger.warning("Started challenge for user @%s", user.nick_name)
-        return AnswerResult(
+        return ChallengeEvaluation(
             correct=True,
             replies=[
                 self.start_info,
@@ -84,10 +83,10 @@ class ChallengeMaster:
             return result
         raise UserIsNotWinnerError("User @%s is not a winner!", user.nick_name)
 
-    def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> AnswerResult:  # noqa: C901
+    def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> ChallengeEvaluation:  # noqa: C901
         if self._current_challenge is None:
             logger.warning("Try to get answer result when challenge is not running!")
-            return AnswerResult()
+            return ChallengeEvaluation()
 
         try:
             checked_result = self._result_checker.check_answer(
@@ -95,14 +94,14 @@ class ChallengeMaster:
             )
         except NoResultFoundError:
             logger.info("Not found any Result for User @%s. Maybe, challenge not started yet for him?", user.nick_name)
-            return AnswerResult()
+            return ChallengeEvaluation()
         if not checked_result.correct:
-            return AnswerResult(replies=[self._settings.random_incorrect_answer_notification])
+            return ChallengeEvaluation(replies=[self._settings.random_incorrect_answer_notification])
 
         if not checked_result.finished_for_user:
             if checked_result.next_phase is None:
                 raise RuntimeError("Next phase should be specified for not last but correct result!")
-            return AnswerResult(
+            return ChallengeEvaluation(
                 correct=True,
                 replies=[
                     self._settings.random_correct_answer_notification,
@@ -120,7 +119,7 @@ class ChallengeMaster:
             )
         ]
         if not checked_result.challenge_finished:
-            return AnswerResult(correct=True, replies=replies)
+            return ChallengeEvaluation(correct=True, replies=replies)
 
         logger.info(
             "Challenge #%s '%s' finished with all winners resolution!",
@@ -131,7 +130,7 @@ class ChallengeMaster:
         next_challenge_question = self.start_challenge_for_user(user)
         if next_challenge_question.correct:
             replies.extend(next_challenge_question.replies)
-        return AnswerResult(correct=True, replies=replies)
+        return ChallengeEvaluation(correct=True, replies=replies)
 
     @property
     def start_info(self) -> str:

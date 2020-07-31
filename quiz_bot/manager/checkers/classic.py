@@ -3,9 +3,8 @@ import re
 from typing import Sequence
 
 import telebot
+from quiz_bot.entity import CheckedResult, ContextChallenge, ContextResult, ContextUser, ExtendedChallenge
 from quiz_bot.manager.checkers.base import BaseResultChecker
-from quiz_bot.manager.checkers.models import CheckedResult
-from quiz_bot.storage import ContextChallenge, ContextResult, ContextUser, ExtendedChallenge
 from quiz_bot.utils import get_now
 
 logger = logging.getLogger(__name__)

@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import telebot
 from quiz_bot import db
-from quiz_bot.storage.context_models import ContextUser
+from quiz_bot.entity import ContextUser
 
 logger = logging.getLogger(__name__)
 

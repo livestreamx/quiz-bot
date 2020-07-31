@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Sequence, cast
 
 from quiz_bot import db
-from quiz_bot.storage.context_models import ContextChallenge, ContextResult, ContextUser
+from quiz_bot.entity import ContextChallenge, ContextResult, ContextUser
 from quiz_bot.storage.errors import NoResultFoundError
 
 logger = logging.getLogger(__name__)

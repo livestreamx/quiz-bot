@@ -3,7 +3,7 @@ import logging
 from typing import Optional, cast
 
 from quiz_bot import db
-from quiz_bot.storage.context_models import ContextChallenge
+from quiz_bot.entity import ContextChallenge
 from quiz_bot.storage.errors import NoActualChallengeError, StopChallengeIteration
 from quiz_bot.utils import get_now
 

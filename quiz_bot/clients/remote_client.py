@@ -6,8 +6,7 @@ from typing import Any, DefaultDict, List, Optional
 import requests
 import telebot
 import tenacity
-from quiz_bot.settings import RemoteClientSettings
-from quiz_bot.storage import ContextUser
+from quiz_bot.entity import ContextUser, RemoteClientSettings
 
 logger = logging.getLogger(__name__)
 

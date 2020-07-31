@@ -1,7 +1,3 @@
-class UnexpectedChallengeNameError(RuntimeError):
-    pass
-
-
 class NoActualChallengeError(RuntimeError):
     pass
 

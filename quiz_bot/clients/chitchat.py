@@ -5,7 +5,7 @@ from functools import cached_property
 import requests
 import tenacity
 from pydantic import BaseModel
-from quiz_bot.settings import ChitchatSettings
+from quiz_bot.entity import ChitchatSettings
 
 logger = logging.getLogger(__name__)
 

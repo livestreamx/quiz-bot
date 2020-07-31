@@ -2,10 +2,10 @@ import abc
 import logging
 from typing import List
 
+from quiz_bot.entity import ContextChallenge, WinnerResult
+from quiz_bot.entity.settings import ChallengeSettings
 from quiz_bot.manager.checkers.abstract import IResultChecker
-from quiz_bot.manager.checkers.models import WinnerResult
-from quiz_bot.settings import ChallengeSettings
-from quiz_bot.storage import ContextChallenge, IResultStorage
+from quiz_bot.storage import IResultStorage
 
 logger = logging.getLogger(__name__)
 
