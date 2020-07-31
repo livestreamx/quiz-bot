@@ -25,6 +25,7 @@ class User(PrimaryKeyMixin, Base):
     __query_cls__ = UserQuery
 
     external_id = sa.Column(sa.Integer, nullable=False)
+    remote_chat_id = sa.Column(sa.Integer, nullable=False)
     chitchat_id = sa.Column(sa.String, nullable=False)
     first_name = sa.Column(sa.String)
     last_name = sa.Column(sa.String)
@@ -33,12 +34,14 @@ class User(PrimaryKeyMixin, Base):
     def __init__(
         self,
         external_id: int,
+        remote_chat_id: int,
         chitchat_id: str,
         first_name: Optional[str],
         last_name: Optional[str],
         nick_name: Optional[str],
     ) -> None:
         self.external_id = external_id
+        self.remote_chat_id = remote_chat_id
         self.chitchat_id = chitchat_id
         self.first_name = first_name
         self.last_name = last_name

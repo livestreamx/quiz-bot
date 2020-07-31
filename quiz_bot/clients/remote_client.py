@@ -44,13 +44,13 @@ class RemoteBotClient:
     def send(
         self,
         user: ContextUser,
-        message: telebot.types.Message,
-        answers: List[str],
+        bot_answers: List[str],
+        user_message: Optional[str] = None,
         split_answers: bool = False,
         markup: Optional[telebot.types.InlineKeyboardMarkup] = None,
     ) -> None:
-        for reply in self._get_grouped_replies(answers=answers, split_answers=split_answers):
-            self._telebot.send_message(chat_id=message.chat.id, text=reply, parse_mode='html', reply_markup=markup)
+        for reply in self._get_grouped_replies(answers=bot_answers, split_answers=split_answers):
+            self._telebot.send_message(chat_id=user.remote_chat_id, text=reply, parse_mode='html', reply_markup=markup)
             logger.info(
-                'Chat ID %s with %s: [user] %s -> [bot] %s', message.chat.id, user.full_name, message.text, reply,
+                'Chat ID %s with %s: [user] %s -> [bot] %s', user.remote_chat_id, user.full_name, user_message, reply,
             )

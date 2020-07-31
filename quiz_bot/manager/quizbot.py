@@ -44,11 +44,11 @@ class QuizBot:
         def help_handler(message: telebot.types.Message) -> None:
             logger.info('Got %s message from chat #%s', ApiCommand.START.name, message.chat.id)
             with self._remote_client.thread_lock[message.chat.id]:
-                internal_user = self._user_storage.get_or_create_user(user=message.from_user)
+                internal_user = self._user_storage.get_or_create_user(message)
                 self._remote_client.send(
                     user=internal_user,
-                    message=message,
-                    answers=[self._info_settings.greetings],
+                    bot_answers=[self._info_settings.greetings],
+                    user_message=message.text,
                     markup=self._interface_maker.start_markup,
                 )
 
@@ -56,7 +56,7 @@ class QuizBot:
         def start_handler(message: telebot.types.Message) -> None:
             logger.info('Got %s message from chat #%s', ApiCommand.START.name, message.chat.id)
             with self._remote_client.thread_lock[message.chat.id]:
-                internal_user = self._user_storage.get_or_create_user(message.from_user)
+                internal_user = self._user_storage.get_or_create_user(message)
                 first_question = self._challenge_master.start_challenge_for_user(internal_user)
 
                 if first_question.correct:
@@ -64,7 +64,10 @@ class QuizBot:
                 else:
                     replies = [self._get_chitchat_answer(user=internal_user, message=message)]
                 self._remote_client.send(
-                    user=internal_user, message=message, answers=replies, split_answers=first_question.split_replies
+                    user=internal_user,
+                    bot_answers=replies,
+                    user_message=message.text,
+                    split_answers=first_question.split_replies,
                 )
 
         def _get_api_handler_by_callback(query_data: str) -> FunctionType:
@@ -112,8 +115,8 @@ class QuizBot:
             challenge_master_answer.replies.insert(0, self._get_chitchat_answer(user=user, message=message))
         self._remote_client.send(
             user=user,
-            message=message,
-            answers=challenge_master_answer.replies,
+            bot_answers=challenge_master_answer.replies,
+            user_message=message.text,
             split_answers=challenge_master_answer.split_replies,
         )
 
@@ -122,7 +125,7 @@ class QuizBot:
         chitchat_answer = self._get_chitchat_answer(user=unknown_user, message=message)
         self._remote_client.send(
             user=unknown_user,
-            message=message,
-            answers=[chitchat_answer, self._info_settings.unknown_info],
+            bot_answers=[chitchat_answer, self._info_settings.unknown_info],
+            user_message=message.text,
             markup=self._interface_maker.help_markup,
         )

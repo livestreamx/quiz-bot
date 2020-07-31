@@ -20,4 +20,4 @@ class QuizNotifier:
     def notify(self, challenge_id: int) -> None:
         challenge_info = self._challenge_master.get_challenge_info(challenge_id)
         for user in self._user_storage.users:
-            self._remote_client.send(user=user, message=None, answers=[challenge_info])
+            self._remote_client.send(user=user, bot_answers=[challenge_info])
