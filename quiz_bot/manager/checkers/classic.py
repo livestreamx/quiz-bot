@@ -27,12 +27,14 @@ class ClassicResultChecker(AnswerMatchingMixin, BaseResultChecker):
 
     def prepare_user_result(self, user: ContextUser, challenge: ContextChallenge) -> ContextResult:
         self._result_storage.create_result(user=user, challenge=challenge, phase=1)
-        return self._result_storage.get_last_result(user=user, challenge=challenge)
+        return self._result_storage.get_last_user_result_by_challenge(user=user, challenge=challenge)
 
     def check_answer(
         self, user: ContextUser, current_challenge: ExtendedChallenge, message: telebot.types.Message
     ) -> CheckedResult:
-        current_result = self._result_storage.get_last_result(user=user, challenge=current_challenge.data)
+        current_result = self._result_storage.get_last_user_result_by_challenge(
+            user=user, challenge=current_challenge.data
+        )
         expectation = current_challenge.info.get_answer(current_result.phase)
         if not self._match(answer=message.text, expectation=expectation):
             logger.info(
@@ -41,7 +43,7 @@ class ClassicResultChecker(AnswerMatchingMixin, BaseResultChecker):
                 current_result.phase,
                 current_challenge.number,
             )
-            return CheckedResult(correct=False, challenge_finished=False)
+            return CheckedResult(correct=False, finish_condition_reached=False, next_phase=current_result.phase)
 
         logger.info(
             "User '%s' given CORRECT answer for phase %s, challenge %s",
@@ -55,8 +57,8 @@ class ClassicResultChecker(AnswerMatchingMixin, BaseResultChecker):
             logger.info("User '%s' reached the end of challenge '%s!'", user.nick_name, current_challenge.info.name)
             equal_results = self._result_storage.get_equal_results(current_result)
             challenge_finished = self._resolve_challenge_finish(challenge=current_challenge, results=equal_results)
-            return CheckedResult(correct=True, challenge_finished=challenge_finished)
+            return CheckedResult(correct=True, finish_condition_reached=challenge_finished)
 
         next_phase = current_result.phase + 1
         self._result_storage.prepare_next_result(result=current_result, next_phase=next_phase)
-        return CheckedResult(correct=True, challenge_finished=False, next_phase=next_phase)
+        return CheckedResult(correct=True, finish_condition_reached=False, next_phase=next_phase)

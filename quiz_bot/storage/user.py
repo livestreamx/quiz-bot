@@ -79,6 +79,9 @@ class UserStorage(IUserStorage):
     def users(self) -> Iterator[ContextUser]:
         with db.create_session() as session:
             user_ids = session.query(db.User).get_all_user_ids()
+        if not user_ids:
+            logger.warning("No one user was found in database!")
+            return
         for user_id in user_ids:
             with db.create_session() as session:
                 db_user = session.query(db.User).get_by_internal_id(user_id)

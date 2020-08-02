@@ -51,6 +51,14 @@ class ExtendedChallenge:
     def finish_after(self) -> timedelta:
         return cast(timedelta, self.data.created_at + self.info.duration - get_now())
 
+    @property
+    def finished(self) -> bool:
+        return self.data.finished_at is not None
+
+    @property
+    def out_of_date(self) -> bool:
+        return not self.finished and self.finish_after.total_seconds() < 0
+
 
 class ChallengeEvaluation(BaseModel):
     correct: bool = False
@@ -69,7 +77,7 @@ class ChallengeEvaluation(BaseModel):
 
 class CheckedResult(BaseModel):
     correct: bool
-    challenge_finished: bool
+    finish_condition_reached: bool
     next_phase: Optional[int]
 
     @property

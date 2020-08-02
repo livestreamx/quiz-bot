@@ -84,17 +84,30 @@ class ChallengeMaster:
         raise UserIsNotWinnerError("User @%s is not a winner!", user.nick_name)
 
     def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> ChallengeEvaluation:  # noqa: C901
+        if self._current_challenge is not None and self._current_challenge.out_of_date:
+            self.start_next_challenge()
         if self._current_challenge is None:
-            logger.warning("Try to get answer result when challenge is not running!")
-            return ChallengeEvaluation()
+            logger.warning("Try to get evaluation when challenge is not running!")
+            return ChallengeEvaluation(
+                replies=[self._settings.out_of_date_answer_notification, self._settings.post_end_info]
+            )
 
         try:
             checked_result = self._result_checker.check_answer(
                 user=user, current_challenge=self._current_challenge, message=message
             )
         except NoResultFoundError:
-            logger.info("Not found any Result for User @%s. Maybe, challenge not started yet for him?", user.nick_name)
-            return ChallengeEvaluation()
+            logger.info(
+                "Not found any Result for User @%s with challenge ID %s!",
+                self._current_challenge.data.id,
+                user.nick_name,
+            )
+            replies: List[str] = [self._settings.out_of_date_answer_notification]
+            next_challenge_question = self.start_challenge_for_user(user)
+            if next_challenge_question.correct:
+                replies.extend(next_challenge_question.replies)
+            return ChallengeEvaluation(correct=True, replies=replies)
+
         if not checked_result.correct:
             return ChallengeEvaluation(replies=[self._settings.random_incorrect_answer_notification])
 
@@ -113,12 +126,12 @@ class ChallengeMaster:
             )
 
         winner_result = self._get_winner_result(user=user, challenge=self._current_challenge.data)
-        replies: List[str] = [
+        replies: List[str] = [  # type: ignore
             self._settings.get_winner_notification(
                 challenge_name=self._current_challenge.info.name, winner_pos=winner_result.position
             )
         ]
-        if not checked_result.challenge_finished:
+        if not checked_result.finish_condition_reached:
             return ChallengeEvaluation(correct=True, replies=replies)
 
         logger.info(

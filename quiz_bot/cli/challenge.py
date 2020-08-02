@@ -17,9 +17,11 @@ def challenge() -> None:
 @click.option('-i', '--challenge-id', type=click.INT, help='Database challenge ID for notification')
 @click.option('-c', '--challenge-settings-file', type=click.File('r'), help='Challenge settings JSON file')
 def notification(challenge_id: int, challenge_settings_file: Optional[io.StringIO]) -> None:
+    click.echo(f"Prepare notification for challenge ID {challenge_id}...")
     set_basic_settings()
     challenge_settings: ChallengeSettings = get_settings(
         file=challenge_settings_file, settings_type=ChallengeSettings  # type: ignore
     )
     factory = NotifierFactory(challenge_settings=challenge_settings)
     factory.notifier.notify(challenge_id)
+    click.echo('Notification finished.')

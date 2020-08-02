@@ -88,6 +88,7 @@ class ChallengeSettings(BaseSettings):
         "Наверное, в параллельной вселенной это бы было правильным ответом. Но в нашей - увы.",
     ]
     next_answer_notification: str = "Вопрос #<b>{number}</b>: {question}"
+    out_of_date_answer_notification: str = "Увы, но вы чуть-чуть припозднились."
 
     challenge_info: str = "Испытание #<b>{number}</b>: <b>{name}</b>\n\n{results}"
     results_row: str = "#{winner_pos} место: @{nick_name} (<code>{timestamp}</code>)"
@@ -144,7 +145,7 @@ class ChallengeSettings(BaseSettings):
         info = ""
         if winner_results:
             info += "\n".join(self.get_results_info(winner_results)) + "\n\n"
-        if challenge.data.finished_at is None:
+        if not challenge.finished:
             info += self.time_info.format(minutes=round(challenge.finish_after.total_seconds() / 60))
         else:
             info += self.time_over_info.format(timestamp=challenge.data.finished_at.strftime("%H:%M:%S %d-%m-%Y"))
