@@ -49,7 +49,7 @@ class ExtendedChallenge:
 
     @property
     def finish_after(self) -> timedelta:
-        return cast(timedelta, self.data.created_at + self.info.duration - (self.data.created_at + get_now()))
+        return cast(timedelta, self.data.created_at + self.info.duration - get_now())
 
 
 class ChallengeEvaluation(BaseModel):

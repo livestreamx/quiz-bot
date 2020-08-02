@@ -91,7 +91,7 @@ class ChallengeSettings(BaseSettings):
 
     challenge_info: str = "Испытание #<b>{number}</b>: <b>{name}</b>\n\n{results}"
     results_row: str = "#{winner_pos} место: @{nick_name} (<code>{timestamp}</code>)"
-    time_info: str = "Минут до окончания: <code>{minutes}</code>"
+    time_info: str = "Осталось <code>{minutes}</code> минут до окончания испытания."
     time_over_info: str = "Испытание завершено в <code>{timestamp}</code>."
 
     post_end_info: str = "Викторина завершена, спасибо за участие!"
@@ -145,7 +145,7 @@ class ChallengeSettings(BaseSettings):
         if winner_results:
             info += "\n".join(self.get_results_info(winner_results)) + "\n\n"
         if challenge.data.finished_at is None:
-            info += self.time_info.format(minutes=challenge.finish_after.total_seconds() / 60)
+            info += self.time_info.format(minutes=round(challenge.finish_after.total_seconds() / 60))
         else:
             info += self.time_over_info.format(timestamp=challenge.data.finished_at.strftime("%H:%M:%S %d-%m-%Y"))
         return self.challenge_info.format(number=challenge.number, name=challenge.info.name, results=info)
