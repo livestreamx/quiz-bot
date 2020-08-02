@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, cast
+from typing import List, Optional, cast
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
@@ -15,6 +15,12 @@ class ChallengeQuery(so.Query):
         return cast(
             Optional[Challenge],
             self.session.query(Challenge).filter(Challenge.finished_at.is_(None)).order_by(Challenge.id.asc()).first(),
+        )
+
+    def get_finished_ids(self) -> List[int]:
+        return cast(
+            List[int],
+            self.session.query(Challenge).with_entities(Challenge.id).filter(Challenge.finished_at.isnot(None)).all(),
         )
 
 

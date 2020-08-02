@@ -9,6 +9,12 @@ from quiz_bot.entity.context_models import ContextChallenge, ContextUser
 from quiz_bot.utils import get_now
 
 
+class QuizState(str, enum.Enum):
+    PREPARED = "prepared"
+    IN_PROGRESS = "in_progress"
+    FINISHED = "finished"
+
+
 class ChallengeType(str, enum.Enum):
     CLASSIC = "classic"
     SCRIPT = "script"

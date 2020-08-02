@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import Optional, cast
+from typing import List, Optional, cast
 
 from quiz_bot import db
 from quiz_bot.entity import ContextChallenge
@@ -26,6 +26,10 @@ class IChallengeStorage(abc.ABC):
 
     @abc.abstractmethod
     def get_challenge(self, challenge_id: int) -> Optional[ContextChallenge]:
+        pass
+
+    @abc.abstractmethod
+    def get_finished_challenge_ids(self) -> List[int]:
         pass
 
 
@@ -69,3 +73,7 @@ class ChallengeStorage(IChallengeStorage):
             if challenge is None:
                 return None
             return cast(ContextChallenge, ContextChallenge.from_orm(challenge))
+
+    def get_finished_challenge_ids(self) -> List[int]:
+        with db.create_session() as session:
+            return cast(List[int], session.query(db.Challenge).get_finished_ids())

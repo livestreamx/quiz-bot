@@ -8,8 +8,10 @@ from quiz_bot.entity import (
     ContextChallenge,
     ContextUser,
     ExtendedChallenge,
+    QuizState,
     WinnerResult,
 )
+from quiz_bot.entity.errors import UnexpectedChallengeAmountError
 from quiz_bot.manager.checkers import IResultChecker
 from quiz_bot.manager.errors import ChallengeNotFoundError, UserIsNotWinnerError
 from quiz_bot.storage import IChallengeStorage, NoResultFoundError, StopChallengeIteration
@@ -25,10 +27,11 @@ class ChallengeMaster:
         self._settings = settings
         self._result_checker = result_checker
 
+        self._state: QuizState = QuizState.PREPARED
         self._current_challenge: Optional[ExtendedChallenge] = None
-        self._resolve()
+        self._resolve_on_startup()
 
-    def _resolve(self) -> None:
+    def _resolve_on_startup(self) -> None:
         for challenge in self._settings.challenges:
             self._challenge_storage.ensure_challenge_exists(
                 name=challenge.name, phase_amount=len(challenge.questions), winner_amount=challenge.max_winners
@@ -51,6 +54,16 @@ class ChallengeMaster:
             actual_challenge = self._challenge_storage.get_actual_challenge()
             if actual_challenge is not None:
                 self._resolve_current_state(challenge=actual_challenge)
+                return
+
+            finished_challenge_ids = self._challenge_storage.get_finished_challenge_ids()
+            if len(finished_challenge_ids) == len(self._settings.challenges):
+                self._state = QuizState.FINISHED
+                return
+            raise UnexpectedChallengeAmountError(
+                f"Not equal challenge amount: expected {len(self._settings.challenges)}, "
+                f"got {len(finished_challenge_ids)} finished challenges!"
+            )
 
     def start_next_challenge(self) -> None:
         try:
