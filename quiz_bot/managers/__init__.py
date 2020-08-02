@@ -1,6 +1,6 @@
 # flake8: noqa
 from .challenge import ChallengeMaster
 from .checkers import ClassicResultChecker
-from .interface import InterfaceMaker
+from .interface import QuizInterface
+from .markup import UserMarkupMaker
 from .notifier import QuizNotifier
-from .quizbot import QuizBot

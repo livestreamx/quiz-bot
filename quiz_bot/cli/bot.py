@@ -6,7 +6,7 @@ import click
 from quiz_bot.cli.group import app
 from quiz_bot.cli.utils import get_settings, set_basic_settings
 from quiz_bot.entity import ChallengeSettings, ChitchatSettings
-from quiz_bot.factory import QuizBotFactory
+from quiz_bot.factory import QuizInterfaceFactory
 
 logger = logging.getLogger(__name__)
 
@@ -23,5 +23,5 @@ def start(challenge_settings_file: Optional[io.StringIO], chitchat_settings_file
     chitchat_settings: ChitchatSettings = get_settings(
         file=chitchat_settings_file, settings_type=ChitchatSettings  # type: ignore
     )
-    factory = QuizBotFactory(challenge_settings=challenge_settings, chitchat_settings=chitchat_settings)
-    factory.quiz_bot.run()
+    factory = QuizInterfaceFactory(challenge_settings=challenge_settings, chitchat_settings=chitchat_settings)
+    factory.interface.run()
