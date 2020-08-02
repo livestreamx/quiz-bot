@@ -1,5 +1,5 @@
 from quiz_bot.clients import RemoteBotClient
-from quiz_bot.manager.challenge import ChallengeMaster
+from quiz_bot.managers.challenge import ChallengeMaster
 from quiz_bot.storage import IUserStorage
 
 

@@ -1,7 +1,7 @@
 from functools import cached_property
 
 from quiz_bot.factory.base_factory import BaseQuizFactory
-from quiz_bot.manager import QuizNotifier
+from quiz_bot.managers import QuizNotifier
 
 
 class NotifierFactory(BaseQuizFactory):

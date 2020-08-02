@@ -2,8 +2,8 @@ from functools import cached_property
 
 from quiz_bot.clients import RemoteBotClient
 from quiz_bot.entity import ChallengeSettings, RemoteClientSettings
-from quiz_bot.manager import ChallengeMaster, ClassicResultChecker
-from quiz_bot.manager.checkers import IResultChecker
+from quiz_bot.managers import ChallengeMaster, ClassicResultChecker
+from quiz_bot.managers.checkers import IResultChecker
 from quiz_bot.storage import (
     ChallengeStorage,
     IChallengeStorage,

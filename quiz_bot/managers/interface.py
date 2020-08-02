@@ -2,7 +2,7 @@ from functools import cached_property
 from types import FunctionType
 
 import telebot
-from quiz_bot.manager.objects import ApiCommand
+from quiz_bot.managers.objects import ApiCommand
 
 
 class InterfaceMaker:

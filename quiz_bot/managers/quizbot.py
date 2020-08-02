@@ -6,10 +6,10 @@ import requests
 import telebot
 from quiz_bot.clients import ChitchatClient, ChitchatPrewrittenDetectedError, ChitChatRequest, RemoteBotClient
 from quiz_bot.entity import ContextUser, InfoSettings
-from quiz_bot.manager.challenge import ChallengeMaster
-from quiz_bot.manager.errors import NotSupportedCallbackError
-from quiz_bot.manager.interface import InterfaceMaker
-from quiz_bot.manager.objects import ApiCommand, ContentType
+from quiz_bot.managers.challenge import ChallengeMaster
+from quiz_bot.managers.errors import NotSupportedCallbackError
+from quiz_bot.managers.interface import InterfaceMaker
+from quiz_bot.managers.objects import ApiCommand, ContentType
 from quiz_bot.storage import IUserStorage
 
 logger = logging.getLogger(__name__)

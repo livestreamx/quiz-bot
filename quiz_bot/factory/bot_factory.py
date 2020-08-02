@@ -3,7 +3,7 @@ from functools import cached_property
 from quiz_bot.clients import ChitchatClient
 from quiz_bot.entity import ChallengeSettings, ChitchatSettings, InfoSettings
 from quiz_bot.factory.base_factory import BaseQuizFactory
-from quiz_bot.manager import InterfaceMaker, QuizBot
+from quiz_bot.managers import InterfaceMaker, QuizBot
 
 
 class QuizBotFactory(BaseQuizFactory):

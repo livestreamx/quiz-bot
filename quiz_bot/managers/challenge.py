@@ -12,8 +12,8 @@ from quiz_bot.entity import (
     WinnerResult,
 )
 from quiz_bot.entity.errors import UnexpectedChallengeAmountError
-from quiz_bot.manager.checkers import IResultChecker
-from quiz_bot.manager.errors import ChallengeNotFoundError, UserIsNotWinnerError
+from quiz_bot.managers.checkers import IResultChecker
+from quiz_bot.managers.errors import ChallengeNotFoundError, UserIsNotWinnerError
 from quiz_bot.storage import IChallengeStorage, NoResultFoundError, StopChallengeIteration
 
 logger = logging.getLogger(__name__)
