@@ -1,8 +1,7 @@
 from functools import cached_property
-from types import FunctionType
 
 import telebot
-from quiz_bot.managers.objects import ApiCommand
+from quiz_bot.quiz.objects import ApiCommand
 
 
 class UserMarkupMaker:
@@ -25,10 +24,3 @@ class UserMarkupMaker:
         keyboard = telebot.types.InlineKeyboardMarkup()
         self._add_help_button(keyboard)
         return keyboard
-
-    @staticmethod
-    def callback_from(bot: telebot.TeleBot, query: telebot.types.CallbackQuery, func: FunctionType) -> None:
-        bot.answer_callback_query(query.id)
-        query.message.text = query.data
-        query.message.from_user = query.from_user
-        func(query.message)

@@ -1,14 +1,37 @@
 import collections
 import logging
 import threading
-from typing import Any, DefaultDict, List, Optional
+from typing import Any, DefaultDict, Dict, List, Optional
 
 import requests
 import telebot
 import tenacity
+from pydantic import BaseModel, root_validator
 from quiz_bot.entity import ContextUser, RemoteClientSettings
 
 logger = logging.getLogger(__name__)
+
+
+class BotResponse(BaseModel):
+    user: ContextUser
+    user_message: Optional[str]
+    reply: Optional[str]
+    replies: List[str] = []
+    split: bool = False
+    markup: Optional[telebot.types.InlineKeyboardMarkup]
+
+    @root_validator
+    def make_replies(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        reply = values.get('reply')
+        if isinstance(reply, str):
+            values['replies'] = [reply]
+        replies = values.get('replies')
+        if not replies:
+            raise ValueError("No one reply has been specified!")
+        return values
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class RemoteBotClient:
@@ -40,16 +63,15 @@ class RemoteBotClient:
         before_sleep=tenacity.before_sleep_log(logger, logger.level),
         after=tenacity.after_log(logger, logger.level),
     )
-    def send(
-        self,
-        user: ContextUser,
-        bot_answers: List[str],
-        user_message: Optional[str] = None,
-        split_answers: bool = False,
-        markup: Optional[telebot.types.InlineKeyboardMarkup] = None,
-    ) -> None:
-        for reply in self._get_grouped_replies(answers=bot_answers, split_answers=split_answers):
-            self._telebot.send_message(chat_id=user.remote_chat_id, text=reply, parse_mode='html', reply_markup=markup)
+    def send(self, response: BotResponse) -> None:
+        for reply in self._get_grouped_replies(answers=response.replies, split_answers=response.split):
+            self._telebot.send_message(
+                chat_id=response.user.remote_chat_id, text=reply, parse_mode='html', reply_markup=response.markup
+            )
             logger.info(
-                'Chat ID %s with %s: [user] %s -> [bot] %s', user.remote_chat_id, user.full_name, user_message, reply,
+                'Chat ID %s with %s: [user] %s -> [bot] %s',
+                response.user.remote_chat_id,
+                response.user.full_name,
+                response.user_message,
+                reply,
             )

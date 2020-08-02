@@ -76,10 +76,6 @@ class ChallengeEvaluation(BaseModel):
             raise ValueError("Correct answer should contain at least one reply!")
         return v
 
-    @property
-    def split_replies(self) -> bool:
-        return self.correct
-
 
 class CheckedResult(BaseModel):
     correct: bool

@@ -21,7 +21,7 @@ class IUserStorage(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def make_unknown_context_user(user: telebot.types.User) -> ContextUser:
+    def make_unknown_context_user(message: telebot.types.Message) -> ContextUser:
         pass
 
     @property

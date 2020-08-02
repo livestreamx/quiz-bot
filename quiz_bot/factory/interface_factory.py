@@ -3,7 +3,7 @@ from functools import cached_property
 from quiz_bot.clients import ChitchatClient
 from quiz_bot.entity import ChallengeSettings, ChitchatSettings, InfoSettings
 from quiz_bot.factory.base_factory import BaseQuizFactory
-from quiz_bot.managers import QuizInterface, UserMarkupMaker
+from quiz_bot.quiz import QuizInterface, QuizManager, UserMarkupMaker
 
 
 class QuizInterfaceFactory(BaseQuizFactory):
@@ -24,12 +24,15 @@ class QuizInterfaceFactory(BaseQuizFactory):
         return UserMarkupMaker()
 
     @cached_property
-    def interface(self) -> QuizInterface:
-        return QuizInterface(
+    def _manager(self) -> QuizManager:
+        return QuizManager(
             user_storage=self._user_storage,
             chitchat_client=self._chitchat_client,
-            remote_client=self._remote_bot_client,
             info_settings=self._info_settings,
             markup_maker=self._interface_maker,
             challenge_master=self._challenge_master,
         )
+
+    @cached_property
+    def interface(self) -> QuizInterface:
+        return QuizInterface(client=self._remote_bot_client, manager=self._manager,)

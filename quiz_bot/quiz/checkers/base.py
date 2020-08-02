@@ -4,7 +4,7 @@ from typing import List
 
 from quiz_bot.entity import ContextChallenge, WinnerResult
 from quiz_bot.entity.settings import ChallengeSettings
-from quiz_bot.managers.checkers.abstract import IResultChecker
+from quiz_bot.quiz.checkers.abstract import IResultChecker
 from quiz_bot.storage import IResultStorage
 
 logger = logging.getLogger(__name__)
