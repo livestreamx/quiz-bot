@@ -28,7 +28,7 @@ def notification(obj: ChallengeSettings, challenge_id: int) -> None:
 
 @challenge.command()
 @click.pass_obj
-def next(obj: ChallengeSettings) -> None:
+def start_next(obj: ChallengeSettings) -> None:
     click.echo("Prepare to start next challenge...")
     factory = QuizManagerFactory(challenge_settings=obj, chitchat_settings=ChitchatSettings())
     factory.manager.next()
