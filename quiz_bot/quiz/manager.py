@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 import requests
 import telebot
@@ -76,12 +77,23 @@ class QuizManager:
 
     def get_start_response(self, message: telebot.types.Message) -> BotResponse:
         internal_user = self._user_storage.get_or_create_user(message)
-        first_question = self._challenge_master.start_challenge_for_user(internal_user)
+
+        replies: List[str] = []
+        if self._state is QuizState.PREPARED:
+            replies.append(self._info_settings.not_started_info)
+        if self._state is QuizState.IN_PROGRESS:
+            start_info = self._challenge_master.start_challenge_for_user(internal_user)
+            if start_info.replies:
+                replies.extend(start_info.replies)
+            else:
+                replies.append(self._get_chitchat_answer(user=internal_user, text=message.text))
+        if self._state is QuizState.FINISHED:
+            replies.append(self._info_settings.post_end_info)
         return BotResponse(
             user=internal_user,
             user_message=message.text,
-            replies=first_question.replies or [self._get_chitchat_answer(user=internal_user, text=message.text)],
-            split=first_question.correct,
+            replies=replies,
+            split=replies,
             markup=self._markup_maker.start_markup,
         )
 

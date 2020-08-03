@@ -61,6 +61,8 @@ class InfoSettings(BaseSettings):
         "проведения викторин. Чтобы начать свой путь к вершине победы, нажми на кнопку старта."
     )
     unknown_info: str = "Если хочешь узнать, что я за бот такой - нажми на <b>кнопку помощи</b>."
+    not_started_info: str = "Испытание еще не началось. Ожидайте объявления начала испытания."
+    post_end_info: str = "Викторина уже завершена, спасибо за участие!"
 
     @property
     def random_empty_message(self) -> str:
@@ -95,8 +97,6 @@ class ChallengeSettings(BaseSettings):
     results_row: str = "#{winner_pos} место: @{nick_name} (<code>{timestamp}</code>)"
     time_info: str = "Осталось <code>{minutes}</code> минут до окончания испытания."
     time_over_info: str = "Испытание завершено в <code>{timestamp}</code>."
-
-    post_end_info: str = "Викторина завершена, спасибо за участие!"
 
     @property
     def random_correct_answer_notification(self) -> str:

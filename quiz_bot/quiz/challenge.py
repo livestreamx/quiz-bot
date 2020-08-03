@@ -13,7 +13,7 @@ from quiz_bot.entity import (
 )
 from quiz_bot.entity.errors import UnexpectedChallengeAmountError
 from quiz_bot.quiz.checkers import IResultChecker
-from quiz_bot.quiz.errors import ChallengeNotFoundError, UserIsNotWinnerError
+from quiz_bot.quiz.errors import ChallengeNotFoundError, NullableCurrentChallengeError, UserIsNotWinnerError
 from quiz_bot.storage import IChallengeStorage, NoResultFoundError, StopChallengeIteration
 
 logger = logging.getLogger(__name__)
@@ -82,8 +82,9 @@ class ChallengeMaster:
 
     def start_challenge_for_user(self, user: ContextUser) -> ChallengeEvaluation:
         if self._current_challenge is None:
-            logger.warning("Try to start challenge for User @%s result when challenge is not running!", user.nick_name)
-            return ChallengeEvaluation()
+            raise NullableCurrentChallengeError(
+                "Try to start challenge for User @%s result when challenge is not running!", user.nick_name
+            )
         result = self._result_checker.prepare_user_result(user=user, challenge=self._current_challenge.data)
         logger.warning("Started challenge for user @%s", user.nick_name)
         return ChallengeEvaluation(
@@ -112,7 +113,7 @@ class ChallengeMaster:
         if self._current_challenge is None:
             logger.warning("Try to get evaluation when challenge is not running!")
             return ChallengeEvaluation(
-                replies=[self._settings.out_of_date_answer_notification, self._settings.post_end_info]
+                replies=[self._settings.out_of_date_answer_notification, self._settings.post_end_info]  # type: ignore
             )
 
         try:
@@ -171,7 +172,7 @@ class ChallengeMaster:
     @property
     def _start_info(self) -> str:
         if self._current_challenge is None:
-            return self._settings.post_end_info
+            return self._settings.post_end_info  # type: ignore
         return self._settings.get_start_notification(
             challenge_num=self._current_challenge.number,
             challenge_name=self._current_challenge.info.name,
