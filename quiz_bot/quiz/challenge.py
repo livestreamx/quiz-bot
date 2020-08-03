@@ -27,47 +27,52 @@ class ChallengeMaster:
         self._settings = settings
         self._result_checker = result_checker
 
-        self._state: QuizState = QuizState.PREPARED
         self._current_challenge: Optional[ExtendedChallenge] = None
-        self._resolve_on_startup()
-
-    def _resolve_on_startup(self) -> None:
-        for challenge in self._settings.challenges:
-            self._challenge_storage.ensure_challenge_exists(
-                name=challenge.name, phase_amount=len(challenge.questions), winner_amount=challenge.max_winners
-            )
-        self._synchronize_current_challenge_if_neccessary()
+        self.get_quiz_state()
 
     def _make_extended_model(self, challenge: ContextChallenge) -> ExtendedChallenge:
         return ExtendedChallenge(
             info=self._settings.get_challenge_info_by_name(challenge.name), data=challenge, number=challenge.id
         )
 
-    def _resolve_current_state(self, challenge: Optional[ContextChallenge]) -> None:
+    def _set_current_state(self, challenge: Optional[ContextChallenge]) -> None:
         if challenge is None:
             self._current_challenge = None
             return
         self._current_challenge = self._make_extended_model(challenge)
 
-    def _synchronize_current_challenge_if_neccessary(self) -> None:
+    def _resolve_quiz_state(self) -> QuizState:
         if self._current_challenge is None:
             actual_challenge = self._challenge_storage.get_actual_challenge()
             if actual_challenge is not None:
-                self._resolve_current_state(challenge=actual_challenge)
-                return
+                logger.info("Found actual challenge with ID %s", actual_challenge.id)
+                self._set_current_state(challenge=actual_challenge)
+                return QuizState.IN_PROGRESS
 
             finished_challenge_ids = self._challenge_storage.get_finished_challenge_ids()
-            if len(finished_challenge_ids) == len(self._settings.challenges):
-                self._state = QuizState.FINISHED
-                return
-            raise UnexpectedChallengeAmountError(
-                f"Not equal challenge amount: expected {len(self._settings.challenges)}, "
-                f"got {len(finished_challenge_ids)} finished challenges!"
+            if not finished_challenge_ids or len(finished_challenge_ids) < len(self._settings.challenges):
+                logger.info("Quiz is not running now. Finished challenges: %s", finished_challenge_ids)
+                return QuizState.PREPARED
+
+            if len(finished_challenge_ids) >= len(self._settings.challenges):
+                raise UnexpectedChallengeAmountError(
+                    f"Not equal challenge amount: expected {len(self._settings.challenges)}, "
+                    f"got {len(finished_challenge_ids)} finished challenges!"
+                )
+            logger.info("All challenges finished, so quiz is finished also.")
+            return QuizState.FINISHED
+        return QuizState.IN_PROGRESS
+
+    def get_quiz_state(self) -> QuizState:
+        for challenge in self._settings.challenges:
+            self._challenge_storage.ensure_challenge_exists(
+                name=challenge.name, phase_amount=len(challenge.questions), winner_amount=challenge.max_winners
             )
+        return self._resolve_quiz_state()
 
     def start_next_challenge(self) -> None:
         try:
-            self._resolve_current_state(challenge=self._challenge_storage.start_next_challenge())
+            self._set_current_state(challenge=self._challenge_storage.start_next_challenge())
         except StopChallengeIteration:
             logger.warning("Quiz is finished - active challenge was not found!")
             self._current_challenge = None
@@ -96,7 +101,9 @@ class ChallengeMaster:
             return result
         raise UserIsNotWinnerError("User @%s is not a winner!", user.nick_name)
 
-    def get_answer_result(self, user: ContextUser, message: telebot.types.Message) -> ChallengeEvaluation:  # noqa: C901
+    def get_evaluation_result(  # noqa: C901
+        self, user: ContextUser, message: telebot.types.Message
+    ) -> ChallengeEvaluation:
         if self._current_challenge is not None and self._current_challenge.out_of_date:
             self.start_next_challenge()
         if self._current_challenge is None:
@@ -160,7 +167,7 @@ class ChallengeMaster:
 
     @property
     def start_info(self) -> str:
-        self._synchronize_current_challenge_if_neccessary()
+        self._resolve_quiz_state()
         if self._current_challenge is None:
             return self._settings.post_end_info
         return self._settings.get_start_notification(

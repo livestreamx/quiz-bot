@@ -3,7 +3,7 @@ import logging
 import requests
 import telebot
 from quiz_bot.clients import BotResponse, ChitchatClient, ChitchatPrewrittenDetectedError, ChitChatRequest
-from quiz_bot.entity import ContextUser, InfoSettings
+from quiz_bot.entity import ContextUser, InfoSettings, QuizState
 from quiz_bot.quiz.challenge import ChallengeMaster
 from quiz_bot.quiz.markup import UserMarkupMaker
 from quiz_bot.storage import IUserStorage
@@ -25,6 +25,12 @@ class QuizManager:
         self._user_storage = user_storage
         self._markup_maker = markup_maker
         self._challenge_master = challenge_master
+
+        self._state: QuizState = QuizState.PREPARED
+        self._resolve_on_startup()
+
+    def _resolve_on_startup(self) -> None:
+        self._state = self._challenge_master.get_quiz_state()
 
     def _get_chitchat_answer(self, user: ContextUser, text: str) -> str:
         if self._chitchat_client.enabled:
@@ -48,7 +54,7 @@ class QuizManager:
         )
 
     def _evaluate(self, user: ContextUser, message: telebot.types.Message) -> BotResponse:
-        evaluation = self._challenge_master.get_answer_result(user=user, message=message)
+        evaluation = self._challenge_master.get_evaluation_result(user=user, message=message)
         if not evaluation.correct:
             evaluation.replies.insert(0, self._get_chitchat_answer(user=user, text=message.text))
         return BotResponse(user=user, user_message=message.text, replies=evaluation.replies, split=evaluation.correct)
