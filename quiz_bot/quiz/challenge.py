@@ -26,9 +26,17 @@ class ChallengeMaster:
         self._challenge_storage = challenge_storage
         self._settings = settings
         self._result_checker = result_checker
-
         self._current_challenge: Optional[ExtendedChallenge] = None
-        self.get_quiz_state()
+
+        self._ensure_challenges_exist()
+        if self._settings.autostart:
+            self.start_next_challenge()
+
+    def _ensure_challenges_exist(self) -> None:
+        for challenge in self._settings.challenges:
+            self._challenge_storage.ensure_challenge_exists(
+                name=challenge.name, phase_amount=len(challenge.questions), winner_amount=challenge.max_winners
+            )
 
     def _make_extended_model(self, challenge: ContextChallenge) -> ExtendedChallenge:
         return ExtendedChallenge(
@@ -41,7 +49,7 @@ class ChallengeMaster:
             return
         self._current_challenge = self._make_extended_model(challenge)
 
-    def _resolve_quiz_state(self) -> QuizState:
+    def get_quiz_state(self) -> QuizState:
         if self._current_challenge is None:
             actual_challenge = self._challenge_storage.get_actual_challenge()
             if actual_challenge is not None:
@@ -63,19 +71,14 @@ class ChallengeMaster:
             return QuizState.FINISHED
         return QuizState.IN_PROGRESS
 
-    def get_quiz_state(self) -> QuizState:
-        for challenge in self._settings.challenges:
-            self._challenge_storage.ensure_challenge_exists(
-                name=challenge.name, phase_amount=len(challenge.questions), winner_amount=challenge.max_winners
-            )
-        return self._resolve_quiz_state()
-
-    def start_next_challenge(self) -> None:
+    def start_next_challenge(self) -> QuizState:
         try:
             self._set_current_state(challenge=self._challenge_storage.start_next_challenge())
+            return self.get_quiz_state()
         except StopChallengeIteration:
             logger.warning("Quiz is finished - active challenge was not found!")
             self._current_challenge = None
+            return QuizState.FINISHED
 
     def start_challenge_for_user(self, user: ContextUser) -> ChallengeEvaluation:
         if self._current_challenge is None:
@@ -86,7 +89,7 @@ class ChallengeMaster:
         return ChallengeEvaluation(
             correct=True,
             replies=[
-                self.start_info,
+                self._start_info,
                 self._settings.get_next_answer_notification(
                     question=self._current_challenge.info.get_question(result.phase), question_num=result.phase,
                 ),
@@ -166,8 +169,7 @@ class ChallengeMaster:
         return ChallengeEvaluation(correct=True, replies=replies)
 
     @property
-    def start_info(self) -> str:
-        self._resolve_quiz_state()
+    def _start_info(self) -> str:
         if self._current_challenge is None:
             return self._settings.post_end_info
         return self._settings.get_start_notification(

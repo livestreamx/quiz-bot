@@ -1,3 +1,4 @@
 # flake8: noqa
 from .interface_factory import QuizInterfaceFactory
-from .notifier_factory import NotifierFactory
+from .manager_factory import QuizManagerFactory
+from .notifier_factory import QuizNotifierFactory

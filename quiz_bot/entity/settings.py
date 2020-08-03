@@ -68,6 +68,7 @@ class InfoSettings(BaseSettings):
 
 
 class ChallengeSettings(BaseSettings):
+    autostart: bool = False
     challenges: List[ChallengeInfo]
 
     start_notification: str = "Начинается испытание #<b>{number}</b> <b>{name}</b>. <i>{description}</i>"

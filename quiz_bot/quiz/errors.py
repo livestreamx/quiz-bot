@@ -8,3 +8,7 @@ class UserIsNotWinnerError(RuntimeError):
 
 class ChallengeNotFoundError(RuntimeError):
     pass
+
+
+class UnexpectedQuizStateError(RuntimeError):
+    pass

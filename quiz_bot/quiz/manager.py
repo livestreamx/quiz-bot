@@ -5,6 +5,7 @@ import telebot
 from quiz_bot.clients import BotResponse, ChitchatClient, ChitchatPrewrittenDetectedError, ChitChatRequest
 from quiz_bot.entity import ContextUser, InfoSettings, QuizState
 from quiz_bot.quiz.challenge import ChallengeMaster
+from quiz_bot.quiz.errors import UnexpectedQuizStateError
 from quiz_bot.quiz.markup import UserMarkupMaker
 from quiz_bot.storage import IUserStorage
 
@@ -26,11 +27,16 @@ class QuizManager:
         self._markup_maker = markup_maker
         self._challenge_master = challenge_master
 
-        self._state: QuizState = QuizState.PREPARED
-        self._resolve_on_startup()
+        self._state: QuizState = self._challenge_master.get_quiz_state()
 
-    def _resolve_on_startup(self) -> None:
-        self._state = self._challenge_master.get_quiz_state()
+    def next(self) -> None:
+        if self._state is QuizState.PREPARED:
+            next_state = self._challenge_master.start_next_challenge()
+            if next_state is not QuizState.IN_PROGRESS:
+                raise UnexpectedQuizStateError(f"Quiz has state '{next_state}' after next challenge starting!")
+            self._state = next_state
+            return
+        raise UnexpectedQuizStateError(f"Could not start next challenge - current state is '{self._state}'!")
 
     def _get_chitchat_answer(self, user: ContextUser, text: str) -> str:
         if self._chitchat_client.enabled:

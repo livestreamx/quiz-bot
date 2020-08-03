@@ -4,7 +4,7 @@ from quiz_bot.factory.base_factory import BaseQuizFactory
 from quiz_bot.quiz import QuizNotifier
 
 
-class NotifierFactory(BaseQuizFactory):
+class QuizNotifierFactory(BaseQuizFactory):
     @cached_property
     def notifier(self) -> QuizNotifier:
         return QuizNotifier(
