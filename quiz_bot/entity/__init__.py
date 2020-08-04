@@ -1,7 +1,7 @@
 # flake8: noqa
 from .context_models import ContextChallenge, ContextResult, ContextUser
 from .objects import (
-    ChallengeEvaluation,
+    AnswerEvaluation,
     ChallengeInfo,
     ChallengeType,
     CheckedResult,

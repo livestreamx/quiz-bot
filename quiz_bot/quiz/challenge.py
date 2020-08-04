@@ -3,7 +3,7 @@ from typing import List, Optional
 
 import telebot
 from quiz_bot.entity import (
-    ChallengeEvaluation,
+    AnswerEvaluation,
     ChallengeSettings,
     ContextChallenge,
     ContextUser,
@@ -80,14 +80,14 @@ class ChallengeMaster:
             self._current_challenge = None
             return QuizState.FINISHED
 
-    def start_challenge_for_user(self, user: ContextUser) -> ChallengeEvaluation:
+    def start_challenge_for_user(self, user: ContextUser) -> AnswerEvaluation:
         if self._current_challenge is None:
             raise NullableCurrentChallengeError(
                 "Try to start challenge for User @%s result when challenge is not running!", user.nick_name
             )
         result = self._result_checker.prepare_user_result(user=user, challenge=self._current_challenge.data)
         logger.warning("Started challenge ID %s for user @%s", self._current_challenge.number, user.nick_name)
-        return ChallengeEvaluation(
+        return AnswerEvaluation(
             correct=True,
             replies=[
                 self._settings.get_start_notification(
@@ -109,14 +109,12 @@ class ChallengeMaster:
             return result
         raise UserIsNotWinnerError("User @%s is not a winner!", user.nick_name)
 
-    def get_evaluation_result(  # noqa: C901
-        self, user: ContextUser, message: telebot.types.Message
-    ) -> ChallengeEvaluation:
+    def evaluate(self, user: ContextUser, message: telebot.types.Message) -> AnswerEvaluation:  # noqa: C901
         if self._current_challenge is not None and self._current_challenge.out_of_date:
             self.start_next_challenge()
         if self._current_challenge is None:
             logger.warning("Try to get evaluation when challenge is not running!")
-            return ChallengeEvaluation(
+            return AnswerEvaluation(
                 replies=[self._settings.out_of_date_answer_notification, self._settings.post_end_info]  # type: ignore
             )
 
@@ -134,15 +132,15 @@ class ChallengeMaster:
             next_challenge_question = self.start_challenge_for_user(user)
             if next_challenge_question.correct:
                 replies.extend(next_challenge_question.replies)
-            return ChallengeEvaluation(correct=True, replies=replies)
+            return AnswerEvaluation(correct=True, replies=replies)
 
         if not checked_result.correct:
-            return ChallengeEvaluation(replies=[self._settings.random_incorrect_answer_notification])
+            return AnswerEvaluation(replies=[self._settings.random_incorrect_answer_notification])
 
         if not checked_result.finished_for_user:
             if checked_result.next_phase is None:
                 raise RuntimeError("Next phase should be specified for not last but correct result!")
-            return ChallengeEvaluation(
+            return AnswerEvaluation(
                 correct=True,
                 replies=[
                     self._settings.random_correct_answer_notification,
@@ -160,7 +158,7 @@ class ChallengeMaster:
             )
         ]
         if not checked_result.finish_condition_reached:
-            return ChallengeEvaluation(correct=True, replies=replies)
+            return AnswerEvaluation(correct=True, replies=replies)
 
         logger.info(
             "Challenge #%s '%s' finished with all winners resolution!",
@@ -171,7 +169,7 @@ class ChallengeMaster:
         next_challenge_question = self.start_challenge_for_user(user)
         if next_challenge_question.correct:
             replies.extend(next_challenge_question.replies)
-        return ChallengeEvaluation(correct=True, replies=replies)
+        return AnswerEvaluation(correct=True, replies=replies)
 
     def get_challenge_info(self, challenge_id: int) -> str:
         context_challenge = self._challenge_storage.get_challenge(challenge_id)

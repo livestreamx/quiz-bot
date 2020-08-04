@@ -61,7 +61,7 @@ class QuizManager:
         )
 
     def _evaluate(self, user: ContextUser, message: telebot.types.Message) -> BotResponse:
-        evaluation = self._challenge_master.get_evaluation_result(user=user, message=message)
+        evaluation = self._challenge_master.evaluate(user=user, message=message)
         if not evaluation.correct:
             evaluation.replies.insert(0, self._get_chitchat_answer(user=user, text=message.text))
         return BotResponse(user=user, user_message=message.text, replies=evaluation.replies, split=evaluation.correct)

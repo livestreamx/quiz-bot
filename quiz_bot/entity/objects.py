@@ -66,7 +66,7 @@ class ExtendedChallenge:
         return not self.finished and self.finish_after.total_seconds() < 0
 
 
-class ChallengeEvaluation(BaseModel):
+class AnswerEvaluation(BaseModel):
     correct: bool = False
     replies: List[str] = []
 
