@@ -16,13 +16,13 @@ logger = logging.getLogger(__name__)
 class QuizManager:
     def __init__(
         self,
-        info_settings: InfoSettings,
+        settings: InfoSettings,
         chitchat_client: ChitchatClient,
         user_storage: IUserStorage,
         markup_maker: UserMarkupMaker,
         challenge_master: ChallengeMaster,
     ) -> None:
-        self._info_settings = info_settings
+        self._settings = settings
         self._chitchat_client = chitchat_client
         self._user_storage = user_storage
         self._markup_maker = markup_maker
@@ -48,7 +48,7 @@ class QuizManager:
                 logger.exception("Error while making request to chitchat!")
             except ChitchatPrewrittenDetectedError as e:
                 logger.info(e)  # noqa: G200
-        return self._info_settings.random_empty_message
+        return self._settings.random_empty_message
 
     def _get_unknown_user_response(self, message: telebot.types.Message) -> BotResponse:
         unknown_user = self._user_storage.make_unknown_context_user(message)
@@ -56,7 +56,7 @@ class QuizManager:
         return BotResponse(
             user=unknown_user,
             user_message=message.text,
-            replies=[chitchat_answer, self._info_settings.unknown_info],
+            replies=[chitchat_answer, self._settings.unknown_info],
             markup=self._markup_maker.help_markup,
         )
 
@@ -71,7 +71,7 @@ class QuizManager:
         return BotResponse(
             user=internal_user,
             user_message=message.text,
-            reply=self._info_settings.greetings,
+            reply=self._settings.greetings,
             markup=self._markup_maker.start_markup,
         )
 
@@ -80,7 +80,7 @@ class QuizManager:
 
         replies: List[str] = []
         if self._state is QuizState.PREPARED:
-            replies.append(self._info_settings.not_started_info)
+            replies.append(self._settings.not_started_info)
         if self._state is QuizState.IN_PROGRESS:
             start_info = self._challenge_master.start_challenge_for_user(internal_user)
             if start_info.replies:
@@ -88,7 +88,7 @@ class QuizManager:
             else:
                 replies.append(self._get_chitchat_answer(user=internal_user, text=message.text))
         if self._state is QuizState.FINISHED:
-            replies.append(self._info_settings.post_end_info)
+            replies.append(self._settings.post_end_info)
         return BotResponse(
             user=internal_user,
             user_message=message.text,

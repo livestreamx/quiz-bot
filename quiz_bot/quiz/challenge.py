@@ -86,11 +86,15 @@ class ChallengeMaster:
                 "Try to start challenge for User @%s result when challenge is not running!", user.nick_name
             )
         result = self._result_checker.prepare_user_result(user=user, challenge=self._current_challenge.data)
-        logger.warning("Started challenge for user @%s", user.nick_name)
+        logger.warning("Started challenge ID %s for user @%s", self._current_challenge.number, user.nick_name)
         return ChallengeEvaluation(
             correct=True,
             replies=[
-                self._start_info,
+                self._settings.get_start_notification(
+                    challenge_num=self._current_challenge.number,
+                    challenge_name=self._current_challenge.info.name,
+                    description=f"{self._current_challenge.info.description}",
+                ),
                 self._settings.get_next_answer_notification(
                     question=self._current_challenge.info.get_question(result.phase), question_num=result.phase,
                 ),
@@ -168,16 +172,6 @@ class ChallengeMaster:
         if next_challenge_question.correct:
             replies.extend(next_challenge_question.replies)
         return ChallengeEvaluation(correct=True, replies=replies)
-
-    @property
-    def _start_info(self) -> str:
-        if self._current_challenge is None:
-            return self._settings.post_end_info  # type: ignore
-        return self._settings.get_start_notification(
-            challenge_num=self._current_challenge.number,
-            challenge_name=self._current_challenge.info.name,
-            description=f"{self._current_challenge.info.description}",
-        )
 
     def get_challenge_info(self, challenge_id: int) -> str:
         context_challenge = self._challenge_storage.get_challenge(challenge_id)

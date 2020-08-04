@@ -28,7 +28,7 @@ class QuizManagerFactory(BaseQuizFactory):
         return QuizManager(
             user_storage=self._user_storage,
             chitchat_client=self._chitchat_client,
-            info_settings=self._info_settings,
+            settings=self._info_settings,
             markup_maker=self._interface_maker,
             challenge_master=self._challenge_master,
         )
