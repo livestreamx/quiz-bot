@@ -53,7 +53,7 @@ class ChallengeMaster:
         actual_challenge = self._storage.get_actual_challenge()
         if actual_challenge is not None:
             logger.info("Actual challenge with ID %s", actual_challenge.id)
-            self._set_current_challenge(challenge=actual_challenge)
+            self._set_current_challenge(actual_challenge)
             return
 
         finished_challenge_ids = self._storage.get_finished_challenge_ids()
@@ -86,7 +86,7 @@ class ChallengeMaster:
     def _get_next_challenge_info(self) -> ChallengeInfo:
         if self._current_challenge is None:
             return self._settings.get_challenge_model(1)
-        return self._settings.get_challenge_model(self._current_challenge.number)
+        return self._settings.get_challenge_model(self._current_challenge.number + 1)
 
     def start_next_challenge(self) -> QuizState:
         next_challenge_info = self._get_next_challenge_info()
@@ -95,7 +95,7 @@ class ChallengeMaster:
             phase_amount=len(next_challenge_info.questions),
             winner_amount=next_challenge_info.max_winners,
         )
-        self._set_current_challenge(challenge=next_challenge)
+        logger.info("Next challenge: %s", next_challenge)
         return self.quiz_state
 
     def _get_evaluation(self, status: EvaluationStatus, replies: Optional[Sequence[str]] = ()) -> AnswerEvaluation:
@@ -139,7 +139,7 @@ class ChallengeMaster:
                 "Try to evaluate answer for User @%s result when challenge is not running!", user.nick_name
             )
         if self._current_challenge.out_of_date:
-            self._set_current_challenge(challenge=self._storage.finish_actual_challenge())
+            self._storage.finish_actual_challenge()
         try:
             checked_result = self._result_checker.check_answer(
                 user=user, current_challenge=self._current_challenge, message=message
@@ -180,7 +180,7 @@ class ChallengeMaster:
         if not checked_result.finish_condition_reached:
             return self._get_evaluation(status=EvaluationStatus.CORRECT, replies=winner_replies)
 
-        self._set_current_challenge(challenge=self._storage.finish_actual_challenge())
+        self._storage.finish_actual_challenge()
         logger.info(
             "Challenge #%s '%s' finished with all winners resolution!",
             self._current_challenge.number,
