@@ -27,22 +27,20 @@ class QuizManager:
         self._markup_maker = markup_maker
         self._challenge_master = challenge_master
 
+        self._state: QuizState = QuizState.NEW
+        self._sync_state()
+
+    def _sync_state(self) -> None:
         self._state = self._challenge_master.quiz_state
 
     def next(self) -> None:
         if self._state.prepared:
             self._challenge_master.start_next_challenge()
-            self._state = self._challenge_master.quiz_state
+            self._sync_state()
             if self._state is QuizState.IN_PROGRESS:
                 return
             raise UnexpectedQuizStateError(f"Quiz has state '{self._state}' after next challenge starting!")
         raise UnexpectedQuizStateError(f"Could not start next challenge - current state is '{self._state}'!")
-
-    def _sync_for_user(self, message: telebot.types.Message) -> ContextUser:
-        internal_user = self._user_storage.get_or_create_user(message)
-        if internal_user is not None:
-            self._state = self._challenge_master.quiz_state
-        return internal_user
 
     def _get_chitchat_answer(self, user: ContextUser, text: str) -> str:
         if self._chitchat_client.enabled:
@@ -65,7 +63,7 @@ class QuizManager:
         return BotResponse(user=user, user_message=message.text, replies=replies, markup=markup,)
 
     def get_help_response(self, message: telebot.types.Message) -> BotResponse:
-        internal_user = self._sync_for_user(message)
+        internal_user = self._user_storage.get_or_create_user(message)
         if self._state is QuizState.IN_PROGRESS:
             return BotResponse(
                 user=internal_user,
@@ -89,7 +87,10 @@ class QuizManager:
         )
 
     def get_start_response(self, message: telebot.types.Message) -> BotResponse:
-        internal_user = self._sync_for_user(message)
+        internal_user = self._user_storage.get_or_create_user(message)
+        if self._state.prepared:
+            self._sync_state()
+
         if self._state.prepared:
             return BotResponse(user=internal_user, user_message=message.text, reply=self._settings.not_started_info,)
         if self._state is QuizState.FINISHED:
@@ -132,7 +133,7 @@ class QuizManager:
         raise UnreachableMessageProcessingError("Should not be there!")
 
     def respond(self, message: telebot.types.Message) -> BotResponse:
-        internal_user = self._sync_for_user(message)
+        internal_user = self._user_storage.get_or_create_user(message)
         if internal_user is None:
             logger.warning("Gotten message '%s' from unknown user: %s!", message.text, message.from_user)
             return self._get_simple_response(message, attach_unknown_info=True)
