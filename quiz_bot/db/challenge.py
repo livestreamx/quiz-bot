@@ -8,9 +8,6 @@ from quiz_bot.db.base import Base, PrimaryKeyMixin
 
 
 class ChallengeQuery(so.Query):
-    def get_by_name(self, name: str) -> Optional[Challenge]:
-        return cast(Optional[Challenge], self.session.query(Challenge).filter(Challenge.name == name).one_or_none())
-
     def get_actual(self) -> Optional[Challenge]:
         return cast(
             Optional[Challenge],

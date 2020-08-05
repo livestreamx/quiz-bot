@@ -4,7 +4,6 @@ from random import choice
 from typing import List, Optional
 
 from pydantic import BaseSettings, conint, validator
-from quiz_bot.entity.errors import UnexpectedChallengeNameError
 from quiz_bot.entity.objects import ChallengeInfo, ExtendedChallenge, WinnerResult
 from sqlalchemy.engine import Engine, engine_from_config
 from sqlalchemy.engine.url import URL as SAURL
@@ -48,6 +47,17 @@ class RemoteClientSettings(BaseSettings):
 
 
 class InfoSettings(BaseSettings):
+    greetings: str = (
+        "Мое имя - <b>T-Quiz Bot</b>. @livestream_x создал меня для того, чтобы я выполнял функцию ведущего для "
+        "проведения викторин."
+    )
+    unknown_info: str = "Если хочешь узнать, что я за бот такой - нажми на <b>кнопку помощи</b>."
+
+    not_started_info: str = "Следующее испытание еще не началось. Ожидайте объявления начала испытания."
+    wait_for_user_info: str = "Чтобы начать свой путь к вершине победы, нажми на старт!"
+    out_of_date_info: str = "Увы, но вы чуть-чуть припозднились. Испытание было завершено."
+    post_end_info: str = "Викторина завершена, спасибо за участие!"
+
     empty_messages: List[str] = [
         "Нечего сказать " + r'¯\_(ツ)_/¯',
         "Действительно так думаете?",
@@ -56,28 +66,6 @@ class InfoSettings(BaseSettings):
         "Это, конечно, интересно.",
         "Интересно.",
     ]
-    greetings: str = (
-        "Мое имя - <b>T-Quiz Bot</b>. @livestream_x создал меня для того, чтобы я выполнял функцию ведущего для "
-        "проведения викторин. Чтобы начать свой путь к вершине победы, нажми на кнопку старта."
-    )
-    unknown_info: str = "Если хочешь узнать, что я за бот такой - нажми на <b>кнопку помощи</b>."
-    not_started_info: str = "Испытание еще не началось. Ожидайте объявления начала испытания."
-    post_end_info: str = "Викторина уже завершена, спасибо за участие!"
-
-    @property
-    def random_empty_message(self) -> str:
-        return choice(self.empty_messages)
-
-
-class ChallengeSettings(BaseSettings):
-    autostart: bool = False
-    challenges: List[ChallengeInfo]
-
-    start_notification: str = "Начинается испытание #<b>{number}</b> <b>{name}</b>. <i>{description}</i>"
-    finish_notification: str = "Завершено испытание #<b>{number}</b>: <b>{name}</b>."
-    winner_notification: str = "Мои поздравления - вы стали победителем в испытании '<b>{name}</b>'!"
-    prizer_notification: str = "Ура! Вы - призер (#{number} место) в испытании '<b>{name}</b>'."
-
     correct_answer_notifications: List[str] = ["Верно.", "Молодец!", "Так держать!", "И, правда, так."]
     incorrect_answer_notifications: List[str] = [
         "Но ответ неверный.",
@@ -90,13 +78,10 @@ class ChallengeSettings(BaseSettings):
         "Надо бы попытаться снова попробовать дать ответ.",
         "Наверное, в параллельной вселенной это бы было правильным ответом. Но в нашей - увы.",
     ]
-    next_answer_notification: str = "Вопрос #<b>{number}</b>: {question}"
-    out_of_date_answer_notification: str = "Увы, но вы чуть-чуть припозднились."
 
-    challenge_info: str = "Испытание #<b>{number}</b>: <b>{name}</b>\n\n{results}"
-    results_row: str = "#{winner_pos} место: @{nick_name} (<code>{timestamp}</code>)"
-    time_info: str = "Осталось <code>{minutes}</code> минут до окончания испытания."
-    time_over_info: str = "Испытание завершено в <code>{timestamp}</code>."
+    @property
+    def random_empty_message(self) -> str:
+        return choice(self.empty_messages)
 
     @property
     def random_correct_answer_notification(self) -> str:
@@ -106,21 +91,31 @@ class ChallengeSettings(BaseSettings):
     def random_incorrect_answer_notification(self) -> str:
         return choice(self.incorrect_answer_notifications)
 
-    def get_challenge_info_by_name(self, name: str) -> ChallengeInfo:
-        for challenge in self.challenges:
-            if challenge.name != name:
-                continue
-            return challenge
-        raise UnexpectedChallengeNameError(
-            f"'{name}' not found in challenges: {[x.name for x in self.challenges]}"
-            "If you want to change challenges - please, clear database and start application again."
-        )
+
+class ChallengeSettings(BaseSettings):
+    autostart: bool = False
+    challenges: List[ChallengeInfo]
+
+    start_notification: str = "Для тебя начинается испытание #<b>{number}</b> <b>{name}</b>! <i>{description}</i>"
+    winner_notification: str = "Мои поздравления - вы стали победителем в испытании '<b>{name}</b>'!"
+    prizer_notification: str = "Ура! Ты - призер (#{number} место) в испытании '<b>{name}</b>'."
+
+    next_answer_notification: str = "Вопрос #<b>{number}</b>: {question}"
+
+    challenge_info: str = "Испытание #<b>{number}</b>: <b>{name}</b>\n\n{results}"
+    results_row: str = "#{winner_pos} место: @{nick_name} (<code>{timestamp}</code>)"
+    time_info: str = "Осталось <code>{minutes}</code> минут до окончания испытания."
+    time_over_info: str = "Испытание завершено в <code>{timestamp}</code>."
+
+    @property
+    def challenge_amount(self) -> int:
+        return len(self.challenges)
+
+    def get_challenge_model(self, number: int) -> ChallengeInfo:
+        return self.challenges[number - 1]
 
     def get_start_notification(self, challenge_num: int, challenge_name: str, description: str) -> str:
         return self.start_notification.format(number=challenge_num, name=challenge_name, description=description)
-
-    def get_finish_notification(self, challenge_num: int, challenge_name: str) -> str:
-        return self.finish_notification.format(number=challenge_num, name=challenge_name)
 
     def get_winner_notification(self, challenge_name: str, winner_pos: int) -> str:
         if winner_pos > 1:

@@ -16,3 +16,7 @@ class NullableCurrentChallengeError(RuntimeError):
 
 class UnexpectedQuizStateError(RuntimeError):
     pass
+
+
+class UnreachableMessageProcessingError(RuntimeError):
+    pass

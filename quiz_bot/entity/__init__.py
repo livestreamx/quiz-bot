@@ -5,6 +5,7 @@ from .objects import (
     ChallengeInfo,
     ChallengeType,
     CheckedResult,
+    EvaluationStatus,
     ExtendedChallenge,
     QuizState,
     WinnerResult,

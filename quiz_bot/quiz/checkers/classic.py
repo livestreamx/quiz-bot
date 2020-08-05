@@ -5,6 +5,7 @@ from typing import Sequence
 import telebot
 from quiz_bot.entity import CheckedResult, ContextChallenge, ContextResult, ContextUser, ExtendedChallenge
 from quiz_bot.quiz.checkers.base import BaseResultChecker
+from quiz_bot.storage import NoResultFoundError
 from quiz_bot.utils import get_now
 
 logger = logging.getLogger(__name__)
@@ -25,9 +26,16 @@ class ClassicResultChecker(AnswerMatchingMixin, BaseResultChecker):
     def _resolve_challenge_finish(challenge: ExtendedChallenge, results: Sequence[ContextResult]) -> bool:
         return bool(len(results) == challenge.data.winner_amount)
 
+    def _set_phase_finished(self, result: ContextResult) -> None:
+        result.finished_at = get_now()
+        self._result_storage.finish_phase(result=result, finish_time=result.finished_at)
+
     def prepare_user_result(self, user: ContextUser, challenge: ContextChallenge) -> ContextResult:
-        self._result_storage.create_result(user=user, challenge=challenge, phase=1)
-        return self._result_storage.get_last_user_result_by_challenge(user=user, challenge=challenge)
+        try:
+            return self._result_storage.get_last_user_result_by_challenge(user=user, challenge=challenge)
+        except NoResultFoundError:
+            self._result_storage.create_result(user=user, challenge=challenge, phase=1)
+            return self._result_storage.get_last_user_result_by_challenge(user=user, challenge=challenge)
 
     def check_answer(
         self, user: ContextUser, current_challenge: ExtendedChallenge, message: telebot.types.Message
@@ -35,6 +43,22 @@ class ClassicResultChecker(AnswerMatchingMixin, BaseResultChecker):
         current_result = self._result_storage.get_last_user_result_by_challenge(
             user=user, challenge=current_challenge.data
         )
+        if current_challenge.data.finished_at is not None:
+            logger.info(
+                "Challenge ID %s is finished. Skip result checking for user @%s",
+                current_challenge.number,
+                user.nick_name,
+            )
+            if current_result.finished_at is None:
+                logger.info(
+                    "User '%s' given answer when challenge with ID %s is finished!",
+                    user.nick_name,
+                    current_challenge.number,
+                )
+                self._set_phase_finished(current_result)
+                return CheckedResult(correct=False, finish_condition_reached=True)
+            return CheckedResult(correct=False, finish_condition_reached=False)
+
         expectation = current_challenge.info.get_answer(current_result.phase)
         if not self._match(answer=message.text, expectation=expectation):
             logger.info(
@@ -51,8 +75,7 @@ class ClassicResultChecker(AnswerMatchingMixin, BaseResultChecker):
             current_result.phase,
             current_challenge.number,
         )
-        current_result.finished_at = get_now()
-        self._result_storage.finish_phase(result=current_result, finish_time=current_result.finished_at)
+        self._set_phase_finished(current_result)
         if current_result.phase == current_challenge.data.phase_amount:
             logger.info("User '%s' reached the end of challenge '%s!'", user.nick_name, current_challenge.info.name)
             equal_results = self._result_storage.get_equal_results(current_result)

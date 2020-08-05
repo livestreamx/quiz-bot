@@ -1,6 +1,7 @@
 import enum
 from dataclasses import dataclass
 from datetime import datetime
+from functools import cached_property
 from typing import Any, Dict, List, Optional, cast
 
 from pydantic import BaseModel, conint, root_validator, validator
@@ -10,9 +11,24 @@ from quiz_bot.utils import get_now
 
 
 class QuizState(str, enum.Enum):
-    PREPARED = "prepared"
-    IN_PROGRESS = "in_progress"
-    FINISHED = "finished"
+    NEW = "new"  # Quiz has not been started yet
+    IN_PROGRESS = "in_progress"  # Quiz is having active challenge at the moment
+    WAIT_NEXT = "wait_next"  # Quiz has finished and not finished challenges, waiting for starting next challenge
+    FINISHED = "finished"  # Quiz has been finished
+
+    @cached_property
+    def prepared(self) -> bool:
+        return self in [QuizState.NEW, QuizState.WAIT_NEXT]
+
+    @cached_property
+    def delivered(self) -> bool:  # Quiz has been started and reached some challenge's end. Maybe, quiz finished also.
+        return self in [QuizState.WAIT_NEXT, QuizState.FINISHED]
+
+
+class EvaluationStatus(str, enum.Enum):
+    CORRECT = "correct"  # Evaluation has been checked and it is correct
+    INCORRECT = "incorrect"  # Evaluation has been checked and it is incorrect
+    NOT_CHECKED = "not_checked"  # Evaluation has not been checked due to circumstances
 
 
 class ChallengeType(str, enum.Enum):
@@ -67,12 +83,13 @@ class ExtendedChallenge:
 
 
 class AnswerEvaluation(BaseModel):
-    correct: bool = False
+    status: EvaluationStatus
     replies: List[str] = []
+    quiz_state: QuizState = QuizState.IN_PROGRESS
 
     @validator('replies')
     def validate_replies(cls, v: List[str], values: Dict[str, Any]) -> List[str]:
-        if values.get('correct') is True and not v:
+        if values.get('status') is EvaluationStatus.CORRECT and not v:
             raise ValueError("Correct answer should contain at least one reply!")
         return v
 
