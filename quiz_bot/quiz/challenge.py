@@ -34,9 +34,7 @@ class ChallengeMaster:
             self.start_next_challenge()
 
     @property
-    def current_challenge(self) -> ExtendedChallenge:
-        if self._current_challenge is None:
-            raise NullableCurrentChallengeError
+    def current_challenge(self) -> Optional[ExtendedChallenge]:
         return self._current_challenge
 
     @property

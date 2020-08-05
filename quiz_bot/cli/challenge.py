@@ -33,7 +33,6 @@ def notification(challenge_settings_file: Optional[io.StringIO], challenge_id: i
 
 @challenge.command()
 @click.option('-c', '--challenge-settings-file', type=click.File('r'), help='Challenge settings JSON file')
-@click.pass_obj
 def start_next(challenge_settings_file: Optional[io.StringIO]) -> None:
     click.echo("Prepare to start next challenge...")
     factory = _get_management_factory(challenge_settings_file)
@@ -41,6 +40,10 @@ def start_next(challenge_settings_file: Optional[io.StringIO]) -> None:
     previous_challenge = factory.challenge_master.current_challenge
     factory.manager.next()
     next_challenge = factory.challenge_master.current_challenge
+
+    if next_challenge is None:
+        raise RuntimeError("Next challenge could not be nullable!")
+
     click.echo(f"Next challenge with ID {next_challenge.number} started.")
 
     if previous_challenge is not None:
@@ -49,5 +52,5 @@ def start_next(challenge_settings_file: Optional[io.StringIO]) -> None:
         click.echo('Notification finished.')
 
     click.echo(f"Notify players about next challenge with ID {next_challenge.number}...")
-    factory.notifier.notify(previous_challenge.number)
+    factory.notifier.notify(next_challenge.number)
     click.echo('Notification finished.')

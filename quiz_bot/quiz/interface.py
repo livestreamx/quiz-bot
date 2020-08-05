@@ -21,7 +21,7 @@ class QuizInterface:
         self._client.run_loop()
 
     def _process(self, message: telebot.types.Message, func: Callable[[telebot.types.Message], BotResponse]) -> None:
-        logger.info('Got %s message from chat #%s', ApiCommand.START.name, message.chat.id)
+        logger.info("Got '%s' message from chat #%s", message.text, message.chat.id)
         with self._client.thread_lock[message.chat.id]:
             response = func(message)
             self._client.send(response)

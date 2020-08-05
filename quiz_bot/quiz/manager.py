@@ -59,12 +59,27 @@ class QuizManager:
 
     def get_help_response(self, message: telebot.types.Message) -> BotResponse:
         internal_user = self._user_storage.get_or_create_user(message)
-        replies = [self._settings.greetings]
-        markup = None
         if self._state is QuizState.IN_PROGRESS:
-            replies.append(self._settings.wait_for_user_info)
-            markup = self._markup_maker.start_markup
-        return BotResponse(user=internal_user, user_message=message.text, replies=replies, markup=markup,)
+            return BotResponse(
+                user=internal_user,
+                user_message=message.text,
+                replies=[self._settings.greetings, self._settings.wait_for_user_info],
+                markup=self._markup_maker.start_markup,
+                split=True,
+            )
+        if self._state is QuizState.FINISHED:
+            return BotResponse(
+                user=internal_user,
+                user_message=message.text,
+                replies=[self._settings.greetings, self._settings.post_end_info],
+                split=True,
+            )
+        return BotResponse(
+            user=internal_user,
+            user_message=message.text,
+            replies=[self._settings.greetings, self._settings.not_started_info],
+            split=True,
+        )
 
     def get_start_response(self, message: telebot.types.Message) -> BotResponse:
         internal_user = self._user_storage.get_or_create_user(message)
