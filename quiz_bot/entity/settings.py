@@ -41,6 +41,7 @@ class ChitchatSettings(BaseSettings):
 class RemoteClientSettings(BaseSettings):
     token: str
     threads_num: conint(ge=1) = 2  # type: ignore
+    read_timeout: int = 5
 
     class Config:
         env_prefix = 'REMOTE_'

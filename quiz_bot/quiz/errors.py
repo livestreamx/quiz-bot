@@ -20,3 +20,7 @@ class UnexpectedQuizStateError(RuntimeError):
 
 class UnreachableMessageProcessingError(RuntimeError):
     pass
+
+
+class UnexpectedChallengeStateError(RuntimeError):
+    pass

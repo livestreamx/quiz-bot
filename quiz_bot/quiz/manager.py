@@ -35,7 +35,12 @@ class QuizManager:
             if next_state is not QuizState.IN_PROGRESS:
                 raise UnexpectedQuizStateError(f"Quiz has state '{next_state}' after next challenge starting!")
             self._state = next_state
+            return
         raise UnexpectedQuizStateError(f"Could not start next challenge - current state is '{self._state}'!")
+
+    def _sync_for_user(self, message: telebot.types.Message) -> ContextUser:
+        self._state = self._challenge_master.quiz_state
+        return self._user_storage.get_or_create_user(message)
 
     def _get_chitchat_answer(self, user: ContextUser, text: str) -> str:
         if self._chitchat_client.enabled:
@@ -58,7 +63,7 @@ class QuizManager:
         return BotResponse(user=user, user_message=message.text, replies=replies, markup=markup,)
 
     def get_help_response(self, message: telebot.types.Message) -> BotResponse:
-        internal_user = self._user_storage.get_or_create_user(message)
+        internal_user = self._sync_for_user(message)
         if self._state is QuizState.IN_PROGRESS:
             return BotResponse(
                 user=internal_user,
@@ -82,7 +87,7 @@ class QuizManager:
         )
 
     def get_start_response(self, message: telebot.types.Message) -> BotResponse:
-        internal_user = self._user_storage.get_or_create_user(message)
+        internal_user = self._sync_for_user(message)
         if self._state.prepared:
             return BotResponse(user=internal_user, user_message=message.text, reply=self._settings.not_started_info,)
         if self._state is QuizState.FINISHED:
@@ -130,7 +135,7 @@ class QuizManager:
         raise UnreachableMessageProcessingError("Should not be there!")
 
     def respond(self, message: telebot.types.Message) -> BotResponse:
-        internal_user = self._user_storage.get_user(message.from_user)
+        internal_user = self._sync_for_user(message)
         if internal_user is None:
             logger.warning("Gotten message '%s' from unknown user: %s!", message.text, message.from_user)
             return self._get_simple_response(message, attach_unknown_info=True)

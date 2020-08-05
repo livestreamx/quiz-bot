@@ -36,6 +36,7 @@ class BotResponse(BaseModel):
 
 class RemoteBotClient:
     def __init__(self, settings: RemoteClientSettings) -> None:
+        self._settings = settings
         self._locks: DefaultDict[Any, threading.Lock] = collections.defaultdict(threading.Lock)
         self._telebot = telebot.TeleBot(token=settings.token, num_threads=settings.threads_num)
 
@@ -66,7 +67,11 @@ class RemoteBotClient:
     def send(self, response: BotResponse) -> None:
         for reply in self._get_grouped_replies(answers=response.replies, split_answers=response.split):
             self._telebot.send_message(
-                chat_id=response.user.remote_chat_id, text=reply, parse_mode='html', reply_markup=response.markup
+                chat_id=response.user.remote_chat_id,
+                text=reply,
+                parse_mode='html',
+                reply_markup=response.markup,
+                timeout=self._settings.read_timeout,
             )
             logger.info(
                 'Chat ID %s with %s: [user] %s -> [bot] %s',

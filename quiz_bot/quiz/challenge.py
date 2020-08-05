@@ -49,32 +49,34 @@ class ChallengeMaster:
     def _set_current_challenge(self, challenge: ContextChallenge) -> None:
         self._current_challenge = self._make_extended_model(challenge)
 
+    def _sync_challenge(self) -> None:
+        actual_challenge = self._storage.get_actual_challenge()
+        if actual_challenge is not None:
+            logger.info("Actual challenge with ID %s", actual_challenge.id)
+            self._set_current_challenge(challenge=actual_challenge)
+            return
+
+        finished_challenge_ids = self._storage.get_finished_challenge_ids()
+        if not finished_challenge_ids:
+            logger.info("Quiz has not been running yet.")
+            return
+
+        if len(finished_challenge_ids) > self._settings.challenge_amount:
+            raise UnexpectedChallengeAmountError(
+                f"Not equal challenge amount: expected {self._settings.challenge_amount}, "
+                f"got {len(finished_challenge_ids)} finished challenges!"
+            )
+        logger.info("Quiz is not running now. Finished challenges: %s", finished_challenge_ids)
+        challenge = self._storage.get_challenge(finished_challenge_ids[-1])
+        if challenge is None:
+            raise ChallengeNotFoundError("Could not found finished challenge - WTF?")
+        self._set_current_challenge(challenge)
+
     @property
     def quiz_state(self) -> QuizState:
+        self._sync_challenge()
         if self._current_challenge is None:
-            actual_challenge = self._storage.get_actual_challenge()
-            if actual_challenge is not None:
-                logger.info("Found actual challenge with ID %s", actual_challenge.id)
-                self._set_current_challenge(challenge=actual_challenge)
-                return QuizState.IN_PROGRESS
-
-            finished_challenge_ids = self._storage.get_finished_challenge_ids()
-            if not finished_challenge_ids:
-                logger.info("Quiz has not been running yet.")
-                return QuizState.NEW
-
-            if len(finished_challenge_ids) < self._settings.challenge_amount:
-                logger.info("Quiz is not running now. Finished challenges: %s", finished_challenge_ids)
-                return QuizState.WAIT_NEXT
-
-            if len(finished_challenge_ids) >= self._settings.challenge_amount:
-                raise UnexpectedChallengeAmountError(
-                    f"Not equal challenge amount: expected {self._settings.challenge_amount}, "
-                    f"got {len(finished_challenge_ids)} finished challenges!"
-                )
-            logger.info("All challenges finished, so quiz is finished also.")
-            return QuizState.FINISHED
-
+            return QuizState.NEW
         if self._current_challenge.finished:
             if self._is_last_challenge:
                 return QuizState.FINISHED

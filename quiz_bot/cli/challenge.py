@@ -52,5 +52,5 @@ def start_next(challenge_settings_file: Optional[io.StringIO]) -> None:
         click.echo('Notification finished.')
 
     click.echo(f"Notify players about next challenge with ID {next_challenge.number}...")
-    factory.notifier.notify(next_challenge.number)
+    factory.notifier.notify(next_challenge.number, is_start=True)
     click.echo('Notification finished.')
