@@ -196,7 +196,7 @@ class ChallengeMaster:
     def get_challenge_info(self, challenge_id: int) -> str:
         context_challenge = self._storage.get_challenge(challenge_id)
         if context_challenge is None:
-            raise ChallengeNotFoundError("Challenge with ID '%s' was not found!", challenge_id)
+            raise ChallengeNotFoundError(f"Challenge with ID {challenge_id} was not found!")
         challenge = self._make_extended_model(context_challenge)
         winner_results = self._result_checker.get_winners(challenge.data)
         return self._settings.get_challenge_info(challenge=challenge, winner_results=winner_results)

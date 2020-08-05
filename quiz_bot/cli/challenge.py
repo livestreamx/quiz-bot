@@ -8,40 +8,46 @@ from quiz_bot.entity import ChallengeSettings, ChitchatSettings
 from quiz_bot.factory import QuizManagerFactory
 
 
-@app.group()
-@click.pass_context
-@click.option('-c', '--challenge-settings-file', type=click.File('r'), help='Challenge settings JSON file')
-def challenge(ctx: click.Context, challenge_settings_file: Optional[io.StringIO]) -> None:
+def _get_management_factory(challenge_settings_file: Optional[io.StringIO]) -> QuizManagerFactory:
     set_basic_settings()
     challenge_settings: ChallengeSettings = get_settings(  # type: ignore
         file=challenge_settings_file, settings_type=ChallengeSettings
     )
-    ctx.obj = QuizManagerFactory(challenge_settings=challenge_settings, chitchat_settings=ChitchatSettings())
+    return QuizManagerFactory(challenge_settings=challenge_settings, chitchat_settings=ChitchatSettings())
+
+
+@app.group(short_help="Commands for challenge managment")
+def challenge() -> None:
+    pass
 
 
 @challenge.command()
-@click.pass_obj
+@click.option('-c', '--challenge-settings-file', type=click.File('r'), help='Challenge settings JSON file')
 @click.option('-i', '--challenge-id', type=click.INT, help='Database challenge ID for notification')
-def notification(obj: QuizManagerFactory, challenge_id: int) -> None:
+def notification(challenge_settings_file: Optional[io.StringIO], challenge_id: int) -> None:
     click.echo(f"Prepare notification for challenge ID {challenge_id}...")
-    obj.notifier.notify(challenge_id)
+    factory = _get_management_factory(challenge_settings_file)
+    factory.notifier.notify(challenge_id)
     click.echo('Notification finished.')
 
 
 @challenge.command()
+@click.option('-c', '--challenge-settings-file', type=click.File('r'), help='Challenge settings JSON file')
 @click.pass_obj
-def start_next(obj: QuizManagerFactory) -> None:
+def start_next(challenge_settings_file: Optional[io.StringIO]) -> None:
     click.echo("Prepare to start next challenge...")
-    previous_challenge = obj.challenge_master.current_challenge
-    obj.manager.next()
-    next_challenge = obj.challenge_master.current_challenge
+    factory = _get_management_factory(challenge_settings_file)
+
+    previous_challenge = factory.challenge_master.current_challenge
+    factory.manager.next()
+    next_challenge = factory.challenge_master.current_challenge
     click.echo(f"Next challenge with ID {next_challenge.number} started.")
 
     if previous_challenge is not None:
         click.echo(f"Previous challenge with ID {previous_challenge.number} exists, so need to notify players.")
-        obj.notifier.notify(previous_challenge.number)
+        factory.notifier.notify(previous_challenge.number)
         click.echo('Notification finished.')
 
     click.echo(f"Notify players about next challenge with ID {next_challenge.number}...")
-    obj.notifier.notify(previous_challenge.number)
+    factory.notifier.notify(previous_challenge.number)
     click.echo('Notification finished.')
