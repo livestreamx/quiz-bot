@@ -31,11 +31,11 @@ class QuizManager:
 
     def next(self) -> None:
         if self._state.prepared:
-            next_state = self._challenge_master.start_next_challenge()
-            if next_state is not QuizState.IN_PROGRESS:
-                raise UnexpectedQuizStateError(f"Quiz has state '{next_state}' after next challenge starting!")
-            self._state = next_state
-            return
+            self._challenge_master.start_next_challenge()
+            self._state = self._challenge_master.quiz_state
+            if self._state is QuizState.IN_PROGRESS:
+                return
+            raise UnexpectedQuizStateError(f"Quiz has state '{self._state}' after next challenge starting!")
         raise UnexpectedQuizStateError(f"Could not start next challenge - current state is '{self._state}'!")
 
     def _sync_for_user(self, message: telebot.types.Message) -> ContextUser:

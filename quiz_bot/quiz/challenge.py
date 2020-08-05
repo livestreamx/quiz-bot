@@ -88,7 +88,7 @@ class ChallengeMaster:
             return self._settings.get_challenge_model(1)
         return self._settings.get_challenge_model(self._current_challenge.number + 1)
 
-    def start_next_challenge(self) -> QuizState:
+    def start_next_challenge(self) -> None:
         next_challenge_info = self._get_next_challenge_info()
         next_challenge = self._storage.create_challenge(
             name=next_challenge_info.name,
@@ -96,7 +96,6 @@ class ChallengeMaster:
             winner_amount=next_challenge_info.max_winners,
         )
         logger.info("Next challenge: %s", next_challenge)
-        return self.quiz_state
 
     def _get_evaluation(self, status: EvaluationStatus, replies: Optional[Sequence[str]] = ()) -> AnswerEvaluation:
         return AnswerEvaluation(status=status, replies=replies, quiz_state=self.quiz_state)
