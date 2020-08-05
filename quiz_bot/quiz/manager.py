@@ -93,12 +93,7 @@ class QuizManager:
         if self._state is QuizState.FINISHED:
             return BotResponse(user=internal_user, user_message=message.text, reply=self._settings.post_end_info,)
         start_info = self._challenge_master.start_challenge_for_user(internal_user)
-        return BotResponse(
-            user=internal_user,
-            user_message=message.text,
-            replies=start_info.replies,
-            markup=self._markup_maker.start_markup,
-        )
+        return BotResponse(user=internal_user, user_message=message.text, replies=start_info.replies, split=True)
 
     def _evaluate(self, user: ContextUser, message: telebot.types.Message) -> BotResponse:
         evaluation = self._challenge_master.evaluate(user=user, message=message)
