@@ -65,12 +65,17 @@ class RemoteBotClient:
         after=tenacity.after_log(logger, logger.level),
     )
     def send(self, response: BotResponse) -> None:
-        for reply in self._get_grouped_replies(answers=response.replies, split_answers=response.split):
+        messages = self._get_grouped_replies(answers=response.replies, split_answers=response.split)
+        for num, message in enumerate(messages, start=1):
+            markup = None
+            if num == len(messages):
+                markup = response.markup
+
             self._telebot.send_message(
                 chat_id=response.user.remote_chat_id,
-                text=reply,
+                text=message,
                 parse_mode='html',
-                reply_markup=response.markup,
+                reply_markup=markup,
                 timeout=self._settings.read_timeout,
             )
             logger.info(
@@ -78,5 +83,5 @@ class RemoteBotClient:
                 response.user.remote_chat_id,
                 response.user.full_name,
                 response.user_message,
-                reply,
+                message,
             )
