@@ -45,7 +45,7 @@ class RemoteBotClient:
         return self._telebot
 
     def run_loop(self) -> None:
-        self._telebot.polling(none_stop=True)
+        self._telebot.polling(none_stop=True, timeout=self._settings.poll_timeout)
 
     @property
     def thread_lock(self) -> DefaultDict[Any, threading.Lock]:
