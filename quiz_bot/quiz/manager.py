@@ -39,8 +39,10 @@ class QuizManager:
         raise UnexpectedQuizStateError(f"Could not start next challenge - current state is '{self._state}'!")
 
     def _sync_for_user(self, message: telebot.types.Message) -> ContextUser:
-        self._state = self._challenge_master.quiz_state
-        return self._user_storage.get_or_create_user(message)
+        internal_user = self._user_storage.get_or_create_user(message)
+        if internal_user is not None:
+            self._state = self._challenge_master.quiz_state
+        return internal_user
 
     def _get_chitchat_answer(self, user: ContextUser, text: str) -> str:
         if self._chitchat_client.enabled:
