@@ -14,13 +14,15 @@ from yarl import URL
 
 
 class LoggingSettings(BaseSettings):
-    log_level: str = logging.getLevelName(logging.INFO)
+    level: str = logging.getLevelName(logging.INFO)
+    format: str = "%(asctime)s [%(levelname)s] [%(name)s:%(lineno)s]  %(message)s"
+    datefmt: str = "%H:%M:%S %d-%m-%Y"
 
     class Config:
-        env_prefix = 'APP_'
+        env_prefix = 'LOG_'
 
     def setup_logging(self) -> None:
-        logging.basicConfig(level=self.log_level)
+        logging.basicConfig(level=self.level, format=self.format, datefmt=self.datefmt)
 
 
 class ChitchatSettings(BaseSettings):
