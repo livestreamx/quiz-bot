@@ -31,9 +31,14 @@ class ChallengeMaster:
         self._current_challenge: Optional[ExtendedChallenge] = None
 
         self._sync_challenge()
-        if self._current_challenge is not None:
-            if all([self._settings.autostart, self._current_challenge.finished]):
-                self.start_next_challenge()
+        if all(
+            [
+                self._settings.autostart,
+                self._current_challenge is None
+                or (self._current_challenge is not None and self._current_challenge.finished),
+            ]
+        ):
+            self.start_next_challenge()
 
     @property
     def current_challenge(self) -> Optional[ExtendedChallenge]:

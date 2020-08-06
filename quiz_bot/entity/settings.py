@@ -1,8 +1,10 @@
 import logging
 import socket
+from datetime import tzinfo
 from random import choice
 from typing import List, Optional
 
+import pytz
 from pydantic import BaseSettings, conint, validator
 from quiz_bot.entity.objects import ChallengeInfo, ExtendedChallenge, WinnerResult
 from sqlalchemy.engine import Engine, engine_from_config
@@ -98,6 +100,7 @@ class InfoSettings(BaseSettings):
 
 class ChallengeSettings(BaseSettings):
     autostart: bool = False
+    timezone: tzinfo = pytz.timezone('Asia/Yekaterinburg')
     challenges: List[ChallengeInfo]
 
     start_notification: str = "Для тебя начинается испытание #<b>{number}</b> <b>{name}</b>! <i>{description}</i>"
@@ -136,7 +139,7 @@ class ChallengeSettings(BaseSettings):
                 self.results_row.format(
                     winner_pos=winner.position,
                     nick_name=winner.user.nick_name,
-                    timestamp=winner.finished_at.strftime("%H:%M:%S, %d-%m-%Y"),
+                    timestamp=winner.finished_at.astimezone(self.timezone).strftime("%H:%M:%S, %d-%m-%Y"),
                 )
             )
         return results
@@ -148,7 +151,9 @@ class ChallengeSettings(BaseSettings):
         if not challenge.finished:
             info += self.time_info.format(minutes=round(challenge.finish_after.total_seconds() / 60))
         else:
-            info += self.time_over_info.format(timestamp=challenge.data.finished_at.strftime("%H:%M:%S %d-%m-%Y"))
+            info += self.time_over_info.format(
+                timestamp=challenge.data.finished_at.astimezone(self.timezone).strftime("%H:%M:%S %d-%m-%Y")
+            )
         return self.challenge_info.format(number=challenge.number, name=challenge.info.name, results=info)
 
 
