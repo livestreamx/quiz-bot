@@ -114,6 +114,12 @@ class ChallengeSettings(BaseSettings):
     time_info: str = "Осталось <code>{minutes}</code> минут до окончания испытания."
     time_over_info: str = "Испытание завершено в <code>{timestamp}</code>."
 
+    @validator('timezone')
+    def validate_timezone(cls, v: Optional[str]) -> Optional[tzinfo]:
+        if isinstance(v, str):
+            return pytz.timezone(v)
+        return None
+
     @property
     def challenge_amount(self) -> int:
         return len(self.challenges)
