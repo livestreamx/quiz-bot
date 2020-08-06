@@ -30,6 +30,7 @@ class ChallengeMaster:
         self._result_checker = result_checker
         self._current_challenge: Optional[ExtendedChallenge] = None
 
+        self._sync_challenge()
         if self._settings.autostart:
             self.start_next_challenge()
 
