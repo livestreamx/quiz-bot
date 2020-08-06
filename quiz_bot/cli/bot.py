@@ -1,5 +1,4 @@
 import io
-import logging
 from typing import Optional
 
 import click
@@ -7,8 +6,6 @@ from quiz_bot.cli.group import app
 from quiz_bot.cli.utils import get_settings, set_basic_settings
 from quiz_bot.entity import ChallengeSettings, ChitchatSettings
 from quiz_bot.factory import QuizInterfaceFactory
-
-logger = logging.getLogger(__name__)
 
 
 @app.command()

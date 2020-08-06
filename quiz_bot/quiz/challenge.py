@@ -96,6 +96,7 @@ class ChallengeMaster:
             winner_amount=next_challenge_info.max_winners,
         )
         logger.info("Next challenge: %s", next_challenge)
+        self._sync_challenge()
 
     def _get_evaluation(self, status: EvaluationStatus, replies: Optional[Sequence[str]] = ()) -> AnswerEvaluation:
         return AnswerEvaluation(status=status, replies=replies, quiz_state=self.quiz_state)
