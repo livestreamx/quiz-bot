@@ -24,8 +24,11 @@ def challenge() -> None:
 @challenge.command()
 @click.option('-c', '--challenge-settings-file', type=click.File('r'), help='Challenge settings JSON file')
 @click.option('-i', '--challenge-id', type=click.INT, help='Database challenge ID for notification')
-def notification(challenge_settings_file: Optional[io.StringIO], challenge_id: int) -> None:
-    click.echo(f"Prepare notification for challenge ID {challenge_id}...")
+def notification(challenge_settings_file: Optional[io.StringIO], challenge_id: Optional[int]) -> None:
+    if isinstance(challenge_id, int):
+        click.echo(f"Prepare notification for challenge ID {challenge_id}...")
+    else:
+        click.echo("Challenge ID not specified. Try to prepare notification for current challenge...")
     factory = _get_management_factory(challenge_settings_file)
     factory.notifier.notify(challenge_id)
     click.echo('Notification finished.')

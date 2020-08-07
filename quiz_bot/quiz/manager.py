@@ -69,7 +69,7 @@ class QuizManager:
                 user=internal_user,
                 user_message=message.text,
                 replies=[self._settings.greetings, self._settings.wait_for_user_info],
-                markup=self._markup_maker.start_markup,
+                markup=self._markup_maker.start_with_status_markup,
                 split=True,
             )
         if self._state is QuizState.FINISHED:
@@ -77,6 +77,7 @@ class QuizManager:
                 user=internal_user,
                 user_message=message.text,
                 replies=[self._settings.greetings, self._settings.post_end_info],
+                markup=self._markup_maker.status_markup,
                 split=True,
             )
         return BotResponse(
@@ -94,9 +95,36 @@ class QuizManager:
         if self._state.prepared:
             return BotResponse(user=internal_user, user_message=message.text, reply=self._settings.not_started_info,)
         if self._state is QuizState.FINISHED:
-            return BotResponse(user=internal_user, user_message=message.text, reply=self._settings.post_end_info,)
+            return BotResponse(
+                user=internal_user,
+                user_message=message.text,
+                reply=self._settings.post_end_info,
+                markup=self._markup_maker.status_markup,
+            )
         start_info = self._challenge_master.start_challenge_for_user(internal_user)
         return BotResponse(user=internal_user, user_message=message.text, replies=start_info.replies, split=True)
+
+    def get_status_response(self, message: telebot.types.Message) -> BotResponse:
+        internal_user = self._user_storage.get_or_create_user(message)
+        if self._state is QuizState.NEW:
+            return BotResponse(user=internal_user, user_message=message.text, reply=self._settings.not_started_info,)
+        if self._state is QuizState.IN_PROGRESS:
+            return BotResponse(
+                user=internal_user, user_message=message.text, reply=self._challenge_master.get_challenge_info(),
+            )
+        if self._state is QuizState.WAIT_NEXT:
+            return BotResponse(
+                user=internal_user,
+                user_message=message.text,
+                replies=[self._challenge_master.get_challenge_info(), self._settings.not_started_info],
+                split=True,
+            )
+        return BotResponse(
+            user=internal_user,
+            user_message=message.text,
+            replies=[self._challenge_master.get_challenge_info(), self._settings.post_end_info],
+            split=True,
+        )
 
     def _evaluate(self, user: ContextUser, message: telebot.types.Message) -> BotResponse:
         evaluation = self._challenge_master.evaluate(user=user, message=message)
@@ -118,7 +146,9 @@ class QuizManager:
                 return BotResponse(user=user, user_message=message.text, replies=replies)
             if self._state.delivered:
                 replies.insert(0, self._settings.out_of_date_info)
-                return BotResponse(user=user, user_message=message.text, replies=replies)
+                return BotResponse(
+                    user=user, user_message=message.text, replies=replies, markup=self._markup_maker.status_markup
+                )
 
         if evaluation.status is EvaluationStatus.NOT_CHECKED:
             if self._state.delivered:
@@ -128,7 +158,10 @@ class QuizManager:
                     [self._get_chitchat_answer(user=user, text=message.text), self._settings.wait_for_user_info]
                 )
                 return BotResponse(
-                    user=user, user_message=message.text, replies=replies, markup=self._markup_maker.start_markup,
+                    user=user,
+                    user_message=message.text,
+                    replies=replies,
+                    markup=self._markup_maker.start_with_help_markup,
                 )
         raise UnreachableMessageProcessingError("Should not be there!")
 

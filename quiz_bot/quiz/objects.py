@@ -4,6 +4,7 @@ import enum
 class ApiCommand(str, enum.Enum):
     START = 'start'
     HELP = 'help'
+    STATUS = 'status'
 
     @property
     def as_url(self) -> str:

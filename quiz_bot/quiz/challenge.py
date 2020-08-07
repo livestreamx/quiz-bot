@@ -200,7 +200,13 @@ class ChallengeMaster:
             )
         return self._get_evaluation(status=EvaluationStatus.CORRECT, replies=winner_replies)
 
-    def get_challenge_info(self, challenge_id: int) -> str:
+    def get_challenge_info(self, challenge_id: Optional[int] = None) -> str:
+        if not isinstance(challenge_id, int):
+            logger.info("Challenge ID was not specified, so use current challenge information.")
+            if self._current_challenge is None:
+                raise NullableCurrentChallengeError
+            challenge_id = self._current_challenge.number
+
         context_challenge = self._storage.get_challenge(challenge_id)
         if context_challenge is None:
             raise ChallengeNotFoundError(f"Challenge with ID {challenge_id} was not found!")

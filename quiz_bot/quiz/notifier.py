@@ -1,3 +1,5 @@
+from typing import Optional
+
 from quiz_bot.clients import BotResponse, RemoteBotClient
 from quiz_bot.entity import InfoSettings
 from quiz_bot.quiz import UserMarkupMaker
@@ -20,7 +22,7 @@ class QuizNotifier:
         self._markup_maker = markup_maker
         self._challenge_master = challenge_master
 
-    def notify(self, challenge_id: int, is_start: bool = False) -> None:
+    def notify(self, challenge_id: Optional[int], is_start: bool = False) -> None:
         challenge_info = self._challenge_master.get_challenge_info(challenge_id)
 
         replies = [challenge_info]
