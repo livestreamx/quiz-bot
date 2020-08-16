@@ -2,7 +2,7 @@ import enum
 from dataclasses import dataclass
 from datetime import datetime
 from functools import cached_property
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Set, Union, cast
 
 from pydantic import BaseModel, conint, root_validator, validator
 from pydantic.datetime_parse import timedelta
@@ -40,17 +40,11 @@ class ChallengeInfo(BaseModel):
     name: str
     description: str
     questions: List[str]
-    answers: List[str]
+    answers: List[Union[str, Set[str]]]
     max_winners: conint(ge=1) = 1  # type: ignore
 
     type: ChallengeType = ChallengeType.CLASSIC
     duration: timedelta = timedelta(days=1)
-
-    def get_question(self, number: int) -> str:
-        return self.questions[number - 1]
-
-    def get_answer(self, number: int) -> str:
-        return self.answers[number - 1]
 
     @root_validator
     def validate_questions_and_answers(cls, values: Dict[str, Any]) -> Dict[str, Any]:
@@ -61,6 +55,15 @@ class ChallengeInfo(BaseModel):
         if len(questions) != len(answers):
             raise ValueError("Length of questions (%s) is not equal to length of answers (%s)!", questions, answers)
         return values
+
+    def get_question(self, number: int) -> str:
+        return self.questions[number - 1]
+
+    def get_answer_variants(self, number: int) -> Set[str]:
+        answer = self.answers[number - 1]
+        if isinstance(answer, str):
+            return {answer}
+        return answer
 
 
 @dataclass(frozen=True)

@@ -19,11 +19,6 @@ class IResultChecker(abc.ABC):
     ) -> CheckedResult:
         pass
 
-    @classmethod
-    @abc.abstractmethod
-    def _match(cls, answer: str, expectation: str) -> bool:
-        pass
-
     @abc.abstractmethod
     def get_winners(self, challenge: ContextChallenge) -> List[WinnerResult]:
         pass

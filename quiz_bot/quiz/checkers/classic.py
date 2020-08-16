@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Sequence
+from typing import Optional, Sequence, Set
 
 import telebot
 from quiz_bot.entity import CheckedResult, ContextChallenge, ContextResult, ContextUser, ExtendedChallenge
@@ -17,8 +17,12 @@ class AnswerMatchingMixin:
         return text.strip().lower()
 
     @classmethod
-    def _match(cls, answer: str, expectation: str) -> bool:
-        return bool(re.search(rf"({cls._prepare_for_matching(expectation)})+", cls._prepare_for_matching(answer)))
+    def _search(cls, answer: str, expectation: str) -> Optional[re.Match[str]]:
+        return re.search(rf"({cls._prepare_for_matching(expectation)})+", cls._prepare_for_matching(answer))
+
+    @classmethod
+    def _match(cls, answer: str, expectations: Set[str]) -> bool:
+        return any(cls._search(answer, expectation) for expectation in expectations)
 
 
 class ClassicResultChecker(AnswerMatchingMixin, BaseResultChecker):
@@ -59,8 +63,8 @@ class ClassicResultChecker(AnswerMatchingMixin, BaseResultChecker):
                 return CheckedResult(correct=False, finish_condition_reached=True)
             return CheckedResult(correct=False, finish_condition_reached=False)
 
-        expectation = current_challenge.info.get_answer(current_result.phase)
-        if not self._match(answer=message.text, expectation=expectation):
+        expectations = current_challenge.info.get_answer_variants(current_result.phase)
+        if not self._match(answer=message.text, expectations=expectations):
             logger.info(
                 "User '%s' given incorrect answer for phase %s, challenge %s",
                 user.nick_name,
