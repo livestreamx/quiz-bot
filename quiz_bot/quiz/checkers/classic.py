@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Optional, Sequence, Set
+from typing import Match, Optional, Sequence, Set
 
 import telebot
 from quiz_bot.entity import CheckedResult, ContextChallenge, ContextResult, ContextUser, ExtendedChallenge
@@ -17,7 +17,7 @@ class AnswerMatchingMixin:
         return text.strip().lower()
 
     @classmethod
-    def _search(cls, answer: str, expectation: str) -> Optional[re.Match[str]]:
+    def _search(cls, answer: str, expectation: str) -> Optional[Match[str]]:
         return re.search(rf"({cls._prepare_for_matching(expectation)})+", cls._prepare_for_matching(answer))
 
     @classmethod
