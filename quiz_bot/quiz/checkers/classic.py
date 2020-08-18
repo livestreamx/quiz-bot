@@ -63,6 +63,14 @@ class ClassicResultChecker(AnswerMatchingMixin, BaseResultChecker):
                 return CheckedResult(correct=False, finish_condition_reached=True)
             return CheckedResult(correct=False, finish_condition_reached=False)
 
+        if current_result.finished_at is not None:
+            logger.info(
+                "User '%s' has been already finished challenge with ID %s. Skip response.",
+                user.nick_name,
+                current_challenge.number,
+            )
+            return CheckedResult(correct=True, finish_condition_reached=False)
+
         expectations = current_challenge.info.get_answer_variants(current_result.phase)
         if not self._match(answer=message.text, expectations=expectations):
             logger.info(
