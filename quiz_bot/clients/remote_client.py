@@ -12,6 +12,10 @@ from quiz_bot.entity import ContextUser, RemoteClientSettings
 logger = logging.getLogger(__name__)
 
 
+class SendMessageError(RuntimeError):
+    pass
+
+
 class BotResponse(BaseModel):
     user: ContextUser
     user_message: Optional[str]
@@ -59,7 +63,7 @@ class RemoteBotClient:
 
     @tenacity.retry(
         reraise=True,
-        retry=tenacity.retry_if_exception_type(requests.ConnectionError),
+        retry=tenacity.retry_if_exception_type(SendMessageError),
         stop=tenacity.stop_after_attempt(3),
         before_sleep=tenacity.before_sleep_log(logger, logger.level),
         after=tenacity.after_log(logger, logger.level),
@@ -71,13 +75,17 @@ class RemoteBotClient:
             if num == len(messages):
                 markup = response.markup
 
-            self._telebot.send_message(
-                chat_id=response.user.remote_chat_id,
-                text=message,
-                parse_mode='html',
-                reply_markup=markup,
-                timeout=self._settings.read_timeout,
-            )
+            try:
+                self._telebot.send_message(
+                    chat_id=response.user.remote_chat_id,
+                    text=message,
+                    parse_mode='html',
+                    reply_markup=markup,
+                    timeout=self._settings.read_timeout,
+                )
+            except (requests.ConnectionError, telebot.apihelper.ApiException) as e:
+                logger.error("Catched error while trying to send message for chat ID %s!", response.user.remote_chat_id)
+                raise SendMessageError from e
             logger.info(
                 'Chat ID %s with %s: [user] %s -> [bot] %s',
                 response.user.remote_chat_id,

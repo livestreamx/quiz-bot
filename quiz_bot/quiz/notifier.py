@@ -1,6 +1,6 @@
 from typing import Optional
 
-from quiz_bot.clients import BotResponse, RemoteBotClient
+from quiz_bot.clients import BotResponse, RemoteBotClient, SendMessageError
 from quiz_bot.entity import InfoSettings
 from quiz_bot.quiz import UserMarkupMaker
 from quiz_bot.quiz.challenge import ChallengeMaster
@@ -33,4 +33,7 @@ class QuizNotifier:
 
         for user in self._user_storage.users:
             response = BotResponse(user=user, replies=replies, markup=markup)
-            self._remote_client.send(response)
+            try:
+                self._remote_client.send(response)
+            except SendMessageError:
+                pass
