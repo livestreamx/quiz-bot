@@ -23,7 +23,8 @@ class ParticipantQuery(so.Query):
             Sequence[Participant],
             self.session.query(Participant)
             .filter(Participant.challenge_id == challenge_id, Participant.finished_at.isnot(None))
-            .order_by(Participant.scores.desc()),
+            .order_by(Participant.scores.desc())
+            .all(),
         )
 
 

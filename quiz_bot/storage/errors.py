@@ -8,3 +8,7 @@ class StopChallengeIteration(RuntimeError):
 
 class NoResultFoundError(RuntimeError):
     pass
+
+
+class NoParticipantFoundError(RuntimeError):
+    pass

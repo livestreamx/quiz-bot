@@ -1,5 +1,5 @@
 # flake8: noqa
-from .context_models import ContextChallenge, ContextResult, ContextUser
+from .context_models import ContextChallenge, ContextParticipant, ContextResult, ContextUser
 from .objects import (
     AnswerEvaluation,
     ChallengeInfo,
