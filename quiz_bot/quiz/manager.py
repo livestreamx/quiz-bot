@@ -31,7 +31,7 @@ class QuizManager:
         self._sync_state()
 
     def _sync_state(self) -> None:
-        self._state = self._challenge_master.quiz_state
+        self._state = self._challenge_master.resolve_quiz_state()
 
     def next(self) -> None:
         if self._state.prepared:

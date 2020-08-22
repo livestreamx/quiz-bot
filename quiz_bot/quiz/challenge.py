@@ -79,8 +79,7 @@ class ChallengeMaster:
             raise ChallengeNotFoundError("Could not found finished challenge - WTF?")
         self._set_current_challenge(challenge)
 
-    @property
-    def quiz_state(self) -> QuizState:
+    def resolve_quiz_state(self) -> QuizState:
         self._sync_challenge()
         if self._current_challenge is None:
             return QuizState.NEW
@@ -106,7 +105,7 @@ class ChallengeMaster:
         self._sync_challenge()
 
     def _get_evaluation(self, status: EvaluationStatus, replies: Optional[Sequence[str]] = ()) -> AnswerEvaluation:
-        return AnswerEvaluation(status=status, replies=replies, quiz_state=self.quiz_state)
+        return AnswerEvaluation(status=status, replies=replies, quiz_state=self.resolve_quiz_state())
 
     def start_challenge_for_user(
         self,
