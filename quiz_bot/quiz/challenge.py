@@ -6,7 +6,9 @@ from quiz_bot.entity import (
     AnswerEvaluation,
     ChallengeInfo,
     ChallengeSettings,
+    CheckedResult,
     ContextChallenge,
+    ContextParticipant,
     ContextUser,
     EvaluationStatus,
     ExtendedChallenge,
@@ -14,7 +16,7 @@ from quiz_bot.entity import (
 )
 from quiz_bot.entity.errors import UnexpectedChallengeAmountError
 from quiz_bot.quiz.checkers import IResultChecker
-from quiz_bot.quiz.errors import ChallengeNotFoundError, NullableCurrentChallengeError
+from quiz_bot.quiz.errors import ChallengeNotFoundError, NullableCurrentChallengeError, NullableParticipantError
 from quiz_bot.quiz.registrar import Registrar
 from quiz_bot.storage import IChallengeStorage
 
@@ -150,6 +152,48 @@ class ChallengeMaster:
             replies=[self._settings.get_already_started_notification(challenge_name=self._current_challenge.info.name)],
         )
 
+    def _resolve_next_event(self, participant: ContextParticipant, result: CheckedResult) -> AnswerEvaluation:
+        if self._current_challenge is None:
+            raise NullableCurrentChallengeError
+        status = EvaluationStatus.CORRECT
+
+        if result.next_phase is not None:
+            return self._get_evaluation(
+                status=status,
+                replies=[
+                    self._settings.get_next_answer_notification(
+                        question=self._current_challenge.info.get_question(result.next_phase),
+                        question_num=result.next_phase,
+                    ),
+                ],
+            )
+
+        self._registrar.finish_participation(participant)
+        pretender_replies = [
+            self._settings.get_pretender_notification(
+                challenge_name=self._current_challenge.info.name,
+                scores=participant.scores,
+                finished_at=participant.finished_at,
+            )
+        ]
+
+        has_all_winners = self._registrar.all_winners_exist(challenge=self._current_challenge.data)
+        if not has_all_winners:
+            return self._get_evaluation(status=status, replies=pretender_replies)
+
+        self._storage.finish_actual_challenge()
+        logger.info(
+            "Challenge #%s '%s' finished with all winners resolution!",
+            self._current_challenge.number,
+            self._current_challenge.info.name,
+        )
+        if not self._is_last_challenge and self._settings.autostart:
+            self.start_next_challenge()
+            return self.start_challenge_for_user(
+                user=participant.user, status=status, additional_replies=pretender_replies
+            )
+        return self._get_evaluation(status=status, replies=pretender_replies)
+
     def evaluate(self, user: ContextUser, message: telebot.types.Message) -> AnswerEvaluation:  # noqa: C901
         if self._current_challenge is None:
             raise NullableCurrentChallengeError(
@@ -181,43 +225,19 @@ class ChallengeMaster:
         if not checked_result.correct:
             return self._get_evaluation(status=EvaluationStatus.INCORRECT)
 
-        self._registrar.set_answer_correct(participant)
-        if checked_result.next_phase is not None:
-            return self._get_evaluation(
-                status=EvaluationStatus.CORRECT,
-                replies=[
-                    self._settings.get_next_answer_notification(
-                        question=self._current_challenge.info.get_question(checked_result.next_phase),
-                        question_num=checked_result.next_phase,
-                    ),
-                ],
-            )
+        self._registrar.add_correct_answer(participant)
+        return self._resolve_next_event(participant=participant, result=checked_result)
 
-        self._registrar.finish_participation(participant)
-        pretender_replies = [
-            self._settings.get_pretender_notification(
-                challenge_name=self._current_challenge.info.name,
-                scores=participant.scores,
-                finished_at=participant.finished_at,
-            )
-        ]
-
-        has_all_winners = self._registrar.all_winners_exist(challenge=self._current_challenge.data)
-        if not has_all_winners:
-            return self._get_evaluation(status=EvaluationStatus.CORRECT, replies=pretender_replies)
-
-        self._storage.finish_actual_challenge()
-        logger.info(
-            "Challenge #%s '%s' finished with all winners resolution!",
-            self._current_challenge.number,
-            self._current_challenge.info.name,
+    def skip_evaluation(self, user: ContextUser) -> AnswerEvaluation:
+        if self._current_challenge is None:
+            raise NullableCurrentChallengeError
+        participant = self._registrar.get_participation_for_user(user=user, challenge=self._current_challenge.data)
+        if participant is None:
+            raise NullableParticipantError
+        unchecked_result = self._result_checker.skip_question(
+            participant=participant, current_challenge=self._current_challenge
         )
-        if not self._is_last_challenge and self._settings.autostart:
-            self.start_next_challenge()
-            return self.start_challenge_for_user(
-                user=user, status=EvaluationStatus.CORRECT, additional_replies=pretender_replies
-            )
-        return self._get_evaluation(status=EvaluationStatus.CORRECT, replies=pretender_replies)
+        return self._resolve_next_event(participant=participant, result=unchecked_result)
 
     def get_challenge_info(self, challenge_id: Optional[int] = None) -> str:
         if not isinstance(challenge_id, int):

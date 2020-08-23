@@ -44,10 +44,6 @@ class ClassicResultChecker(BaseResultChecker, AnswerMatchingMixin):
             current_result.phase,
             current_challenge.number,
         )
-        self._set_phase_finished(current_result)
-        if current_result.phase == current_challenge.data.phase_amount:
-            return CheckedResult(correct=True)
-
-        next_phase = current_result.phase + 1
-        self._result_storage.create_result(participant_id=participant.id, phase=next_phase)
-        return CheckedResult(correct=True, next_phase=next_phase)
+        return self._next_result(
+            participant=participant, current_challenge=current_challenge, current_result=current_result,
+        )

@@ -7,6 +7,7 @@ from quiz_bot.entity import ContextUser, EvaluationStatus, InfoSettings, QuizSta
 from quiz_bot.quiz.challenge import ChallengeMaster
 from quiz_bot.quiz.errors import UnexpectedQuizStateError, UnreachableMessageProcessingError
 from quiz_bot.quiz.markup import UserMarkupMaker
+from quiz_bot.quiz.objects import ApiCommand, SkipApprovalCommand
 from quiz_bot.storage import IUserStorage
 
 logger = logging.getLogger(__name__)
@@ -121,6 +122,24 @@ class QuizManager:
             replies=[self._challenge_master.get_challenge_info(), self._settings.post_end_info],
             split=True,
         )
+
+    def get_skip_response(self, message: telebot.types.Message) -> BotResponse:
+        internal_user = self._user_storage.get_or_create_user(message)
+        if message.text.endswith(ApiCommand.SKIP):
+            return BotResponse(
+                user=internal_user,
+                user_message=message.text,
+                markup=self._markup_maker.skip_approval_markup,
+                reply=self._settings.skip_question_approval,
+            )
+        if message.text.endswith(SkipApprovalCommand.YES):
+            fake_evaluation = self._challenge_master.skip_evaluation(internal_user)
+            return BotResponse(
+                user=internal_user, user_message=message.text, replies=fake_evaluation.replies, split=True
+            )
+        if message.text.endswith(SkipApprovalCommand.NO):
+            return BotResponse(user=internal_user, user_message=message.text, reply=self._settings.skip_question_refuse)
+        raise UnreachableMessageProcessingError("Should not be there!")
 
     def _evaluate(self, user: ContextUser, message: telebot.types.Message) -> BotResponse:
         evaluation = self._challenge_master.evaluate(user=user, message=message)

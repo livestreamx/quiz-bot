@@ -17,3 +17,7 @@ class IResultChecker(abc.ABC):
         self, participant: ContextParticipant, current_challenge: ExtendedChallenge, message: telebot.types.Message
     ) -> CheckedResult:
         pass
+
+    @abc.abstractmethod
+    def skip_question(self, participant: ContextParticipant, current_challenge: ExtendedChallenge) -> CheckedResult:
+        pass

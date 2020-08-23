@@ -43,6 +43,9 @@ class QuizInterface:
         def default_handler(message: telebot.types.Message) -> None:
             self._process(message, func=self._manager.respond)
 
+        def skip_handler(message: telebot.types.Message) -> None:
+            self._process(message, func=self._manager.get_skip_response)
+
         def _get_handler_by_data(data: str) -> Callable[[telebot.types.Message], BotResponse]:
             if data == ApiCommand.HELP.as_url:
                 return help_handler  # type: ignore
@@ -50,6 +53,8 @@ class QuizInterface:
                 return start_handler  # type: ignore
             if data == ApiCommand.STATUS.as_url:
                 return status_handler  # type: ignore
+            if data.startswith(ApiCommand.SKIP.as_url):
+                return skip_handler  # type: ignore
             raise NotSupportedCallbackError(f"Unsupported callback query data: {data}!")
 
         @bot.callback_query_handler(func=lambda _: True)

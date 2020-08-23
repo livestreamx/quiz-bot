@@ -20,3 +20,7 @@ class UnreachableMessageProcessingError(RuntimeError):
 
 class UnexpectedChallengeStateError(RuntimeError):
     pass
+
+
+class NullableParticipantError(RuntimeError):
+    pass

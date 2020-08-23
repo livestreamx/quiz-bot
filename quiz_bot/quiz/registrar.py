@@ -17,7 +17,7 @@ class Registrar:
     def create_participation_for_user(self, user: ContextUser, challenge: ContextChallenge) -> ContextParticipant:
         return self._storage.create_participant(user_id=user.id, challenge_id=challenge.id)
 
-    def set_answer_correct(self, participant: ContextParticipant) -> None:
+    def add_correct_answer(self, participant: ContextParticipant) -> None:
         self._storage.increment_score(participant_id=participant.id)
 
     def finish_participation(self, participant: ContextParticipant) -> None:

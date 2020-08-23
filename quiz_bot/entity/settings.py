@@ -90,6 +90,20 @@ class InfoSettings(BaseSettings):
         "Наверное, в параллельной вселенной это бы было правильным ответом. Но в нашей - увы.",
     ]
 
+    skip_question_notifications: List[str] = [
+        "Если очень сложно - вопрос можно пропустить 😉",
+        "Может, пропустим вопрос? Так можно.",
+        "Вообще говоря, необязательно отвечать не каждый вопрос.",
+        "Вопрос можно пропустить, если нет ответа.",
+        "Как насчет пропуска вопроса?",
+        "А вопрос-то можно и пропустить!",
+    ]
+    skip_question_approval: str = (
+        "Балл за пропущенный вопрос не будет начислен. Вернуться назад будет нельзя. Пропускаем?"
+    )
+    skip_question_refuse: str = "Нет - так нет. Жду правильного ответа."
+    skip_question_notification_number: conint(ge=1) = 5  # type: ignore
+
     @property
     def random_empty_message(self) -> str:
         return choice(self.empty_messages)
@@ -101,6 +115,10 @@ class InfoSettings(BaseSettings):
     @property
     def random_incorrect_answer_notification(self) -> str:
         return choice(self.incorrect_answer_notifications)
+
+    @property
+    def random_skip_question_notification(self) -> str:
+        return choice(self.skip_question_notifications)
 
 
 class ChallengeSettings(BaseSettings):
