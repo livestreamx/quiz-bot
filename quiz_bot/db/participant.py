@@ -18,14 +18,18 @@ class ParticipantQuery(so.Query):
             .one_or_none(),
         )
 
-    def get_sorted_pretenders(self, challenge_id: int) -> Sequence[Participant]:
-        return cast(
-            Sequence[Participant],
+    def get_sorted_pretenders(self, challenge_id: int, limit: Optional[int] = None) -> Sequence[Participant]:
+        query = (
             self.session.query(Participant)
             .filter(Participant.challenge_id == challenge_id, Participant.finished_at.isnot(None))
-            .order_by(Participant.scores.desc())
-            .all(),
+            .order_by(Participant.scores.desc(), Participant.finished_at.asc())
         )
+        if limit is not None:
+            query = query.limit(limit)
+        return cast(Sequence[Participant], query.all())
+
+    def get_by_id(self, participant_id: int) -> Participant:
+        return cast(Participant, self.session.query(Participant).filter(Participant.id == participant_id).one())
 
 
 @su.generic_repr('user', 'challenge_id', 'scores')

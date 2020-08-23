@@ -99,19 +99,11 @@ class AnswerEvaluation(BaseModel):
 
 class CheckedResult(BaseModel):
     correct: bool
-    finish_condition_reached: bool
     next_phase: Optional[int]
-
-    @property
-    def finished_for_user(self) -> bool:
-        return self.correct is True and self.next_phase is None
 
 
 class WinnerResult(BaseModel):
     user: ContextUser
     position: int
+    scores: int
     finished_at: datetime
-
-    @property
-    def first(self) -> bool:
-        return self.position == 1

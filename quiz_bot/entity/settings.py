@@ -1,12 +1,14 @@
+import datetime
 import logging
 import socket
 from datetime import tzinfo
 from random import choice
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 import pytz
 from pydantic import BaseSettings, conint, validator
 from quiz_bot.entity.objects import ChallengeInfo, ExtendedChallenge, WinnerResult
+from quiz_bot.utils import display_time
 from sqlalchemy.engine import Engine, engine_from_config
 from sqlalchemy.engine.url import URL as SAURL
 from sqlalchemy.engine.url import make_url
@@ -108,13 +110,20 @@ class ChallengeSettings(BaseSettings):
     challenges: List[ChallengeInfo]
 
     start_notification: str = "Для тебя начинается испытание #<b>{number}</b> <b>{name}</b>! <i>{description}</i>"
-    winner_notification: str = "Мои поздравления - вы стали победителем в испытании '<b>{name}</b>'!"
-    prizer_notification: str = "Ура! Ты - призер (#{number} место) в испытании '<b>{name}</b>'."
+    already_started_notification: str = "Вы уже принимаете участие в испытании <b>{name}</b>."
+
+    pretender_notification: str = (
+        "Мои поздравления! Вы завершили испытание '<b>{name}</b>' с количеством баллов <b>{scores}</b>."
+        "Время финиша: {timestamp}. Пожалуйста, ожидайте окончания соревнования для подведения итогов."
+    )
 
     next_answer_notification: str = "Вопрос #<b>{number}</b>: {question}"
 
     challenge_info: str = "Испытание #<b>{number}</b>: <b>{name}</b>\n\n{results}"
-    results_row: str = "#{winner_pos} место: @{nick_name} (<code>{timestamp}</code>)"
+    results_row: str = (
+        "#{winner_pos} место: @{nick_name} с количеством баллов {scores} "
+        "(время завершения: <code>{timestamp}</code>)"
+    )
     time_info: str = "Осталось <code>{minutes}</code> минут до окончания испытания."
     time_over_info: str = "Испытание завершено в <code>{timestamp}</code>."
 
@@ -134,35 +143,38 @@ class ChallengeSettings(BaseSettings):
     def get_start_notification(self, challenge_num: int, challenge_name: str, description: str) -> str:
         return self.start_notification.format(number=challenge_num, name=challenge_name, description=description)
 
-    def get_winner_notification(self, challenge_name: str, winner_pos: int) -> str:
-        if winner_pos > 1:
-            return self.prizer_notification.format(name=challenge_name, number=winner_pos)
-        return self.winner_notification.format(name=challenge_name)
+    def get_already_started_notification(self, challenge_name: str) -> str:
+        return self.already_started_notification.format(name=challenge_name)
+
+    def get_pretender_notification(self, challenge_name: str, scores: int, finished_at: datetime.datetime) -> str:
+        return self.pretender_notification.format(
+            name=challenge_name, scores=scores, timestamp=display_time(finished_at, self.timezone)
+        )
 
     def get_next_answer_notification(self, question: str, question_num: int) -> str:
         return self.next_answer_notification.format(question=question, number=question_num)
 
-    def get_results_info(self, winner_results: List[WinnerResult]) -> List[str]:
+    def get_results_info(self, winner_results: Sequence[WinnerResult]) -> List[str]:
         results: List[str] = []
         for winner in winner_results:
             results.append(
                 self.results_row.format(
                     winner_pos=winner.position,
                     nick_name=winner.user.nick_name,
-                    timestamp=winner.finished_at.astimezone(self.timezone).strftime("%H:%M:%S, %d-%m-%Y"),
+                    scores=winner.scores,
+                    timestamp=display_time(winner.finished_at, self.timezone),
                 )
             )
         return results
 
-    def get_challenge_info(self, challenge: ExtendedChallenge, winner_results: List[WinnerResult]) -> str:
-        info = ""
-        if winner_results:
-            info += "\n".join(self.get_results_info(winner_results)) + "\n\n"
+    def get_challenge_info(self, challenge: ExtendedChallenge, winner_results: Sequence[WinnerResult]) -> str:
         if not challenge.finished:
-            info += self.time_info.format(minutes=round(challenge.finish_after.total_seconds() / 60))
+            info = self.time_info.format(minutes=round(challenge.finish_after.total_seconds() / 60))
         else:
-            info += self.time_over_info.format(
-                timestamp=challenge.data.finished_at.astimezone(self.timezone).strftime("%H:%M:%S %d-%m-%Y")
+            info = (
+                "\n".join(self.get_results_info(winner_results))
+                + "\n\n"
+                + self.time_over_info.format(timestamp=display_time(challenge.data.finished_at, self.timezone))
             )
         return self.challenge_info.format(number=challenge.number, name=challenge.info.name, results=info)
 

@@ -18,11 +18,13 @@ class ContextChallenge(sqlalchemy_to_pydantic(db.Challenge)):  # type: ignore
 
 
 class ContextResult(sqlalchemy_to_pydantic(db.Result)):  # type: ignore
-    user: ContextUser
-    challenge: ContextChallenge
+    pass
 
 
 class ContextParticipant(sqlalchemy_to_pydantic(db.Participant)):  # type: ignore
+    user: ContextUser
+    challenge: ContextChallenge
+
     @property
     def completed_challenge(self) -> bool:
         return self.finished_at is not None

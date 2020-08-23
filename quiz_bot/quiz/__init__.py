@@ -5,3 +5,4 @@ from .interface import QuizInterface
 from .manager import QuizManager
 from .markup import UserMarkupMaker
 from .notifier import QuizNotifier
+from .registrar import Registrar
