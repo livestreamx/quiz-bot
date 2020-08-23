@@ -5,8 +5,9 @@ from typing import Optional, Sequence, cast
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 import sqlalchemy_utils as su
-from quiz_bot.db import Challenge, User
 from quiz_bot.db.base import Base, PrimaryKeyMixin
+from quiz_bot.db.challenge import Challenge
+from quiz_bot.db.user import User
 
 
 class ParticipantQuery(so.Query):

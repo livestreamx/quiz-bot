@@ -6,7 +6,6 @@ import sqlalchemy as sa
 import sqlalchemy.orm as so
 from quiz_bot.db import Participant
 from quiz_bot.db.base import Base, PrimaryKeyMixin
-from quiz_bot.db.challenge import Challenge
 
 
 class ResultQuery(so.Query):
@@ -29,7 +28,6 @@ class Result(PrimaryKeyMixin, Base):
     finished_at = sa.Column(sa.DateTime(timezone=True))
 
     participant = so.relationship(Participant, backref=so.backref("result", cascade="all, delete-orphan"))
-    challenge = so.relationship(Challenge, backref=so.backref("result", cascade="all, delete-orphan"))
 
     def __init__(self, participant_id: int, phase: int) -> None:
         self.participant_id = participant_id
