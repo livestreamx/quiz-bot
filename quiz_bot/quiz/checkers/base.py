@@ -14,7 +14,7 @@ class BaseResultChecker(IResultChecker, abc.ABC):
         self._result_storage = result_storage
 
     def create_initial_phase(self, participant: ContextParticipant) -> ContextResult:
-        return self._result_storage.create_result(participant_id=participant, phase=1)
+        return self._result_storage.create_result(participant_id=participant.id, phase=1)
 
     def _set_phase_finished(self, result: ContextResult) -> None:
         result.finished_at = get_now()
