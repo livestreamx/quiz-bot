@@ -72,18 +72,11 @@ class QuizManager:
                 markup=self._markup_maker.start_with_status_markup,
                 split=True,
             )
-        if self._state is QuizState.FINISHED:
-            return BotResponse(
-                user=internal_user,
-                user_message=message.text,
-                replies=[self._settings.greetings, self._settings.post_end_info],
-                markup=self._markup_maker.status_markup,
-                split=True,
-            )
         return BotResponse(
             user=internal_user,
             user_message=message.text,
-            replies=[self._settings.greetings, self._settings.not_started_info],
+            reply=self._settings.greetings,
+            markup=self._markup_maker.status_markup,
             split=True,
         )
 

@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class IResultChecker(abc.ABC):
     @abc.abstractmethod
-    def prepare_user_result(self, participant: ContextParticipant) -> ContextResult:
+    def create_initial_phase(self, participant: ContextParticipant) -> ContextResult:
         pass
 
     @abc.abstractmethod

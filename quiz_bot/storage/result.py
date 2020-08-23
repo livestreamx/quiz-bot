@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class IResultStorage(abc.ABC):
     @abc.abstractmethod
-    def create_result(self, participant_id: int, phase: int) -> None:
+    def create_result(self, participant_id: int, phase: int) -> ContextResult:
         pass
 
     @abc.abstractmethod
@@ -25,9 +25,12 @@ class IResultStorage(abc.ABC):
 
 
 class ResultStorage(IResultStorage):
-    def create_result(self, participant_id: int, phase: int) -> None:
+    def create_result(self, participant_id: int, phase: int) -> ContextResult:
         with db.create_session() as session:
-            session.add(db.Result(participant_id=participant_id, phase=phase))
+            db_result = db.Result(participant_id=participant_id, phase=phase)
+            session.add(db_result)
+            session.flush()
+            return cast(ContextResult, ContextResult.from_orm(db_result))
 
     def finish_phase(self, result: ContextResult, finish_time: datetime) -> None:
         with db.create_session() as session:

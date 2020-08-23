@@ -129,7 +129,7 @@ class ChallengeMaster:
             participant = self._registrar.create_participation_for_user(
                 user=user, challenge=self._current_challenge.data
             )
-            result = self._result_checker.prepare_user_result(participant=participant)
+            result = self._result_checker.create_initial_phase(participant=participant)
             logger.warning("Started challenge ID %s for user @%s", self._current_challenge.number, user.nick_name)
             return self._get_evaluation(
                 status=status,
