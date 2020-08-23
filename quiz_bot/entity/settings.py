@@ -1,7 +1,6 @@
 import datetime
 import logging
 import socket
-from datetime import tzinfo
 from random import choice
 from typing import List, Optional, Sequence
 
@@ -106,7 +105,7 @@ class InfoSettings(BaseSettings):
 
 class ChallengeSettings(BaseSettings):
     autostart: bool = False
-    timezone: tzinfo = pytz.timezone('Asia/Yekaterinburg')
+    timezone: str = 'Asia/Yekaterinburg'
     challenges: List[ChallengeInfo]
 
     start_notification: str = "Для тебя начинается испытание #<b>{number}</b> <b>{name}</b>! <i>{description}</i>"
@@ -128,10 +127,16 @@ class ChallengeSettings(BaseSettings):
     time_over_info: str = "Испытание завершено в <code>{timestamp}</code>."
 
     @validator('timezone')
-    def validate_timezone(cls, v: Optional[str]) -> Optional[tzinfo]:
-        if isinstance(v, str):
-            return pytz.timezone(v)
-        return None
+    def validate_timezone(cls, v: str) -> str:
+        try:
+            pytz.timezone(v)
+        except pytz.UnknownTimeZoneError as e:
+            raise ValueError from e
+        return v
+
+    @property
+    def tzinfo(self) -> datetime.tzinfo:
+        return pytz.timezone(self.timezone)
 
     @property
     def challenge_amount(self) -> int:
@@ -148,7 +153,7 @@ class ChallengeSettings(BaseSettings):
 
     def get_pretender_notification(self, challenge_name: str, scores: int, finished_at: datetime.datetime) -> str:
         return self.pretender_notification.format(
-            name=challenge_name, scores=scores, timestamp=display_time(finished_at, self.timezone)
+            name=challenge_name, scores=scores, timestamp=display_time(finished_at, self.tzinfo)
         )
 
     def get_next_answer_notification(self, question: str, question_num: int) -> str:
@@ -162,7 +167,7 @@ class ChallengeSettings(BaseSettings):
                     winner_pos=winner.position,
                     nick_name=winner.user.nick_name,
                     scores=winner.scores,
-                    timestamp=display_time(winner.finished_at, self.timezone),
+                    timestamp=display_time(winner.finished_at, self.tzinfo),
                 )
             )
         return results
@@ -174,7 +179,7 @@ class ChallengeSettings(BaseSettings):
             info = (
                 "\n".join(self.get_results_info(winner_results))
                 + "\n\n"
-                + self.time_over_info.format(timestamp=display_time(challenge.data.finished_at, self.timezone))
+                + self.time_over_info.format(timestamp=display_time(challenge.data.finished_at, self.tzinfo))
             )
         return self.challenge_info.format(number=challenge.number, name=challenge.info.name, results=info)
 
