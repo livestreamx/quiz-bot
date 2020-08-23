@@ -1,5 +1,4 @@
-from collections import Sequence
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 from quiz_bot.entity import ContextChallenge, ContextParticipant, ContextUser, WinnerResult
 from quiz_bot.storage import IParticipantStorage

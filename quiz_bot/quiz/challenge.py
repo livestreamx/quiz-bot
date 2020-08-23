@@ -13,9 +13,9 @@ from quiz_bot.entity import (
     QuizState,
 )
 from quiz_bot.entity.errors import UnexpectedChallengeAmountError
-from quiz_bot.quiz import Registrar
 from quiz_bot.quiz.checkers import IResultChecker
 from quiz_bot.quiz.errors import ChallengeNotFoundError, NullableCurrentChallengeError
+from quiz_bot.quiz.registrar import Registrar
 from quiz_bot.storage import IChallengeStorage
 
 logger = logging.getLogger(__name__)
