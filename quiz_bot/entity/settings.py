@@ -112,19 +112,20 @@ class ChallengeSettings(BaseSettings):
     already_started_notification: str = "Вы уже принимаете участие в испытании <b>{name}</b>."
 
     pretender_notification: str = (
-        "Мои поздравления! Вы завершили испытание '<b>{name}</b>' с количеством баллов <b>{scores}</b>."
-        "Время финиша: {timestamp}. Пожалуйста, ожидайте окончания соревнования для подведения итогов."
+        "Мои поздравления! Вы завершили испытание '<b>{name}</b>' с количеством баллов <b>{scores}</b>. "
+        "Время финиша: <code>{timestamp}</code> (<code>{timezone}</code>). "
+        "Пожалуйста, ожидайте окончания соревнования для подведения итогов."
     )
 
     next_answer_notification: str = "Вопрос #<b>{number}</b>: {question}"
 
     challenge_info: str = "Испытание #<b>{number}</b>: <b>{name}</b>\n\n{results}"
     results_row: str = (
-        "#{winner_pos} место: @{nick_name} с количеством баллов {scores} "
+        "#{winner_pos} место: @{nick_name} с количеством баллов <b>{scores}</b> "
         "(время завершения: <code>{timestamp}</code>)"
     )
     time_info: str = "Осталось <code>{minutes}</code> минут до окончания испытания."
-    time_over_info: str = "Испытание завершено в <code>{timestamp}</code>."
+    time_over_info: str = "Испытание завершено в  <code>{timestamp}</code> (<code>{timezone}</code>)."
 
     @validator('timezone')
     def validate_timezone(cls, v: str) -> str:
@@ -153,7 +154,7 @@ class ChallengeSettings(BaseSettings):
 
     def get_pretender_notification(self, challenge_name: str, scores: int, finished_at: datetime.datetime) -> str:
         return self.pretender_notification.format(
-            name=challenge_name, scores=scores, timestamp=display_time(finished_at, self.tzinfo)
+            name=challenge_name, scores=scores, timestamp=display_time(finished_at, self.tzinfo), timezone=self.timezone
         )
 
     def get_next_answer_notification(self, question: str, question_num: int) -> str:
@@ -179,7 +180,9 @@ class ChallengeSettings(BaseSettings):
             info = (
                 "\n".join(self.get_results_info(winner_results))
                 + "\n\n"
-                + self.time_over_info.format(timestamp=display_time(challenge.data.finished_at, self.tzinfo))
+                + self.time_over_info.format(
+                    timestamp=display_time(challenge.data.finished_at, self.tzinfo), timezone=self.timezone
+                )
             )
         return self.challenge_info.format(number=challenge.number, name=challenge.info.name, results=info)
 

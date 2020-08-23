@@ -99,6 +99,9 @@ class QuizManager:
 
     def get_status_response(self, message: telebot.types.Message) -> BotResponse:
         internal_user = self._user_storage.get_or_create_user(message)
+        if self._state.prepared:
+            self._sync_state()
+
         if self._state is QuizState.NEW:
             return BotResponse(user=internal_user, user_message=message.text, reply=self._settings.not_started_info,)
         if self._state is QuizState.IN_PROGRESS:
