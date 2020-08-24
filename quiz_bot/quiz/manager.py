@@ -8,7 +8,7 @@ from quiz_bot.quiz.challenge import ChallengeMaster
 from quiz_bot.quiz.errors import UnexpectedQuizStateError, UnreachableMessageProcessingError
 from quiz_bot.quiz.markup import UserMarkupMaker
 from quiz_bot.quiz.objects import ApiCommand, SkipApprovalCommand
-from quiz_bot.storage import IUserStorage
+from quiz_bot.storage import IAttemptsStorage, IUserStorage
 
 logger = logging.getLogger(__name__)
 
@@ -19,12 +19,14 @@ class QuizManager:
         settings: InfoSettings,
         chitchat_client: ChitchatClient,
         user_storage: IUserStorage,
+        attempts_storage: IAttemptsStorage,
         markup_maker: UserMarkupMaker,
         challenge_master: ChallengeMaster,
     ) -> None:
         self._settings = settings
         self._chitchat_client = chitchat_client
         self._user_storage = user_storage
+        self._attempts_storage = attempts_storage
         self._markup_maker = markup_maker
         self._challenge_master = challenge_master
 
@@ -125,28 +127,33 @@ class QuizManager:
 
     def get_skip_response(self, message: telebot.types.Message) -> BotResponse:
         internal_user = self._user_storage.get_or_create_user(message)
-        if message.text.endswith(ApiCommand.SKIP):
-            return BotResponse(
-                user=internal_user,
-                user_message=message.text,
-                markup=self._markup_maker.skip_approval_markup,
-                reply=self._settings.skip_question_approval,
-            )
-        if message.text.endswith(SkipApprovalCommand.YES):
-            fake_evaluation = self._challenge_master.skip_evaluation(internal_user)
-            return BotResponse(
-                user=internal_user, user_message=message.text, replies=fake_evaluation.replies, split=True
-            )
-        if message.text.endswith(SkipApprovalCommand.NO):
-            return BotResponse(user=internal_user, user_message=message.text, reply=self._settings.skip_question_refuse)
-        raise UnreachableMessageProcessingError("Should not be there!")
+        if self._attempts_storage.ensure_skip_for_user(internal_user.id):
+            if message.text.endswith(ApiCommand.SKIP):
+                return BotResponse(
+                    user=internal_user,
+                    user_message=message.text,
+                    markup=self._markup_maker.skip_approval_markup,
+                    reply=self._settings.skip_question_approval,
+                )
+            if message.text.endswith(SkipApprovalCommand.YES):
+                self._attempts_storage.clear(internal_user.id)
+                fake_evaluation = self._challenge_master.skip_evaluation(internal_user)
+                return BotResponse(
+                    user=internal_user, user_message=message.text, replies=fake_evaluation.replies, split=True
+                )
+            if message.text.endswith(SkipApprovalCommand.NO):
+                return BotResponse(
+                    user=internal_user, user_message=message.text, reply=self._settings.skip_question_refuse
+                )
+        return BotResponse(user=internal_user, user_message=message.text, reply=self._settings.skip_question_prohibited)
 
-    def _evaluate(self, user: ContextUser, message: telebot.types.Message) -> BotResponse:
+    def _evaluate(self, user: ContextUser, message: telebot.types.Message) -> BotResponse:  # noqa: C901
         evaluation = self._challenge_master.evaluate(user=user, message=message)
         self._state = evaluation.quiz_state
         replies = evaluation.replies
 
         if evaluation.status is EvaluationStatus.CORRECT:
+            self._attempts_storage.clear(user.id)
             replies.insert(0, self._settings.random_correct_answer_notification)
             return BotResponse(user=user, user_message=message.text, replies=replies, split=True)
 
@@ -158,7 +165,11 @@ class QuizManager:
                         self._settings.random_incorrect_answer_notification,
                     ]
                 )
-                return BotResponse(user=user, user_message=message.text, replies=replies)
+                markup = None
+                if self._attempts_storage.need_to_skip_notify(user.id):
+                    replies.append(self._settings.random_skip_question_notification)
+                    markup = self._markup_maker.skip_markup
+                return BotResponse(user=user, user_message=message.text, replies=replies, markup=markup)
             if self._state.delivered:
                 replies.insert(0, self._settings.out_of_date_info)
                 return BotResponse(

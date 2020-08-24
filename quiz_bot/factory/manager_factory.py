@@ -5,7 +5,9 @@ from quiz_bot.entity import ChallengeSettings, ChitchatSettings, InfoSettings, R
 from quiz_bot.quiz import ChallengeMaster, ClassicResultChecker, QuizManager, QuizNotifier, Registrar, UserMarkupMaker
 from quiz_bot.quiz.checkers import IResultChecker
 from quiz_bot.storage import (
+    AttemptsStorage,
     ChallengeStorage,
+    IAttemptsStorage,
     IChallengeStorage,
     IResultStorage,
     IUserStorage,
@@ -35,6 +37,10 @@ class QuizManagerFactory:
     @cached_property
     def _user_storage(self) -> IUserStorage:
         return UserStorage()
+
+    @cached_property
+    def _attempts_storage(self) -> IAttemptsStorage:
+        return AttemptsStorage(skip_notification_attempt_num=self._info_settings.skip_question_notification_number)
 
     @cached_property
     def _challenge_storage(self) -> IChallengeStorage:
@@ -69,6 +75,7 @@ class QuizManagerFactory:
     def manager(self) -> QuizManager:
         return QuizManager(
             user_storage=self._user_storage,
+            attempts_storage=self._attempts_storage,
             chitchat_client=self._chitchat_client,
             settings=self._info_settings,
             markup_maker=self._interface_maker,

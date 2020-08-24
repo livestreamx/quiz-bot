@@ -102,6 +102,7 @@ class InfoSettings(BaseSettings):
         "Балл за пропущенный вопрос не будет начислен. Вернуться назад будет нельзя. Пропускаем?"
     )
     skip_question_refuse: str = "Нет - так нет. Жду правильного ответа."
+    skip_question_prohibited: str = "Давай попытаемся дать ответ на вопрос."
     skip_question_notification_number: conint(ge=1) = 5  # type: ignore
 
     @property
