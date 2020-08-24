@@ -26,6 +26,7 @@ pydantic-sqlalchemy = "^0.0.4"
 sqlalchemy_utils = "^0.36.8"
 psycopg2-binary = "^2.8.5"
 pytz = "^2020.1"
+wordcloud = "^1.8.0"
 
 [tool.poetry.dev-dependencies]
 black = "^19.3b0"
