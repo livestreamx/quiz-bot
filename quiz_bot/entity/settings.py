@@ -104,7 +104,7 @@ class InfoSettings(BaseSettings):
     skip_question_success: str = "Вопрос пропущен."
     skip_question_refuse: str = "Нет - так нет. Жду правильного ответа."
     skip_question_prohibited: str = "Давай попытаемся дать ответ на вопрос."
-    skip_question_notification_number: conint(ge=1) = 5  # type: ignore
+    skip_question_notification_number: conint(ge=1) = 3  # type: ignore
 
     @property
     def random_empty_message(self) -> str:
@@ -145,7 +145,7 @@ class ChallengeSettings(BaseSettings):
         "(время завершения: <code>{timestamp}</code>)"
     )
     time_info: str = "Осталось <code>{minutes}</code> минут до окончания испытания."
-    time_over_info: str = "Испытание завершено в  <code>{timestamp}</code> (<code>{timezone}</code>)."
+    time_over_info: str = "Испытание завершено в  <code>{timestamp}</code>  (<code>{timezone}</code>)."
 
     @validator('timezone')
     def validate_timezone(cls, v: str) -> str:
