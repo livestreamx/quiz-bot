@@ -137,10 +137,10 @@ class QuizManager:
                 )
             if message.text.endswith(SkipApprovalCommand.YES):
                 self._attempts_storage.clear(internal_user.id)
+                replies = [self._settings.skip_question_success]
                 fake_evaluation = self._challenge_master.skip_evaluation(internal_user)
-                return BotResponse(
-                    user=internal_user, user_message=message.text, replies=fake_evaluation.replies, split=True
-                )
+                replies.extend(fake_evaluation.replies)
+                return BotResponse(user=internal_user, user_message=message.text, replies=replies, split=True)
             if message.text.endswith(SkipApprovalCommand.NO):
                 return BotResponse(
                     user=internal_user, user_message=message.text, reply=self._settings.skip_question_refuse

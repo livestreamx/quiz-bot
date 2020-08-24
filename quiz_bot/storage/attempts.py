@@ -27,7 +27,7 @@ class AttemptsStorage(IAttemptsStorage):
             self._user_attempts[user_id] = 1
             return False
         self._user_attempts[user_id] += 1
-        return attempts == self._attempt_num
+        return self._user_attempts[user_id] == self._attempt_num
 
     def ensure_skip_for_user(self, user_id: int) -> bool:
         attempts = self._user_attempts.get(user_id)
