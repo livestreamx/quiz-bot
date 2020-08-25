@@ -30,7 +30,7 @@ class ClassicResultChecker(BaseResultChecker, AnswerMatchingMixin):
         current_result = self._result_storage.get_last_result(participant_id=participant.id)
         expectations = current_challenge.info.get_answer_variants(current_result.phase)
         if not self._match(answer=message.text, expectations=expectations):
-            logger.info(
+            logger.debug(
                 "User '%s' given incorrect answer for phase %s, challenge %s",
                 participant.user.nick_name,
                 current_result.phase,

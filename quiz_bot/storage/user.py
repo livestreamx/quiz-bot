@@ -44,7 +44,7 @@ class UserStorage(IUserStorage):
         with db.create_session() as session:
             internal_user = session.query(db.User).get_by_external_id(value=remote_user.id)
             if internal_user is not None:
-                logger.info("User %s exists", internal_user)
+                logger.debug("User %s exists", internal_user)
                 if internal_user.remote_chat_id != remote_chat_id:
                     internal_user.remote_chat_id = remote_chat_id
                 return cast(ContextUser, ContextUser.from_orm(internal_user))

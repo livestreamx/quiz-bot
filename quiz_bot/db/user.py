@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional, cast
+from typing import Optional, Sequence, cast
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
@@ -12,8 +12,8 @@ class UserQuery(so.Query):
     def get_by_external_id(self, value: int) -> Optional[User]:
         return cast(Optional[User], self.session.query(User).filter(User.external_id == value).one_or_none())
 
-    def get_all_user_ids(self) -> List[int]:
-        return cast(List[int], self.session.query(User).with_entities(User.id).all())
+    def get_all_user_ids(self) -> Sequence[int]:
+        return cast(Sequence[int], self.session.query(User).with_entities(User.id).all())
 
 
 @su.generic_repr('id', 'first_name', 'last_name', 'external_id', 'nick_name')

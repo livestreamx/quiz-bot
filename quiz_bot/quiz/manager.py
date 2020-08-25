@@ -53,7 +53,7 @@ class QuizManager:
             except requests.RequestException:
                 logger.exception("Error while making request to chitchat!")
             except ChitchatPrewrittenDetectedError as e:
-                logger.info(e)  # noqa: G200
+                logger.debug(e)  # noqa: G200
         return self._settings.random_empty_message
 
     def _get_simple_response(self, message: telebot.types.Message, attach_unknown_info: bool = False) -> BotResponse:

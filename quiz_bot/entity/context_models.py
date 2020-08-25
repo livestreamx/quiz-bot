@@ -28,3 +28,7 @@ class ContextParticipant(sqlalchemy_to_pydantic(db.Participant)):  # type: ignor
     @property
     def completed_challenge(self) -> bool:
         return self.finished_at is not None
+
+
+class ContextMessage(sqlalchemy_to_pydantic(db.Message)):  # type: ignore
+    pass
