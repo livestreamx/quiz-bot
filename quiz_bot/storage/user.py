@@ -59,7 +59,7 @@ class UserStorage(IUserStorage):
                 nick_name=remote_user.username,
             )
             session.add(internal_user)
-        logger.info("User %s successfully saved.", internal_user)
+        logger.info("User %s successfully saved.", remote_user)
         context_user = self.get_user(remote_user)
         if internal_user is not None:
             return cast(ContextUser, context_user)
