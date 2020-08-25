@@ -29,9 +29,6 @@ class ParticipantQuery(so.Query):
             query = query.limit(limit)
         return cast(Sequence[Participant], query.all())
 
-    def get_by_id(self, participant_id: int) -> Participant:
-        return cast(Participant, self.session.query(Participant).filter(Participant.id == participant_id).one())
-
 
 @su.generic_repr('user', 'challenge_id', 'scores')
 class Participant(PrimaryKeyMixin, Base):

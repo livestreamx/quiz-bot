@@ -9,9 +9,6 @@ from quiz_bot.db.base import Base, PrimaryKeyMixin
 
 
 class UserQuery(so.Query):
-    def get_by_internal_id(self, value: int) -> User:
-        return cast(User, self.session.query(User).filter(User.id == value).one())
-
     def get_by_external_id(self, value: int) -> Optional[User]:
         return cast(Optional[User], self.session.query(User).filter(User.external_id == value).one_or_none())
 

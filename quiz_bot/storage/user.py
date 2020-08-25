@@ -84,6 +84,6 @@ class UserStorage(IUserStorage):
             return
         for user_id in user_ids:
             with db.create_session() as session:
-                db_user = session.query(db.User).get_by_internal_id(user_id)
+                db_user = session.query(db.User).get(user_id)
                 context_user = ContextUser.from_orm(db_user)
             yield context_user

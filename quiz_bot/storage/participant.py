@@ -67,12 +67,12 @@ class ParticipantStorage(IParticipantStorage):
 
     def increment_score(self, participant_id: int) -> None:
         with db.create_session() as session:
-            db_participant = session.query(db.Participant).get_by_id(participant_id=participant_id)
+            db_participant = session.query(db.Participant).get(participant_id)
             db_participant.scores += 1
 
     def finish_participation(self, participant_id: int, finished_at: datetime.datetime) -> None:
         with db.create_session() as session:
-            db_participant = session.query(db.Participant).get_by_id(participant_id=participant_id)
+            db_participant = session.query(db.Participant).get(participant_id)
             db_participant.finished_at = finished_at
 
     def get_pretenders(self, challenge_id: int) -> Sequence[ContextParticipant]:

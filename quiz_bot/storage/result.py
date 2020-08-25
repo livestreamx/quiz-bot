@@ -34,7 +34,7 @@ class ResultStorage(IResultStorage):
 
     def finish_phase(self, result: ContextResult, finish_time: datetime) -> None:
         with db.create_session() as session:
-            db_result = session.query(db.Result).filter(db.Result.id == result.id).one()
+            db_result = session.query(db.Result).get(result.id)
             db_result.finished_at = finish_time
 
     def get_last_result(self, participant_id: int) -> ContextResult:
