@@ -35,6 +35,6 @@ class MessageStorage(IMessageStorage):
             return
         for message_id in message_ids:
             with db.create_session() as session:
-                db_message = session.query(db.User).get(message_id)
+                db_message = session.query(db.Message).get(message_id)
                 context_message = ContextMessage.from_orm(db_message)
             yield context_message

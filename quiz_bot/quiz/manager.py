@@ -8,7 +8,7 @@ from quiz_bot.quiz.challenge import ChallengeMaster
 from quiz_bot.quiz.errors import UnexpectedQuizStateError, UnreachableMessageProcessingError
 from quiz_bot.quiz.markup import UserMarkupMaker
 from quiz_bot.quiz.objects import ApiCommand, SkipApprovalCommand
-from quiz_bot.storage import IAttemptsStorage, IUserStorage
+from quiz_bot.storage import IAttemptsStorage, IMessageStorage, IUserStorage
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,7 @@ class QuizManager:
         settings: InfoSettings,
         chitchat_client: ChitchatClient,
         user_storage: IUserStorage,
+        message_storage: IMessageStorage,
         attempts_storage: IAttemptsStorage,
         markup_maker: UserMarkupMaker,
         challenge_master: ChallengeMaster,
@@ -26,6 +27,7 @@ class QuizManager:
         self._settings = settings
         self._chitchat_client = chitchat_client
         self._user_storage = user_storage
+        self._message_storage = message_storage
         self._attempts_storage = attempts_storage
         self._markup_maker = markup_maker
         self._challenge_master = challenge_master
@@ -157,6 +159,7 @@ class QuizManager:
             replies.insert(0, self._settings.random_correct_answer_notification)
             return BotResponse(user=user, user_message=message.text, replies=replies, split=True)
 
+        self._message_storage.create(user=user, message=message)
         if evaluation.status is EvaluationStatus.INCORRECT:
             if self._state is QuizState.IN_PROGRESS:
                 replies.extend(
@@ -197,5 +200,6 @@ class QuizManager:
             logger.warning("Gotten message '%s' from unknown user: %s!", message.text, message.from_user)
             return self._get_simple_response(message, attach_unknown_info=True)
         if self._state is QuizState.NEW:
+            self._message_storage.create(user=internal_user, message=message)
             return self._get_simple_response(message)
         return self._evaluate(user=internal_user, message=message)
