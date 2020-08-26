@@ -21,6 +21,7 @@ class QuizManagerFactory:
     def __init__(self, challenge_settings: ChallengeSettings, chitchat_settings: ChitchatSettings) -> None:
         self._challenge_settings = challenge_settings
         self._chitchat_settings = chitchat_settings
+        self._remote_bot_client
 
     @cached_property
     def _info_settings(self) -> InfoSettings:
