@@ -2,8 +2,9 @@ import io
 from typing import Optional
 
 import click
+from quiz_bot.admin import set_basic_settings
 from quiz_bot.cli.group import app
-from quiz_bot.cli.utils import get_settings, set_basic_settings
+from quiz_bot.cli.utils import get_settings
 from quiz_bot.entity import ChallengeSettings, ChitchatSettings
 from quiz_bot.factory import QuizInterfaceFactory
 
