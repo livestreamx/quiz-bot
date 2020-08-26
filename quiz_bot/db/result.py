@@ -27,7 +27,7 @@ class Result(PrimaryKeyMixin, Base):
     phase = sa.Column(sa.Integer, nullable=False)
     finished_at = sa.Column(sa.DateTime(timezone=True))
 
-    participant = so.relationship(Participant, backref=so.backref("result", cascade="all, delete-orphan"))
+    participant = so.relationship(Participant, backref=so.backref("participant", cascade="all, delete-orphan"))
 
     def __init__(self, participant_id: int, phase: int) -> None:
         self.participant_id = participant_id

@@ -11,7 +11,7 @@ from quiz_bot.factory import QuizInterfaceFactory
 @app.command()
 @click.option('-challenges', '--challenge-settings-file', type=click.File('r'), help='Challenge settings JSON file')
 @click.option('-chitchat', '--chitchat-settings-file', type=click.File('r'), help='Chitchat settings JSON file')
-def start(challenge_settings_file: Optional[io.StringIO], chitchat_settings_file: Optional[io.StringIO]) -> None:
+def run(challenge_settings_file: Optional[io.StringIO], chitchat_settings_file: Optional[io.StringIO]) -> None:
     click.echo('Starting up QuizBot...')
     set_basic_settings()
     challenge_settings: ChallengeSettings = get_settings(

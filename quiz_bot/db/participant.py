@@ -40,8 +40,8 @@ class Participant(PrimaryKeyMixin, Base):
     finished_at = sa.Column(sa.DateTime(timezone=True))
     scores = sa.Column(sa.Integer, nullable=False)
 
-    user = so.relationship(User, backref=so.backref("result", cascade="all, delete-orphan"))
-    challenge = so.relationship(Challenge, backref=so.backref("result", cascade="all, delete-orphan"))
+    user = so.relationship(User, backref=so.backref("user", cascade="all, delete-orphan"))
+    challenge = so.relationship(Challenge, backref=so.backref("challenge", cascade="all, delete-orphan"))
 
     def __init__(self, user_id: int, challenge_id: int,) -> None:
         self.user_id = user_id
