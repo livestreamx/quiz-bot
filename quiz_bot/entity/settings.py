@@ -56,7 +56,7 @@ class RemoteClientSettings(BaseSettings):
 class InfoSettings(BaseSettings):
     greetings: str = (
         "Мое имя - <b>T-Quiz Bot</b>. @livestream_x создал меня для того, чтобы я выполнял функцию ведущего для "
-        "проведения викторин. Я имею 3 команды API:\n"
+        "проведения викторины. Я имею 3 команды API:\n"
         "/start - начать очередное испытание;\n"
         "/status - получить данные по текущему испытанию;\n"
         "/help - получить общую информацию обо мне.\n\n"
