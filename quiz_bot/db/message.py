@@ -22,7 +22,7 @@ class Message(PrimaryKeyMixin, Base):
     user_id = sa.Column(sa.Integer, sa.ForeignKey(User.id), nullable=False)
     text = sa.Column(sa.String, nullable=False)
 
-    user = so.relationship(User, backref=so.backref("user", cascade="all, delete-orphan"))
+    user = so.relationship(User, backref=so.backref("source_user", cascade="all, delete-orphan"))
 
     def __init__(self, user_id: int, text: str,) -> None:
         self.user_id = user_id
