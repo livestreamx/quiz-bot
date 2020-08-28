@@ -9,10 +9,8 @@ from quiz_bot.storage import (
     ChallengeStorage,
     IAttemptsStorage,
     IChallengeStorage,
-    IMessageStorage,
     IResultStorage,
     IUserStorage,
-    MessageStorage,
     ParticipantStorage,
     ResultStorage,
     UserStorage,
@@ -40,10 +38,6 @@ class QuizManagerFactory:
     @cached_property
     def _user_storage(self) -> IUserStorage:
         return UserStorage()
-
-    @cached_property
-    def _message_storage(self) -> IMessageStorage:
-        return MessageStorage()
 
     @cached_property
     def _attempts_storage(self) -> IAttemptsStorage:
@@ -82,7 +76,6 @@ class QuizManagerFactory:
     def manager(self) -> QuizManager:
         return QuizManager(
             user_storage=self._user_storage,
-            message_storage=self._message_storage,
             attempts_storage=self._attempts_storage,
             chitchat_client=self._chitchat_client,
             settings=self._info_settings,

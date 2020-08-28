@@ -6,14 +6,17 @@ from quiz_bot.clients import BotResponse, RemoteBotClient
 from quiz_bot.quiz.errors import NotSupportedCallbackError
 from quiz_bot.quiz.manager import QuizManager
 from quiz_bot.quiz.objects import ApiCommand, ContentType
+from quiz_bot.storage import IMessageStorage
 
 logger = logging.getLogger(__name__)
 
 
 class QuizInterface:
-    def __init__(self, client: RemoteBotClient, manager: QuizManager) -> None:
+    def __init__(self, client: RemoteBotClient, manager: QuizManager, message_storage: IMessageStorage) -> None:
         self._client = client
         self._manager = manager
+        self._message_storage = message_storage
+
         self._register_handlers(client.bot)
 
     def run(self) -> None:
@@ -24,6 +27,7 @@ class QuizInterface:
         logger.info("Got '%s' message from chat #%s", message.text, message.chat.id)
         with self._client.thread_lock[message.chat.id]:
             response = func(message)
+            self._message_storage.save_all(response.replies)
             self._client.send(response)
 
     def _register_handlers(self, bot: telebot.TeleBot) -> None:  # noqa: C901

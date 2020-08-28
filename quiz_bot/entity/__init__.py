@@ -16,5 +16,6 @@ from .settings import (
     DataBaseSettings,
     InfoSettings,
     LoggingSettings,
+    MessageCloudSettings,
     RemoteClientSettings,
 )

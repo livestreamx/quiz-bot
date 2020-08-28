@@ -241,3 +241,7 @@ class DataBaseSettings(BaseSettings):
         )
         metadata.bind = engine
         return engine  # noqa: R504
+
+
+class MessageCloudSettings(BaseSettings):
+    select_limit: int = 200
