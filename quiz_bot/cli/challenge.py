@@ -5,7 +5,7 @@ import click
 from quiz_bot.admin import set_basic_settings
 from quiz_bot.cli.group import app
 from quiz_bot.cli.utils import get_settings
-from quiz_bot.entity import ChallengeSettings, ChitchatSettings
+from quiz_bot.entity import ChallengeSettings, ShoutboxSettings
 from quiz_bot.factory import QuizManagerFactory
 
 
@@ -14,7 +14,7 @@ def _get_management_factory(challenge_settings_file: Optional[io.StringIO]) -> Q
     challenge_settings: ChallengeSettings = get_settings(  # type: ignore
         file=challenge_settings_file, settings_type=ChallengeSettings
     )
-    return QuizManagerFactory(challenge_settings=challenge_settings, chitchat_settings=ChitchatSettings())
+    return QuizManagerFactory(challenge_settings=challenge_settings, shoutbox_settings=ShoutboxSettings())
 
 
 @app.group(short_help="Commands for challenge managment")

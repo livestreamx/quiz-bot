@@ -3,8 +3,8 @@ from typing import Optional, cast
 
 from flask import Flask, Response, render_template, send_from_directory
 from quiz_bot import db
+from quiz_bot.admin.cloud import CloudMaker
 from quiz_bot.admin.flask import get_flask_app
-from quiz_bot.utils import CloudMaker
 
 
 def quizbot_app(cloud_maker: CloudMaker) -> Flask:

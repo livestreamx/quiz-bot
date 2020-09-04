@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import matplotlib.pyplot as plt
 from quiz_bot.storage import MessageStorage
-from wordcloud import WordCloud, wordcloud
+from wordcloud import WordCloud
 
 _JPG_FMT = "jpg"
 
@@ -19,7 +19,7 @@ class CloudMaker:
         return f"f{str(uuid4())}.{_JPG_FMT}"
 
     @property
-    def _cloud(self) -> Optional[wordcloud]:
+    def _cloud(self) -> Optional[WordCloud]:
         texts = [message.text for message in self._storage.messages]
         if texts:
             return self._wordcloud_factory.generate(" ".join(texts))

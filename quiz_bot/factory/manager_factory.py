@@ -1,7 +1,7 @@
 from functools import cached_property
 
-from quiz_bot.clients import ChitchatClient, RemoteBotClient
-from quiz_bot.entity import ChallengeSettings, ChitchatSettings, InfoSettings, RemoteClientSettings
+from quiz_bot.clients import RemoteBotClient, ShoutboxClient
+from quiz_bot.entity import ChallengeSettings, InfoSettings, RemoteClientSettings, ShoutboxSettings
 from quiz_bot.quiz import ChallengeMaster, ClassicResultChecker, QuizManager, QuizNotifier, Registrar, UserMarkupMaker
 from quiz_bot.quiz.checkers import IResultChecker
 from quiz_bot.storage import (
@@ -18,9 +18,9 @@ from quiz_bot.storage import (
 
 
 class QuizManagerFactory:
-    def __init__(self, challenge_settings: ChallengeSettings, chitchat_settings: ChitchatSettings) -> None:
+    def __init__(self, challenge_settings: ChallengeSettings, shoutbox_settings: ShoutboxSettings) -> None:
         self._challenge_settings = challenge_settings
-        self._chitchat_settings = chitchat_settings
+        self._shoutbox_settings = shoutbox_settings
         self._remote_bot_client
 
     @cached_property
@@ -32,8 +32,8 @@ class QuizManagerFactory:
         return RemoteBotClient(RemoteClientSettings())
 
     @cached_property
-    def _chitchat_client(self) -> ChitchatClient:
-        return ChitchatClient(self._chitchat_settings)
+    def _shoutbox_client(self) -> ShoutboxClient:
+        return ShoutboxClient(self._shoutbox_settings)
 
     @cached_property
     def _user_storage(self) -> IUserStorage:
@@ -77,7 +77,7 @@ class QuizManagerFactory:
         return QuizManager(
             user_storage=self._user_storage,
             attempts_storage=self._attempts_storage,
-            chitchat_client=self._chitchat_client,
+            shoutbox_client=self._shoutbox_client,
             settings=self._info_settings,
             markup_maker=self._interface_maker,
             challenge_master=self.challenge_master,

@@ -5,27 +5,27 @@ from functools import cached_property
 import requests
 import tenacity
 from pydantic import BaseModel
-from quiz_bot.entity import ChitchatSettings
+from quiz_bot.entity import ShoutboxSettings
 
 logger = logging.getLogger(__name__)
 
 
-class ChitchatPrewrittenDetectedError(RuntimeError):
+class ShoutboxPrewrittenDetectedError(RuntimeError):
     pass
 
 
-class ChitChatRequest(BaseModel):
+class ShoutboxRequest(BaseModel):
     text: str
     user_id: str
     force_full_mode: bool = True
 
 
-class ChitChatResponse(BaseModel):
+class ShoutboxResponse(BaseModel):
     text: str
 
 
-class ChitchatClient:
-    def __init__(self, settings: ChitchatSettings):
+class ShoutboxClient:
+    def __init__(self, settings: ShoutboxSettings):
         self._settings = settings
         self._prewritten = re.compile(rf"({')+|('.join(settings.filter_phrases)})+", flags=re.I)
 
@@ -43,15 +43,15 @@ class ChitchatClient:
         before_sleep=tenacity.before_sleep_log(logger, logger.level),
         after=tenacity.after_log(logger, logger.level),
     )
-    def make_request(self, data: ChitChatRequest) -> ChitChatResponse:
+    def make_request(self, data: ShoutboxRequest) -> ShoutboxResponse:
         if self._settings.url is None:
-            raise RuntimeError("Chitchat is disabled, so should not be here!")
+            raise RuntimeError("Shoutbox is disabled, so should not be here!")
         response = requests.post(
             self._settings.url.human_repr(), json=data.dict(), timeout=self._settings.read_timeout,
         )
         response.raise_for_status()
-        model = ChitChatResponse.parse_obj(response.json())
+        model = ShoutboxResponse.parse_obj(response.json())
 
         if self._detect_prewritten(model.text):
-            raise ChitchatPrewrittenDetectedError(f"Detected chitchat prewritten: '{model.text}'",)
+            raise ShoutboxPrewrittenDetectedError(f"Detected shoutbox prewritten: '{model.text}'",)
         return model

@@ -28,7 +28,7 @@ class LoggingSettings(BaseSettings):
         logging.basicConfig(level=self.level, format=self.format, datefmt=self.datefmt)
 
 
-class ChitchatSettings(BaseSettings):
+class ShoutboxSettings(BaseSettings):
     url: Optional[URL]
     read_timeout: int = 3
     filter_phrases: List[str] = []
@@ -40,7 +40,7 @@ class ChitchatSettings(BaseSettings):
         return v
 
     class Config:
-        env_prefix = 'CHITCHAT_'
+        env_prefix = 'SHOUTBOX_'
 
 
 class RemoteClientSettings(BaseSettings):

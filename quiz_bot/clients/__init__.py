@@ -1,3 +1,3 @@
 # flake8: noqa
-from .chitchat import ChitchatClient, ChitchatPrewrittenDetectedError, ChitChatRequest, ChitChatResponse
-from .remote_client import BotResponse, RemoteBotClient, SendMessageError
+from .shoutbox import ShoutboxClient, ShoutboxPrewrittenDetectedError, ShoutboxRequest, ShoutboxResponse
+from .telegram import BotResponse, RemoteBotClient, SendMessageError

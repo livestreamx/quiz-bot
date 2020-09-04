@@ -2,7 +2,7 @@ import logging
 
 import requests
 import telebot
-from quiz_bot.clients import BotResponse, ChitchatClient, ChitchatPrewrittenDetectedError, ChitChatRequest
+from quiz_bot.clients import BotResponse, ShoutboxClient, ShoutboxPrewrittenDetectedError, ShoutboxRequest
 from quiz_bot.entity import ContextUser, EvaluationStatus, InfoSettings, QuizState
 from quiz_bot.quiz.challenge import ChallengeMaster
 from quiz_bot.quiz.errors import UnexpectedQuizStateError, UnreachableMessageProcessingError
@@ -17,14 +17,14 @@ class QuizManager:
     def __init__(
         self,
         settings: InfoSettings,
-        chitchat_client: ChitchatClient,
+        shoutbox_client: ShoutboxClient,
         user_storage: IUserStorage,
         attempts_storage: IAttemptsStorage,
         markup_maker: UserMarkupMaker,
         challenge_master: ChallengeMaster,
     ) -> None:
         self._settings = settings
-        self._chitchat_client = chitchat_client
+        self._shoutbox_client = shoutbox_client
         self._user_storage = user_storage
         self._attempts_storage = attempts_storage
         self._markup_maker = markup_maker
@@ -45,20 +45,20 @@ class QuizManager:
             raise UnexpectedQuizStateError(f"Quiz has state '{self._state}' after next challenge starting!")
         raise UnexpectedQuizStateError(f"Could not start next challenge - current state is '{self._state}'!")
 
-    def _get_chitchat_answer(self, user: ContextUser, text: str) -> str:
-        if self._chitchat_client.enabled:
+    def _get_shoutbox_answer(self, user: ContextUser, text: str) -> str:
+        if self._shoutbox_client.enabled:
             try:
-                response = self._chitchat_client.make_request(data=ChitChatRequest(text=text, user_id=user.chitchat_id))
+                response = self._shoutbox_client.make_request(data=ShoutboxRequest(text=text, user_id=user.chitchat_id))
                 return response.text
             except requests.RequestException:
-                logger.exception("Error while making request to chitchat!")
-            except ChitchatPrewrittenDetectedError as e:
+                logger.exception("Error while making request to shoutbox!")
+            except ShoutboxPrewrittenDetectedError as e:
                 logger.debug(e)  # noqa: G200
         return self._settings.random_empty_message
 
     def _get_simple_response(self, message: telebot.types.Message, attach_unknown_info: bool = False) -> BotResponse:
         user = self._user_storage.make_unknown_context_user(message)
-        replies = [self._get_chitchat_answer(user=user, text=message.text)]
+        replies = [self._get_shoutbox_answer(user=user, text=message.text)]
         markup = None
         if attach_unknown_info:
             replies.append(self._settings.unknown_info)
@@ -161,7 +161,7 @@ class QuizManager:
             if self._state is QuizState.IN_PROGRESS:
                 replies.extend(
                     [
-                        self._get_chitchat_answer(user=user, text=message.text),
+                        self._get_shoutbox_answer(user=user, text=message.text),
                         self._settings.random_incorrect_answer_notification,
                     ]
                 )
@@ -181,7 +181,7 @@ class QuizManager:
                 return self._get_simple_response(message)
             if self._state is QuizState.IN_PROGRESS:
                 replies.extend(
-                    [self._get_chitchat_answer(user=user, text=message.text), self._settings.wait_for_user_info]
+                    [self._get_shoutbox_answer(user=user, text=message.text), self._settings.wait_for_user_info]
                 )
                 return BotResponse(
                     user=user,

@@ -12,10 +12,10 @@ from .objects import (
 )
 from .settings import (
     ChallengeSettings,
-    ChitchatSettings,
     DataBaseSettings,
     InfoSettings,
     LoggingSettings,
     MessageCloudSettings,
     RemoteClientSettings,
+    ShoutboxSettings,
 )

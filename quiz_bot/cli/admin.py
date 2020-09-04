@@ -1,8 +1,8 @@
 import click
+from quiz_bot.admin.cloud import CloudMaker
 from quiz_bot.cli.group import app
 from quiz_bot.entity import MessageCloudSettings
 from quiz_bot.storage import MessageStorage
-from quiz_bot.utils import CloudMaker
 from wordcloud import WordCloud
 
 

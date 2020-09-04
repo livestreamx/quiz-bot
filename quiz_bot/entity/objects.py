@@ -2,11 +2,14 @@ import enum
 from dataclasses import dataclass
 from datetime import datetime
 from functools import cached_property
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Union, cast
 
 from pydantic import BaseModel, conint, root_validator, validator
 from pydantic.datetime_parse import timedelta
 from quiz_bot.entity.context_models import ContextChallenge, ContextUser
+from quiz_bot.entity.errors import PictureNotExistError
+from quiz_bot.path import get_path_settings
 from quiz_bot.utils import get_now
 
 
@@ -39,6 +42,7 @@ class ChallengeType(str, enum.Enum):
 class ChallengeInfo(BaseModel):
     name: str
     description: str
+    picture: Optional[Path]
     questions: List[str]
     answers: List[Union[str, Set[str]]]
     max_winners: conint(ge=1) = 1  # type: ignore
@@ -55,6 +59,15 @@ class ChallengeInfo(BaseModel):
         if len(questions) != len(answers):
             raise ValueError("Length of questions (%s) is not equal to length of answers (%s)!", questions, answers)
         return values
+
+    @validator('picture', pre=True)
+    def validate_picture(cls, v: Optional[str]) -> Optional[Path]:
+        if isinstance(v, str):
+            path = get_path_settings().root_dir / v
+            if path.exists():
+                return path
+            raise PictureNotExistError(f"Specified picture '{v}' does not exist with path '{path}'!")
+        return None
 
     def get_question(self, number: int) -> str:
         return self.questions[number - 1]
