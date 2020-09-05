@@ -21,15 +21,11 @@ class QuizManagerFactory:
     def __init__(self, challenge_settings: ChallengeSettings, shoutbox_settings: ShoutboxSettings) -> None:
         self._challenge_settings = challenge_settings
         self._shoutbox_settings = shoutbox_settings
-        self._remote_bot_client
+        self._remote_bot_client = RemoteBotClient(RemoteClientSettings())
 
     @cached_property
     def _info_settings(self) -> InfoSettings:
         return InfoSettings()
-
-    @cached_property
-    def _remote_bot_client(self) -> RemoteBotClient:
-        return RemoteBotClient(RemoteClientSettings())
 
     @cached_property
     def _shoutbox_client(self) -> ShoutboxClient:

@@ -19,6 +19,10 @@ class IUserStorage(abc.ABC):
     def get_user(self, user: telebot.types.User) -> Optional[ContextUser]:
         pass
 
+    @abc.abstractmethod
+    def get_user_by_nick_name(self, nick_name: str) -> Optional[ContextUser]:
+        pass
+
     @staticmethod
     @abc.abstractmethod
     def make_unknown_context_user(message: telebot.types.Message) -> ContextUser:
@@ -33,7 +37,14 @@ class IUserStorage(abc.ABC):
 class UserStorage(IUserStorage):
     def get_user(self, user: telebot.types.User) -> Optional[ContextUser]:
         with db.create_session() as session:
-            internal_user = session.query(db.User).get_by_external_id(value=user.id)
+            internal_user = session.query(db.User).get_by_external_id(user.id)
+            if internal_user is None:
+                return None
+            return cast(ContextUser, ContextUser.from_orm(internal_user))
+
+    def get_user_by_nick_name(self, nick_name: str) -> Optional[ContextUser]:
+        with db.create_session() as session:
+            internal_user = session.query(db.User).get_by_nick_name(nick_name)
             if internal_user is None:
                 return None
             return cast(ContextUser, ContextUser.from_orm(internal_user))

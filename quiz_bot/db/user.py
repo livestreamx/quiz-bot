@@ -15,6 +15,11 @@ class UserQuery(so.Query):
     def get_all_user_ids(self) -> Sequence[int]:
         return cast(Sequence[int], self.session.query(User).with_entities(User.id).all())
 
+    def get_by_nick_name(self, value: str) -> Optional[User]:
+        return cast(
+            Optional[User], self.session.query(User).filter(User.nick_name == value).order_by(User.id.asc()).first()
+        )
+
 
 @su.generic_repr('id', 'first_name', 'last_name', 'external_id', 'nick_name')
 class User(PrimaryKeyMixin, Base):

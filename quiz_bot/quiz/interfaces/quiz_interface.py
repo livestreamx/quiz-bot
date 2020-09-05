@@ -4,6 +4,7 @@ from typing import Callable
 import telebot
 from quiz_bot.clients import BotResponse, RemoteBotClient
 from quiz_bot.quiz.errors import NotSupportedCallbackError
+from quiz_bot.quiz.interfaces.base_interface import BaseInterface
 from quiz_bot.quiz.manager import QuizManager
 from quiz_bot.quiz.objects import ApiCommand, ContentType
 from quiz_bot.storage import IMessageStorage
@@ -11,17 +12,11 @@ from quiz_bot.storage import IMessageStorage
 logger = logging.getLogger(__name__)
 
 
-class QuizInterface:
+class QuizInterface(BaseInterface):
     def __init__(self, client: RemoteBotClient, manager: QuizManager, message_storage: IMessageStorage) -> None:
-        self._client = client
+        super().__init__(client)
         self._manager = manager
         self._message_storage = message_storage
-
-        self._register_handlers(client.bot)
-
-    def run(self) -> None:
-        logger.info('QuizBot is started.')
-        self._client.run_loop()
 
     def _process(self, message: telebot.types.Message, func: Callable[[telebot.types.Message], BotResponse]) -> None:
         logger.info("Got '%s' message from chat #%s", message.text, message.chat.id)

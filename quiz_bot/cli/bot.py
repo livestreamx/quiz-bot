@@ -6,7 +6,7 @@ from quiz_bot.admin import set_basic_settings
 from quiz_bot.cli.group import app
 from quiz_bot.cli.utils import get_settings
 from quiz_bot.entity import ChallengeSettings, ShoutboxSettings
-from quiz_bot.factory import QuizInterfaceFactory
+from quiz_bot.factory import ChatFactory, QuizInterfaceFactory
 
 
 @app.command()
@@ -22,4 +22,14 @@ def run(challenge_settings_file: Optional[io.StringIO], shoutbox_settings_file: 
         file=shoutbox_settings_file, settings_type=ShoutboxSettings  # type: ignore
     )
     factory = QuizInterfaceFactory(challenge_settings=challenge_settings, shoutbox_settings=shoutbox_settings)
+    factory.interface.run()
+
+
+@app.command()
+@click.option('-u', '--with-user', help="Chosen user nick_name for chat")
+def chat(with_user: str) -> None:
+    click.echo('Starting up ChatBot...')
+    set_basic_settings()
+    factory = ChatFactory(with_user)
+    factory.interface.message()
     factory.interface.run()

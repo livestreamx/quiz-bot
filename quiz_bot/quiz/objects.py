@@ -19,3 +19,6 @@ class SkipApprovalCommand(str, enum.Enum):
 
 class ContentType(str, enum.Enum):
     TEXT = 'text'
+
+
+ChatEmptyReply = "Skip"
