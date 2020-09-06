@@ -4,3 +4,7 @@ class UnexpectedChallengeAmountError(RuntimeError):
 
 class PictureNotExistError(ValueError):
     pass
+
+
+class EmptyChallengeKeeperError(RuntimeError):
+    pass

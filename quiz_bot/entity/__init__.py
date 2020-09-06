@@ -1,15 +1,17 @@
 # flake8: noqa
 from .context_models import ContextChallenge, ContextMessage, ContextParticipant, ContextResult, ContextUser
+from .errors import UnexpectedChallengeAmountError
 from .objects import (
     AnswerEvaluation,
+    BaseChallengeInfo,
     BotPicture,
-    ChallengeInfo,
     ChallengeType,
     CheckedResult,
     EvaluationStatus,
-    ExtendedChallenge,
     PictureLocation,
     QuizState,
+    RegularChallengeInfo,
+    StoryChallengeInfo,
     WinnerResult,
 )
 from .settings import (
@@ -21,3 +23,4 @@ from .settings import (
     RemoteClientSettings,
     ShoutboxSettings,
 )
+from .types import AnyChallengeInfo, TChallengeInfo

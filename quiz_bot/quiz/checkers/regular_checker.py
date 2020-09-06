@@ -3,8 +3,8 @@ import re
 from typing import Match, Optional, Set
 
 import telebot
-from quiz_bot.entity import CheckedResult, ContextParticipant, ExtendedChallenge
-from quiz_bot.quiz.checkers.base import BaseResultChecker
+from quiz_bot.entity import CheckedResult, ContextChallenge, ContextParticipant, RegularChallengeInfo
+from quiz_bot.quiz.checkers.base_checker import BaseResultChecker
 
 logger = logging.getLogger(__name__)
 
@@ -23,18 +23,22 @@ class AnswerMatchingMixin:
         return any(cls._search(answer, expectation) for expectation in expectations)
 
 
-class ClassicResultChecker(BaseResultChecker, AnswerMatchingMixin):
+class RegularResultChecker(BaseResultChecker[RegularChallengeInfo], AnswerMatchingMixin):
     def check_answer(
-        self, participant: ContextParticipant, current_challenge: ExtendedChallenge, message: telebot.types.Message
+        self,
+        participant: ContextParticipant,
+        data: ContextChallenge,
+        info: RegularChallengeInfo,
+        message: telebot.types.Message,
     ) -> CheckedResult:
         current_result = self._result_storage.get_last_result(participant_id=participant.id)
-        expectations = current_challenge.info.get_answer_variants(current_result.phase)
+        expectations = info.get_answer_variants(current_result.phase)
         if not self._match(answer=message.text, expectations=expectations):
             logger.debug(
                 "User '%s' given incorrect answer for phase %s, challenge %s",
                 participant.user.nick_name,
                 current_result.phase,
-                current_challenge.number,
+                data.id,
             )
             return CheckedResult(correct=False, finish_condition_reached=False, next_phase=current_result.phase)
 
@@ -42,8 +46,6 @@ class ClassicResultChecker(BaseResultChecker, AnswerMatchingMixin):
             "User '%s' given CORRECT answer for phase %s, challenge %s",
             participant.user.nick_name,
             current_result.phase,
-            current_challenge.number,
+            data.id,
         )
-        return self._next_result(
-            participant=participant, current_challenge=current_challenge, current_result=current_result,
-        )
+        return self._next_result(participant=participant, data=data, current_result=current_result,)

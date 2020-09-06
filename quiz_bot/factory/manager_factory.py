@@ -2,8 +2,7 @@ from functools import cached_property
 
 from quiz_bot.clients import RemoteBotClient, ShoutboxClient
 from quiz_bot.entity import ChallengeSettings, InfoSettings, RemoteClientSettings, ShoutboxSettings
-from quiz_bot.quiz import ChallengeMaster, ClassicResultChecker, QuizManager, QuizNotifier, Registrar, UserMarkupMaker
-from quiz_bot.quiz.checkers import IResultChecker
+from quiz_bot.quiz import ChallengeKeeper, ChallengeMaster, QuizManager, QuizNotifier, Registrar, UserMarkupMaker
 from quiz_bot.storage import (
     AttemptsStorage,
     ChallengeStorage,
@@ -48,20 +47,20 @@ class QuizManagerFactory:
         return ResultStorage()
 
     @cached_property
-    def _result_checker(self) -> IResultChecker:
-        return ClassicResultChecker(result_storage=self._result_storage)
-
-    @cached_property
     def _registrar(self) -> Registrar:
         return Registrar(storage=ParticipantStorage())
+
+    @cached_property
+    def _challenge_keeper(self) -> ChallengeKeeper:
+        return ChallengeKeeper(result_storage=self._result_storage)
 
     @cached_property
     def challenge_master(self) -> ChallengeMaster:
         return ChallengeMaster(
             storage=self._challenge_storage,
             settings=self._challenge_settings,
-            result_checker=self._result_checker,
             registrar=self._registrar,
+            keeper=self._challenge_keeper,
         )
 
     @cached_property

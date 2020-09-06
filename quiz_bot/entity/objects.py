@@ -1,16 +1,14 @@
 import enum
-from dataclasses import dataclass
 from datetime import datetime
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union, cast
+from typing import Any, Dict, List, Optional, Set, Union
 
 from pydantic import BaseModel, conint, root_validator, validator
 from pydantic.datetime_parse import timedelta
-from quiz_bot.entity.context_models import ContextChallenge, ContextUser
+from quiz_bot.entity.context_models import ContextUser
 from quiz_bot.entity.errors import PictureNotExistError
 from quiz_bot.path import get_path_settings
-from quiz_bot.utils import get_now
 
 
 class QuizState(str, enum.Enum):
@@ -35,20 +33,36 @@ class EvaluationStatus(str, enum.Enum):
 
 
 class ChallengeType(str, enum.Enum):
-    CLASSIC = "classic"
+    REGULAR = "classic"
     SCRIPT = "script"
+    STORY = "story"
 
 
-class ChallengeInfo(BaseModel):
+class BaseChallengeInfo(BaseModel):
     name: str
     description: str
     picture: Optional[Path]
+
+    max_winners: conint(ge=1) = 1  # type: ignore
+    duration: timedelta = timedelta(days=1)
+
+    type: ChallengeType
+
+    @validator('picture', pre=True)
+    def validate_picture(cls, v: Optional[str]) -> Optional[Path]:
+        if isinstance(v, str):
+            path = get_path_settings().root_dir / v
+            if path.exists():
+                return path
+            raise PictureNotExistError(f"Specified picture '{v}' does not exist with path '{path}'!")
+        return None
+
+
+class RegularChallengeInfo(BaseChallengeInfo):
+    type: ChallengeType = ChallengeType.REGULAR
+
     questions: List[str]
     answers: List[Union[str, Set[str]]]
-    max_winners: conint(ge=1) = 1  # type: ignore
-
-    type: ChallengeType = ChallengeType.CLASSIC
-    duration: timedelta = timedelta(days=1)
 
     @root_validator
     def validate_questions_and_answers(cls, values: Dict[str, Any]) -> Dict[str, Any]:
@@ -60,15 +74,6 @@ class ChallengeInfo(BaseModel):
             raise ValueError("Length of questions (%s) is not equal to length of answers (%s)!", questions, answers)
         return values
 
-    @validator('picture', pre=True)
-    def validate_picture(cls, v: Optional[str]) -> Optional[Path]:
-        if isinstance(v, str):
-            path = get_path_settings().root_dir / v
-            if path.exists():
-                return path
-            raise PictureNotExistError(f"Specified picture '{v}' does not exist with path '{path}'!")
-        return None
-
     def get_question(self, number: int) -> str:
         return self.questions[number - 1]
 
@@ -78,24 +83,52 @@ class ChallengeInfo(BaseModel):
             return {answer}
         return answer
 
+    @property
+    def phase_amount(self) -> int:
+        return len(self.questions)
 
-@dataclass(frozen=True)
-class ExtendedChallenge:
-    info: ChallengeInfo
-    data: ContextChallenge
-    number: int
+
+class StoryStep(str, enum.Enum):
+    GIVEN = "Дано"
+    WHEN = "Когда"
+    THEN = "Тогда"
+
+
+class StoryPreposition(str, enum.Enum):
+    AND = "И"
+    BUT = "Но"
+
+
+_PREPOSITION_PARSER_DELIMITER = "|"
+
+
+class StoryItem(BaseModel):
+    step: StoryStep
+    prepositions: Optional[List[StoryPreposition]]
+    construction: str
+    text: str
+
+    @root_validator
+    def validate_step_with_preposition(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        step = values.get('step')
+        if isinstance(step, str):
+            if _PREPOSITION_PARSER_DELIMITER in step:
+                splitted = step.split(_PREPOSITION_PARSER_DELIMITER)
+                values["prepositions"] = list(
+                    filter(lambda x: x in (s.value for s in list(StoryPreposition)), splitted)
+                )
+                values["step"] = list(filter(lambda x: x in (s.value for s in list(StoryStep)), splitted))
+            return values
+        raise ValueError("Step should be specififed!")
+
+
+class StoryChallengeInfo(BaseChallengeInfo):
+    type: ChallengeType = ChallengeType.STORY
+    items: List[StoryItem]
 
     @property
-    def finish_after(self) -> timedelta:
-        return cast(timedelta, self.data.created_at + self.info.duration - get_now())
-
-    @property
-    def finished(self) -> bool:
-        return self.data.finished_at is not None
-
-    @property
-    def out_of_date(self) -> bool:
-        return not self.finished and self.finish_after.total_seconds() < 0
+    def phase_amount(self) -> int:
+        return 1
 
 
 class PictureLocation(str, enum.Enum):

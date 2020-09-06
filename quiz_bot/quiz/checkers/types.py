@@ -1,0 +1,3 @@
+from quiz_bot.quiz import RegularResultChecker
+
+AnyResultChecker = RegularResultChecker  # Union with StoryResultChecker...

@@ -2,11 +2,13 @@ import datetime
 import logging
 import socket
 from random import choice
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Union
 
 import pytz
 from pydantic import BaseSettings, conint, validator
-from quiz_bot.entity.objects import ChallengeInfo, ExtendedChallenge, WinnerResult
+from quiz_bot.entity.context_models import ContextChallenge
+from quiz_bot.entity.objects import BaseChallengeInfo, RegularChallengeInfo, StoryChallengeInfo, WinnerResult
+from quiz_bot.entity.types import AnyChallengeInfo
 from quiz_bot.utils import display_time
 from sqlalchemy.engine import Engine, engine_from_config
 from sqlalchemy.engine.url import URL as SAURL
@@ -126,7 +128,7 @@ class InfoSettings(BaseSettings):
 class ChallengeSettings(BaseSettings):
     autostart: bool = False
     timezone: str = 'Asia/Yekaterinburg'
-    challenges: List[ChallengeInfo]
+    challenges: List[Union[RegularChallengeInfo, StoryChallengeInfo]]
 
     start_notification: str = "Для тебя начинается испытание #<b>{number}</b> <b>{name}</b>! <i>{description}</i>"
     already_started_notification: str = "Вы уже принимаете участие в испытании <b>{name}</b>."
@@ -163,7 +165,7 @@ class ChallengeSettings(BaseSettings):
     def challenge_amount(self) -> int:
         return len(self.challenges)
 
-    def get_challenge_model(self, number: int) -> ChallengeInfo:
+    def get_challenge_model(self, number: int) -> AnyChallengeInfo:
         return self.challenges[number - 1]
 
     def get_start_notification(self, challenge_num: int, challenge_name: str, description: str) -> str:
@@ -193,18 +195,20 @@ class ChallengeSettings(BaseSettings):
             )
         return results
 
-    def get_challenge_info(self, challenge: ExtendedChallenge, winner_results: Sequence[WinnerResult]) -> str:
-        if not challenge.finished:
-            info = self.time_info.format(minutes=round(challenge.finish_after.total_seconds() / 60))
+    def get_challenge_info(
+        self, data: ContextChallenge, model: BaseChallengeInfo, number: int, winner_results: Sequence[WinnerResult]
+    ) -> str:
+        if not data.finished:
+            info = self.time_info.format(minutes=round(data.finish_after.total_seconds() / 60))
         else:
             info = (
                 "\n".join(self.get_results_info(winner_results))
                 + "\n\n"
                 + self.time_over_info.format(
-                    timestamp=display_time(challenge.data.finished_at, self.tzinfo), timezone=self.timezone
+                    timestamp=display_time(data.finished_at, self.tzinfo), timezone=self.timezone
                 )
             )
-        return self.challenge_info.format(number=challenge.number, name=challenge.info.name, results=info)
+        return self.challenge_info.format(number=number, name=model.name, results=info)
 
 
 class DataBaseSettings(BaseSettings):
