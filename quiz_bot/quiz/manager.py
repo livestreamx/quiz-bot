@@ -98,7 +98,13 @@ class QuizManager:
                 markup=self._markup_maker.status_markup,
             )
         start_info = self._challenge_master.start_challenge_for_user(internal_user)
-        return BotResponse(user=internal_user, user_message=message.text, replies=start_info.replies, split=True)
+        return BotResponse(
+            user=internal_user,
+            user_message=message.text,
+            replies=start_info.replies,
+            split=True,
+            picture=start_info.picture,
+        )
 
     def get_status_response(self, message: telebot.types.Message) -> BotResponse:
         internal_user = self._user_storage.get_or_create_user(message)

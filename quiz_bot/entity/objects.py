@@ -98,10 +98,21 @@ class ExtendedChallenge:
         return not self.finished and self.finish_after.total_seconds() < 0
 
 
+class PictureLocation(str, enum.Enum):
+    ABOVE = "above"
+    BELOW = "below"
+
+
+class BotPicture(BaseModel):
+    file: Path
+    location: PictureLocation
+
+
 class AnswerEvaluation(BaseModel):
     status: EvaluationStatus
     replies: List[str] = []
     quiz_state: QuizState = QuizState.IN_PROGRESS
+    picture: Optional[BotPicture]
 
     @validator('replies')
     def validate_replies(cls, v: List[str], values: Dict[str, Any]) -> List[str]:

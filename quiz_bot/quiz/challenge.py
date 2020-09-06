@@ -4,6 +4,7 @@ from typing import Optional, Sequence
 import telebot
 from quiz_bot.entity import (
     AnswerEvaluation,
+    BotPicture,
     ChallengeInfo,
     ChallengeSettings,
     CheckedResult,
@@ -12,6 +13,7 @@ from quiz_bot.entity import (
     ContextUser,
     EvaluationStatus,
     ExtendedChallenge,
+    PictureLocation,
     QuizState,
 )
 from quiz_bot.entity.errors import UnexpectedChallengeAmountError
@@ -112,8 +114,10 @@ class ChallengeMaster:
         logger.info("Next challenge: %s", next_challenge)
         self._sync_challenge()
 
-    def _get_evaluation(self, status: EvaluationStatus, replies: Optional[Sequence[str]] = ()) -> AnswerEvaluation:
-        return AnswerEvaluation(status=status, replies=replies, quiz_state=self.resolve_quiz_state())
+    def _get_evaluation(
+        self, status: EvaluationStatus, replies: Optional[Sequence[str]] = (), picture: Optional[BotPicture] = None
+    ) -> AnswerEvaluation:
+        return AnswerEvaluation(status=status, replies=replies, quiz_state=self.resolve_quiz_state(), picture=picture)
 
     def start_challenge_for_user(
         self,
@@ -146,6 +150,7 @@ class ChallengeMaster:
                         question=self._current_challenge.info.get_question(result.phase), question_num=result.phase,
                     ),
                 ],
+                picture=BotPicture(file=self._current_challenge.info.picture, location=PictureLocation.ABOVE),
             )
         return self._get_evaluation(
             status=status,

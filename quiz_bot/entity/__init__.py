@@ -2,11 +2,13 @@
 from .context_models import ContextChallenge, ContextMessage, ContextParticipant, ContextResult, ContextUser
 from .objects import (
     AnswerEvaluation,
+    BotPicture,
     ChallengeInfo,
     ChallengeType,
     CheckedResult,
     EvaluationStatus,
     ExtendedChallenge,
+    PictureLocation,
     QuizState,
     WinnerResult,
 )
