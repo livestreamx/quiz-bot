@@ -8,7 +8,7 @@ from quiz_bot.entity import CheckedResult, ContextChallenge, ContextParticipant,
 logger = logging.getLogger(__name__)
 
 
-class IResultChecker(abc.ABC, Generic[TChallengeInfo]):
+class IResultChecker(Generic[TChallengeInfo], abc.ABC):
     @abc.abstractmethod
     def create_initial_phase(self, participant: ContextParticipant) -> ContextResult:
         pass

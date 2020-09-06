@@ -14,9 +14,5 @@ class UnreachableMessageProcessingError(RuntimeError):
     pass
 
 
-class UnexpectedChallengeStateError(RuntimeError):
-    pass
-
-
 class NullableParticipantError(RuntimeError):
     pass

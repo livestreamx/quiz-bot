@@ -1,12 +1,20 @@
 from datetime import timedelta
-from typing import Optional, cast
+from typing import Optional, Type, cast
 
+from quiz_bot.entity import ChallengeType
 from quiz_bot.entity.context_models import ContextChallenge
-from quiz_bot.entity.errors import EmptyChallengeKeeperError
 from quiz_bot.entity.types import AnyChallengeInfo
-from quiz_bot.quiz.checkers import CHALLENGE_TYPE_TO_CHECKER_MAPPING, AnyResultChecker
+from quiz_bot.quiz.checkers import AnyResultChecker, RegularResultChecker
 from quiz_bot.storage import IResultStorage
 from quiz_bot.utils import get_now
+
+
+class EmptyChallengeKeeperError(RuntimeError):
+    pass
+
+
+class UnsupportedChallengeTypeError(RuntimeError):
+    pass
 
 
 class ChallengeKeeper:
@@ -55,9 +63,14 @@ class ChallengeKeeper:
     def out_of_date(self) -> bool:
         return not self.finished and self.finish_after.total_seconds() < 0
 
+    def _get_checker(self) -> Type[RegularResultChecker]:
+        if self.info.type is ChallengeType.REGULAR:
+            return RegularResultChecker
+        raise UnsupportedChallengeTypeError(f"Not supported challenge type: '{self.info.type}'!")
+
     @property
     def checker(self) -> AnyResultChecker:
-        checker_cls = CHALLENGE_TYPE_TO_CHECKER_MAPPING[self.info.type]
+        checker_cls = self._get_checker()
         if not isinstance(self._checker, checker_cls):
             self._checker = checker_cls(result_storage=self._result_storage)
         return self._checker
