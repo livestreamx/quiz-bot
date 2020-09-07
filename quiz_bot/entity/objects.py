@@ -100,7 +100,7 @@ class RegularChallengeInfo(BaseChallengeInfo):
 class StoryStep(str, enum.Enum):
     GIVEN = "Дано"
     WHEN = "Когда"
-    THEN = "Тогда"
+    THEN = "То"
 
 
 class StoryPreposition(str, enum.Enum):
@@ -117,7 +117,7 @@ class StoryItem(BaseModel):
     construction: str
     text: str
 
-    @root_validator
+    @root_validator(pre=True)
     def validate_step_with_preposition(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         step = values.get('step')
         if isinstance(step, str):
@@ -126,7 +126,7 @@ class StoryItem(BaseModel):
                 values["prepositions"] = list(
                     filter(lambda x: x in (s.value for s in list(StoryPreposition)), splitted)
                 )
-                values["step"] = list(filter(lambda x: x in (s.value for s in list(StoryStep)), splitted))
+                values["step"] = next(filter(lambda x: x in (s.value for s in list(StoryStep)), splitted))
             return values
         raise ValueError("Step should be specififed!")
 
