@@ -195,20 +195,14 @@ class ChallengeSettings(BaseSettings):
             )
         return results
 
-    def get_challenge_info(
-        self, data: ContextChallenge, model: BaseChallengeInfo, number: int, winner_results: Sequence[WinnerResult]
-    ) -> str:
-        if not data.finished:
-            info = self.time_info.format(minutes=round(data.finish_after.total_seconds() / 60))
-        else:
-            info = (
-                "\n".join(self.get_results_info(winner_results))
-                + "\n\n"
-                + self.time_over_info.format(
-                    timestamp=display_time(data.finished_at, self.tzinfo), timezone=self.timezone
-                )
-            )
-        return self.challenge_info.format(number=number, name=model.name, results=info)
+    def get_time_left_info(self, finish_after: datetime.timedelta) -> str:
+        return self.time_info.format(minutes=round(finish_after.total_seconds() / 60))
+
+    def get_time_over_info(self, data: ContextChallenge) -> str:
+        return self.time_over_info.format(timestamp=display_time(data.finished_at, self.tzinfo), timezone=self.timezone)
+
+    def get_challenge_info(self, info: BaseChallengeInfo, number: int, results: str) -> str:
+        return self.challenge_info.format(number=number, name=info.name, results=results)
 
 
 class DataBaseSettings(BaseSettings):

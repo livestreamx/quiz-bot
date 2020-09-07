@@ -218,6 +218,13 @@ class ChallengeMaster:
             raise ChallengeNotFoundError(f"Challenge with ID {challenge_id} was not found!")
 
         winner_results = self._registrar.get_winners(self._keeper.data)
-        return self._settings.get_challenge_info(
-            data=self._keeper.data, model=self._keeper.info, number=self._keeper.number, winner_results=winner_results
-        )
+
+        if not self._keeper.finished:
+            results = self._settings.get_time_left_info(self._keeper.finish_after)
+        else:
+            results = (
+                "\n".join(self._settings.get_results_info(winner_results))
+                + "\n\n"
+                + self._settings.get_time_over_info(self._keeper.data)
+            )
+        return self._settings.get_challenge_info(number=self._keeper.number, info=self._keeper.info, results=results)

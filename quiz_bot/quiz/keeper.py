@@ -31,7 +31,7 @@ class ChallengeKeeper:
 
     @property
     def has_data(self) -> bool:
-        return all((self._info is None, self._data is None))
+        return all((self._info is not None, self._data is not None))
 
     def _ensure_existence(self) -> None:
         if not self.has_data:
