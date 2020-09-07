@@ -37,24 +37,34 @@ class ChallengeType(str, enum.Enum):
     STORY = "story"
 
 
+class PictureLocation(str, enum.Enum):
+    ABOVE = "above"
+    BELOW = "below"
+
+
+class PictureModel(BaseModel):
+    file: Path
+    location: PictureLocation
+
+
 class BaseChallengeInfo(BaseModel):
     name: str
     description: str
-    picture: Optional[Path]
+    picture: Optional[PictureModel]
 
     max_winners: conint(ge=1) = 1  # type: ignore
     duration: timedelta = timedelta(days=1)
 
     type: ChallengeType
 
-    @validator('picture', pre=True)
-    def validate_picture(cls, v: Optional[str]) -> Optional[Path]:
-        if isinstance(v, str):
-            path = get_path_settings().root_dir / v
-            if path.exists():
-                return path
-            raise PictureNotExistError(f"Specified picture '{v}' does not exist with path '{path}'!")
-        return None
+    @validator('picture')
+    def validate_picture(cls, v: Optional[PictureModel]) -> Optional[PictureModel]:
+        if isinstance(v, PictureModel):
+            path = get_path_settings().root_dir / v.file
+            if not path.exists():
+                raise PictureNotExistError(f"Specified picture '{v}' does not exist with path '{path}'!")
+            v.file = path
+        return v
 
 
 class RegularChallengeInfo(BaseChallengeInfo):
@@ -130,21 +140,11 @@ class StoryChallengeInfo(BaseChallengeInfo):
         return 1
 
 
-class PictureLocation(str, enum.Enum):
-    ABOVE = "above"
-    BELOW = "below"
-
-
-class BotPicture(BaseModel):
-    file: Path
-    location: PictureLocation
-
-
 class AnswerEvaluation(BaseModel):
     status: EvaluationStatus
     replies: List[str] = []
     quiz_state: QuizState = QuizState.IN_PROGRESS
-    picture: Optional[BotPicture]
+    picture: Optional[PictureModel]
 
     @validator('replies')
     def validate_replies(cls, v: List[str], values: Dict[str, Any]) -> List[str]:

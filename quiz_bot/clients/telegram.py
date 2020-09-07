@@ -7,7 +7,7 @@ import requests
 import telebot
 import tenacity
 from pydantic import BaseModel, root_validator
-from quiz_bot.entity import BotPicture, ContextUser, PictureLocation, RemoteClientSettings
+from quiz_bot.entity import ContextUser, PictureLocation, PictureModel, RemoteClientSettings
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class BotResponse(BaseModel):
     replies: List[str] = []
     split: bool = False
     markup: Optional[telebot.types.InlineKeyboardMarkup]
-    picture: Optional[BotPicture]
+    picture: Optional[PictureModel]
 
     @root_validator
     def make_replies(cls, values: Dict[str, Any]) -> Dict[str, Any]:

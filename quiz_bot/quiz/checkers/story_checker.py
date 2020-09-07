@@ -2,7 +2,7 @@ import enum
 import logging
 import re
 from copy import copy
-from typing import List, Match, Optional, Pattern, Sequence
+from typing import List, Match, Optional, Sequence
 
 import telebot
 from quiz_bot.entity import CheckedResult, ContextChallenge, ContextParticipant, StoryChallengeInfo
@@ -17,7 +17,7 @@ class StoryPatternDelimiter(str, enum.Enum):
     RIGHT = "}"
 
 
-class StoryPattern(Pattern[str], enum.Enum):
+class StoryPattern(enum.Enum):
     USERNAME = re.compile(rf"({StoryPatternDelimiter.LEFT}username{StoryPatternDelimiter.RIGHT})+")
 
 

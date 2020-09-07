@@ -5,14 +5,13 @@ import telebot
 from quiz_bot.entity import (
     AnswerEvaluation,
     AnyChallengeInfo,
-    BotPicture,
     ChallengeSettings,
     CheckedResult,
     ContextChallenge,
     ContextParticipant,
     ContextUser,
     EvaluationStatus,
-    PictureLocation,
+    PictureModel,
     QuizState,
     RegularChallengeInfo,
     UnexpectedChallengeAmountError,
@@ -98,7 +97,7 @@ class ChallengeMaster:
         self._sync_challenge()
 
     def _get_evaluation(
-        self, status: EvaluationStatus, replies: Optional[Sequence[str]] = (), picture: Optional[BotPicture] = None
+        self, status: EvaluationStatus, replies: Optional[Sequence[str]] = (), picture: Optional[PictureModel] = None
     ) -> AnswerEvaluation:
         return AnswerEvaluation(status=status, replies=replies, quiz_state=self.resolve_quiz_state(), picture=picture)
 
@@ -128,11 +127,7 @@ class ChallengeMaster:
                     )
                 )
 
-            return self._get_evaluation(
-                status=status,
-                replies=replies,
-                picture=BotPicture(file=self._keeper.info.picture, location=PictureLocation.ABOVE),
-            )
+            return self._get_evaluation(status=status, replies=replies, picture=self._keeper.info.picture,)
         return self._get_evaluation(
             status=status,
             replies=[self._settings.get_already_started_notification(challenge_name=self._keeper.info.name)],

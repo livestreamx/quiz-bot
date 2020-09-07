@@ -4,11 +4,11 @@ from .errors import UnexpectedChallengeAmountError
 from .objects import (
     AnswerEvaluation,
     BaseChallengeInfo,
-    BotPicture,
     ChallengeType,
     CheckedResult,
     EvaluationStatus,
     PictureLocation,
+    PictureModel,
     QuizState,
     RegularChallengeInfo,
     StoryChallengeInfo,
