@@ -1,3 +1,6 @@
-from quiz_bot.quiz.checkers.regular_checker import RegularResultChecker
+from typing import Union
 
-AnyResultChecker = RegularResultChecker  # Union with StoryResultChecker...
+from quiz_bot.quiz.checkers.regular_checker import RegularResultChecker
+from quiz_bot.quiz.checkers.story_checker import StoryResultChecker
+
+AnyResultChecker = Union[RegularResultChecker, StoryResultChecker]
