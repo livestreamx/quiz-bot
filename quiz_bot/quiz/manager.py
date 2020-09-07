@@ -3,7 +3,7 @@ import logging
 import requests
 import telebot
 from quiz_bot.clients import BotResponse, ShoutboxClient, ShoutboxPrewrittenDetectedError, ShoutboxRequest
-from quiz_bot.entity import ContextUser, EvaluationStatus, InfoSettings, QuizState
+from quiz_bot.entity import ChallengeType, ContextUser, EvaluationStatus, InfoSettings, QuizState
 from quiz_bot.quiz.challenge import ChallengeMaster
 from quiz_bot.quiz.errors import UnexpectedQuizStateError, UnreachableMessageProcessingError
 from quiz_bot.quiz.markup import UserMarkupMaker
@@ -172,7 +172,10 @@ class QuizManager:
                     ]
                 )
                 markup = None
-                if self._attempts_storage.need_to_skip_notify(user.id):
+                if (
+                    self._challenge_master.keeper.info.type is ChallengeType.REGULAR
+                    and self._attempts_storage.need_to_skip_notify(user.id)
+                ):
                     replies.append(self._settings.random_skip_question_notification)
                     markup = self._markup_maker.skip_markup
                 return BotResponse(user=user, user_message=message.text, replies=replies, markup=markup)
