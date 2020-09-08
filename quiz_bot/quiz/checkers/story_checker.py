@@ -87,10 +87,7 @@ class StoryResultChecker(BaseResultChecker[StoryChallengeInfo], AnswerMatchingMi
         current_result = self._result_storage.get_last_result(participant_id=participant.id)
         if not self._match(answer=message.text, items=info.items, participant=participant):
             logger.debug(
-                "User '%s' given incorrect story for challenge %s",
-                participant.user.nick_name,
-                current_result.phase,
-                data.id,
+                "User '%s' given incorrect story for challenge %s", participant.user.nick_name, data.id,
             )
             return CheckedResult(correct=False, finish_condition_reached=False, next_phase=current_result.phase)
 
