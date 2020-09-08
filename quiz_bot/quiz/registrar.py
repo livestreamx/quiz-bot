@@ -19,6 +19,7 @@ class Registrar:
 
     def add_correct_answer(self, participant: ContextParticipant) -> None:
         self._storage.increment_score(participant_id=participant.id)
+        participant.scores += 1
 
     def finish_participation(self, participant: ContextParticipant) -> None:
         participant.finished_at = get_now()

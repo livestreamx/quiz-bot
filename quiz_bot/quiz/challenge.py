@@ -147,6 +147,7 @@ class ChallengeMaster:
             return self._get_evaluation(status=status, replies=replies)
 
         self._registrar.finish_participation(participant)
+
         pretender_replies = [
             self._settings.get_pretender_notification(
                 challenge_name=self._keeper.info.name, scores=participant.scores, finished_at=participant.finished_at,
@@ -194,6 +195,7 @@ class ChallengeMaster:
             return self._get_evaluation(status=EvaluationStatus.INCORRECT)
 
         self._registrar.add_correct_answer(participant)
+        logger.info("Added +1 score for user '%s'!", user.nick_name)
         return self._resolve_next_event(participant=participant, result=checked_result)
 
     def skip_evaluation(self, user: ContextUser) -> AnswerEvaluation:

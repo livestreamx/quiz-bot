@@ -25,9 +25,13 @@ class BaseResultChecker(IResultChecker[TChallengeInfo], abc.ABC):
     ) -> CheckedResult:
         self._set_phase_finished(current_result)
         if current_result.phase == data.phase_amount:
+            logger.debug("CurrentResult phase is equal to ContextChallenge phase_amount, so next_phase is None")
             return CheckedResult(correct=True)
 
         next_phase = current_result.phase + 1
+        logger.debug(
+            "Next phase for user '%s' in challenge ID %s is %s", participant.user.nick_name, data.id, next_phase
+        )
         self._result_storage.create_result(participant_id=participant.id, phase=next_phase)
         return CheckedResult(correct=True, next_phase=next_phase)
 
