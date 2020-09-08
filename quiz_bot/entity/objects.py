@@ -140,6 +140,10 @@ class StoryChallengeInfo(BaseChallengeInfo):
         return 1
 
 
+class StoryPatternValue(str, enum.Enum):
+    USERNAME = "username"
+
+
 class AnswerEvaluation(BaseModel):
     status: EvaluationStatus
     replies: List[str] = []

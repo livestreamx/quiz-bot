@@ -12,6 +12,8 @@ from .objects import (
     QuizState,
     RegularChallengeInfo,
     StoryChallengeInfo,
+    StoryItem,
+    StoryPatternValue,
     WinnerResult,
 )
 from .settings import (

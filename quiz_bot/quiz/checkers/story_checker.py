@@ -1,12 +1,17 @@
 import enum
 import logging
 import re
-from copy import copy
-from typing import List, Match, Optional, Sequence
+from typing import Dict, List, Match, Optional, Pattern, Sequence
 
 import telebot
-from quiz_bot.entity import CheckedResult, ContextChallenge, ContextParticipant, StoryChallengeInfo
-from quiz_bot.entity.objects import StoryItem
+from quiz_bot.entity import (
+    CheckedResult,
+    ContextChallenge,
+    ContextParticipant,
+    StoryChallengeInfo,
+    StoryItem,
+    StoryPatternValue,
+)
 from quiz_bot.quiz.checkers.base_checker import BaseResultChecker
 
 logger = logging.getLogger(__name__)
@@ -17,22 +22,19 @@ class StoryPatternDelimiter(str, enum.Enum):
     RIGHT = "}"
 
 
-class StoryPattern(enum.Enum):
-    USERNAME = re.compile(rf"({StoryPatternDelimiter.LEFT}username{StoryPatternDelimiter.RIGHT})+")
+def _compile_pattern(keyword: str) -> Pattern[str]:
+    return re.compile(rf"({StoryPatternDelimiter.LEFT}{keyword}{StoryPatternDelimiter.RIGHT})+")
+
+
+_KEYWORD_TO_PATTERN_MAPPING: Dict[StoryPatternValue, Pattern[str]] = {
+    x: _compile_pattern(x.value) for x in list(StoryPatternValue)
+}
 
 
 class AnswerMatchingMixin:
     @staticmethod
     def _prepare_for_matching(text: str) -> List[str]:
         return [x for x in text.strip().lower().split("\n") if x]
-
-    @classmethod
-    def _search(cls, answer: str, expectation: str, allow_pattern_parsing: bool = False) -> Optional[Match[str]]:
-        result = copy(answer)
-        if allow_pattern_parsing:
-            for pattern in list(StoryPattern):
-                result = pattern.value.sub(expectation, result)
-        return re.search(rf"({expectation})+", result, re.I)
 
     @staticmethod
     def _lines_number_equal(answer_lines: Sequence[str], expected_items: Sequence[StoryItem]) -> bool:
@@ -45,8 +47,19 @@ class AnswerMatchingMixin:
             return False
         return True
 
+    @staticmethod
+    def _replace_patterns(answer: str, participant: ContextParticipant) -> None:
+        for key, value in _KEYWORD_TO_PATTERN_MAPPING:
+            if key is StoryPatternValue.USERNAME:
+                answer = value.sub(participant.user.nick_name, answer)  # type: ignore
+
     @classmethod
-    def _match(cls, answer: str, items: Sequence[StoryItem]) -> bool:
+    def _search(cls, answer: str, expectation: str) -> Optional[Match[str]]:
+        return re.search(rf"({expectation})+", answer, re.I)
+
+    @classmethod
+    def _match(cls, answer: str, items: Sequence[StoryItem], participant: ContextParticipant) -> bool:
+        cls._replace_patterns(answer=answer, participant=participant)
         lines = cls._prepare_for_matching(answer)
         if not cls._lines_number_equal(lines, items):
             return False
@@ -72,7 +85,7 @@ class StoryResultChecker(BaseResultChecker[StoryChallengeInfo], AnswerMatchingMi
         message: telebot.types.Message,
     ) -> CheckedResult:
         current_result = self._result_storage.get_last_result(participant_id=participant.id)
-        if not self._match(answer=message.text, items=info.items):
+        if not self._match(answer=message.text, items=info.items, participant=participant):
             logger.debug(
                 "User '%s' given incorrect story for challenge %s",
                 participant.user.nick_name,
