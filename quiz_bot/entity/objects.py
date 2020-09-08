@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Union
 
 from pydantic import BaseModel, conint, root_validator, validator
 from pydantic.datetime_parse import timedelta
@@ -130,11 +130,14 @@ class StoryItem(BaseModel):
             return values
         raise ValueError("Step should be specififed!")
 
-    @cached_property
-    def iterable_prepositions(self) -> Iterable[StoryPreposition]:
+    @property
+    def iterable_prepositions(self) -> Sequence[StoryPreposition]:
         if self.prepositions is not None:
             return self.prepositions
         return ()
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class StoryChallengeInfo(BaseChallengeInfo):
