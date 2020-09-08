@@ -67,7 +67,12 @@ class AnswerMatchingMixin:
             if all(
                 (
                     cls._search(line_value, items[line_num].step.value),
-                    cls._search(line_value, items[line_num].construction),
+                    cls._search(line_value, items[line_num].construction)
+                    or any(
+                        preposition
+                        for preposition in items[line_num].iterable_prepositions
+                        if cls._search(line_value, preposition)
+                    ),
                     cls._search(line_value, items[line_num].text),
                 )
             ):
