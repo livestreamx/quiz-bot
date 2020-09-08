@@ -49,9 +49,9 @@ class AnswerMatchingMixin:
 
     @staticmethod
     def _replace_patterns(answer: str, participant: ContextParticipant) -> None:
-        for key, value in _KEYWORD_TO_PATTERN_MAPPING:
+        for key, value in _KEYWORD_TO_PATTERN_MAPPING.items():
             if key is StoryPatternValue.USERNAME:
-                answer = value.sub(participant.user.nick_name, answer)  # type: ignore
+                answer = value.sub(participant.user.nick_name, answer)
 
     @classmethod
     def _search(cls, answer: str, expectation: str) -> Optional[Match[str]]:
