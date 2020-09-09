@@ -33,7 +33,7 @@ class EvaluationStatus(str, enum.Enum):
 
 
 class ChallengeType(str, enum.Enum):
-    REGULAR = "classic"
+    REGULAR = "regular"
     STORY = "story"
 
 
