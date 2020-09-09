@@ -2,7 +2,7 @@ import logging
 from typing import Callable
 
 import telebot
-from quiz_bot.clients import BotResponse, RemoteBotClient
+from quiz_bot.clients import BotResponse, RemoteBotClient, SendMessageError
 from quiz_bot.quiz.errors import NotSupportedCallbackError
 from quiz_bot.quiz.interfaces.base_interface import BaseInterface
 from quiz_bot.quiz.manager import QuizManager
@@ -23,7 +23,12 @@ class QuizInterface(BaseInterface):
         with self._client.thread_lock[message.chat.id]:
             response = func(message)
             self._message_storage.save_all(response.replies)
-            self._client.send(response)
+            try:
+                self._client.send(response)
+            except SendMessageError:
+                logger.exception(
+                    "Could not sent reply for user '%s', chat ID '%s'!", message.from_user.username, message.chat.id
+                )
 
     def _register_handlers(self, bot: telebot.TeleBot) -> None:  # noqa: C901
         @bot.message_handler(commands=[ApiCommand.HELP], content_types=[ContentType.TEXT])
