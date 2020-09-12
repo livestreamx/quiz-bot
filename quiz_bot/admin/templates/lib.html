@@ -1,10 +1,11 @@
 {% macro render_style() %}
     <style type="text/css" media="screen">
-        .main-key {
-            font-weight: bold;
-        }
         .challenge-table td {
-            padding: 3px;
+            padding: 5px;
+            margin: 20px;
+        }
+        .challenge-table {
+            border: 2px solid black;
         }
     </style>
 {% endmacro %}
@@ -17,7 +18,7 @@
             </th>
         </tr>
         <tr>
-            <td class="main-key">
+            <td>
                 Participants
             </td>
             <td>
@@ -25,7 +26,7 @@
             </td>
         </tr>
         <tr>
-            <td class="main-key">
+            <td>
                 Pretenders
             </td>
             <td>
@@ -33,7 +34,7 @@
             </td>
         </tr>
         <tr>
-            <td class="main-key">
+            <td>
                 Max score
             </td>
             <td>

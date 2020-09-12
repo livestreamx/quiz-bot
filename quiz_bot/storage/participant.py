@@ -106,4 +106,7 @@ class ParticipantStorage(IParticipantStorage):
         return cast(int, session.query(db.Participant).get_pretenders_amount(challenge_id=challenge_id))
 
     def get_max_scores(self, session: so.Session, challenge_id: int) -> Optional[int]:
-        return cast(Optional[int], session.query(db.Participant).get_max_scores(challenge_id=challenge_id))
+        participant = session.query(db.Participant).get_max_scores(challenge_id=challenge_id)
+        if participant is not None:
+            return cast(int, participant.scores)
+        return None

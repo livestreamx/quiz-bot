@@ -214,6 +214,7 @@ class ChallengeMaster:
         if context_challenge is None:
             raise ChallengeNotFoundError(f"Challenge with ID {challenge_id} was not found!")
 
+        self._save_challenge_data(context_challenge)
         winner_results = self._registrar.get_winners(self._keeper.data)
 
         if not self._keeper.finished:

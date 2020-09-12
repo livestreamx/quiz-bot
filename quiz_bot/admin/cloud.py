@@ -28,7 +28,7 @@ class CloudMaker:
         picture_name = self._generate_picture_name()
         cloud = self._make_cloud()
         if cloud is not None:
-            plt.imshow(interpolation='bilinear')
+            plt.imshow(cloud, interpolation='bilinear')
             plt.axis("off")
             plt.savefig((folder / picture_name).as_posix(), format=_JPG_FMT, dpi=115)
             return picture_name
