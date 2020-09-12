@@ -76,4 +76,4 @@ class ChallengeStorage(IChallengeStorage):
             return cast(Sequence[int], session.query(db.Challenge).get_finished_ids())
 
     def get_challenge_ids(self, session: so.Session) -> Sequence[int]:
-        return cast(Sequence[int], session.query(db.Challenge.id).distinct())
+        return cast(Sequence[int], session.query(db.Challenge).with_entities(db.Challenge.id).all())

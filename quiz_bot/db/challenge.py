@@ -15,7 +15,10 @@ class ChallengeQuery(so.Query):
         )
 
     def get_finished_ids(self) -> List[int]:
-        return cast(List[int], self.session.query(Challenge.id).filter(Challenge.finished_at.isnot(None)).distinct(),)
+        return cast(
+            List[int],
+            self.session.query(Challenge).with_entities(Challenge.id).filter(Challenge.finished_at.isnot(None)).all(),
+        )
 
 
 class Challenge(PrimaryKeyMixin, Base):
