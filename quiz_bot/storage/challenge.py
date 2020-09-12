@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import Optional, Sequence, cast
+from typing import Optional, Sequence, Tuple, cast
 
 import sqlalchemy.orm as so
 from quiz_bot import db
@@ -76,4 +76,5 @@ class ChallengeStorage(IChallengeStorage):
             return cast(Sequence[int], session.query(db.Challenge).get_finished_ids())
 
     def get_challenge_ids(self, session: so.Session) -> Sequence[int]:
-        return cast(Sequence[int], session.query(db.Challenge).with_entities(db.Challenge.id).all())
+        ids: Sequence[Tuple[int]] = session.query(db.Challenge).with_entities(db.Challenge.id).all()
+        return [x[0] for x in ids]

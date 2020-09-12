@@ -105,4 +105,4 @@ class UserStorage(IUserStorage):
             yield context_user
 
     def get_user_ids_amount(self, session: so.Session) -> int:
-        return cast(int, session.query(db.User.id).count())
+        return cast(int, session.query(db.User).with_entities(db.User.id).count())
