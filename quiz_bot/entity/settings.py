@@ -14,7 +14,7 @@ from sqlalchemy.engine import Engine, engine_from_config
 from sqlalchemy.engine.url import URL as SAURL
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.exc import ArgumentError
-from sqlalchemy.pool import SingletonThreadPool
+from sqlalchemy.pool import QueuePool
 from yarl import URL
 
 
@@ -232,7 +232,7 @@ class DataBaseSettings(BaseSettings):
                 "pool_recycle": self.pool_recycle,
                 "pool_pre_ping": True,
                 "pool_size": self.pool_size,
-                "poolclass": SingletonThreadPool,
+                "poolclass": QueuePool,
                 "connect_args": {'connect_timeout': self.connection_timeout, 'application_name': self.application_name},
             },
             prefix="",

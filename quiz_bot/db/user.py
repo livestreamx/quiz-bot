@@ -13,7 +13,7 @@ class UserQuery(so.Query):
         return cast(Optional[User], self.session.query(User).filter(User.external_id == value).one_or_none())
 
     def get_all_user_ids(self) -> Sequence[int]:
-        return cast(Sequence[int], self.session.query(User).with_entities(User.id).all())
+        return cast(Sequence[int], self.session.query(User.id).distinct())
 
     def get_by_nick_name(self, value: str) -> Optional[User]:
         return cast(

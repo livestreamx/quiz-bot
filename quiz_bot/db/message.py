@@ -10,7 +10,7 @@ from quiz_bot.db.base import Base, PrimaryKeyMixin
 
 class MessageQuery(so.Query):
     def get_message_ids(self, limit: int) -> Sequence[int]:
-        return cast(Sequence[int], self.session.query(Message).with_entities(Message.id).limit(limit).all())
+        return cast(Sequence[int], self.session.query(Message.id).limit(limit).distinct())
 
 
 @su.generic_repr('user_id', 'text')

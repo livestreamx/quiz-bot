@@ -3,6 +3,7 @@ import logging
 from typing import Iterator, Optional, cast
 from uuid import uuid4
 
+import sqlalchemy.orm as so
 import telebot
 from quiz_bot import db
 from quiz_bot.entity import ContextUser
@@ -31,6 +32,10 @@ class IUserStorage(abc.ABC):
     @property
     @abc.abstractmethod
     def users(self) -> Iterator[ContextUser]:
+        pass
+
+    @abc.abstractmethod
+    def get_user_ids_amount(self, session: so.Session) -> int:
         pass
 
 
@@ -98,3 +103,6 @@ class UserStorage(IUserStorage):
                 db_user = session.query(db.User).get(user_id)
                 context_user = ContextUser.from_orm(db_user)
             yield context_user
+
+    def get_user_ids_amount(self, session: so.Session) -> int:
+        return cast(int, session.query(db.User.id).count())

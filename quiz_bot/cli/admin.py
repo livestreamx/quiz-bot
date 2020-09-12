@@ -1,8 +1,8 @@
 import click
-from quiz_bot.admin.cloud import CloudMaker
+from quiz_bot.admin import CloudMaker, StatisticsCollector
 from quiz_bot.cli.group import app
 from quiz_bot.entity import MessageCloudSettings
-from quiz_bot.storage import MessageStorage
+from quiz_bot.storage import ChallengeStorage, MessageStorage, ParticipantStorage, UserStorage
 from wordcloud import WordCloud
 
 
@@ -18,4 +18,9 @@ def admin(port: int, debug: bool) -> None:
         wordcloud=WordCloud(background_color="white", width=1280, height=640),
         storage=MessageStorage(MessageCloudSettings()),
     )
-    quizbot_app(cloud_maker=cloud_maker).run(host='0.0.0.0', port=port, debug=debug)
+    statistics_collector = StatisticsCollector(
+        user_storage=UserStorage(), challenge_storage=ChallengeStorage(), participant_storage=ParticipantStorage()
+    )
+    quizbot_app(cloud_maker=cloud_maker, statistics_collector=statistics_collector).run(
+        host='0.0.0.0', port=port, debug=debug
+    )

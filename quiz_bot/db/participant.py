@@ -29,6 +29,33 @@ class ParticipantQuery(so.Query):
             query = query.limit(limit)
         return cast(Sequence[Participant], query.all())
 
+    def get_participant_amount(self, challenge_id: int) -> int:
+        return cast(
+            int,
+            self.session.query(Participant)
+            .with_entities(Participant.id)
+            .filter(Participant.challenge_id == challenge_id)
+            .count(),
+        )
+
+    def get_pretenders_amount(self, challenge_id: int) -> int:
+        return cast(
+            int,
+            self.session.query(Participant)
+            .with_entities(Participant.id)
+            .filter(Participant.challenge_id == challenge_id, Participant.finished_at.isnot(None))
+            .count(),
+        )
+
+    def get_max_scores(self, challenge_id: int) -> Optional[int]:
+        return cast(
+            int,
+            self.session.query(Participant, sa.func.max(Participant.scores))
+            .with_entities(Participant.id)
+            .filter(Participant.challenge_id == challenge_id)
+            .first(),
+        )
+
 
 @su.generic_repr('user', 'challenge_id', 'scores')
 class Participant(PrimaryKeyMixin, Base):

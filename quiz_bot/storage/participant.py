@@ -36,6 +36,18 @@ class IParticipantStorage(abc.ABC):
     def has_all_winners(self, challenge_id: int, winner_amount: int) -> bool:
         pass
 
+    @abc.abstractmethod
+    def get_participants_amount(self, session: so.Session, challenge_id: int) -> int:
+        pass
+
+    @abc.abstractmethod
+    def get_pretenders_amount(self, session: so.Session, challenge_id: int) -> int:
+        pass
+
+    @abc.abstractmethod
+    def get_max_scores(self, session: so.Session, challenge_id: int) -> Optional[int]:
+        pass
+
 
 class ParticipantStorage(IParticipantStorage):
     @staticmethod
@@ -86,3 +98,12 @@ class ParticipantStorage(IParticipantStorage):
                 challenge_id=challenge_id, limit=winner_amount
             )
             return len(db_pretenders) == winner_amount
+
+    def get_participants_amount(self, session: so.Session, challenge_id: int) -> int:
+        return cast(int, session.query(db.Participant).get_participant_amount(challenge_id=challenge_id))
+
+    def get_pretenders_amount(self, session: so.Session, challenge_id: int) -> int:
+        return cast(int, session.query(db.Participant).get_pretenders_amount(challenge_id=challenge_id))
+
+    def get_max_scores(self, session: so.Session, challenge_id: int) -> Optional[int]:
+        return cast(Optional[int], session.query(db.Participant).get_max_scores(challenge_id=challenge_id))
