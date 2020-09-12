@@ -242,4 +242,4 @@ class DataBaseSettings(BaseSettings):
 
 
 class MessageCloudSettings(BaseSettings):
-    select_limit: int = 200
+    select_limit: int = 100

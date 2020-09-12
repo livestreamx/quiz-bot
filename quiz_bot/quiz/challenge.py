@@ -183,7 +183,7 @@ class ChallengeMaster:
             logger.info(
                 "User @%s has already completed challenge with ID %s!", user.nick_name, self._keeper.data.id,
             )
-            return self._get_evaluation(status=EvaluationStatus.NOT_CHECKED)
+            return self._get_evaluation(status=EvaluationStatus.ALREADY_COMPLETED)
 
         if self._keeper.finished:
             return self._get_evaluation(status=EvaluationStatus.INCORRECT)

@@ -198,6 +198,8 @@ class QuizManager:
                     replies=replies,
                     markup=self._markup_maker.start_with_help_markup,
                 )
+        if evaluation.status is EvaluationStatus.ALREADY_COMPLETED:
+            return self._get_simple_response(message)
         raise UnreachableMessageProcessingError("Should not be there!")
 
     def respond(self, message: telebot.types.Message) -> BotResponse:

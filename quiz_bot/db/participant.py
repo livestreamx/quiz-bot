@@ -48,11 +48,11 @@ class ParticipantQuery(so.Query):
         )
 
     def get_max_scores(self, challenge_id: int) -> Optional[int]:
-        subquery = self.session.query(sa.func.max(Participant.scores))
         return cast(
-            int,
+            Optional[int],
             self.session.query(Participant)
-            .filter(Participant.challenge_id == challenge_id, Participant.scores == subquery)
+            .filter(Participant.challenge_id == challenge_id)
+            .order_by(Participant.scores.desc())
             .first(),
         )
 

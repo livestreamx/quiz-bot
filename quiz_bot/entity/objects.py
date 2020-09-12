@@ -30,6 +30,7 @@ class EvaluationStatus(str, enum.Enum):
     CORRECT = "correct"  # Evaluation has been checked and it is correct
     INCORRECT = "incorrect"  # Evaluation has been checked and it is incorrect
     NOT_CHECKED = "not_checked"  # Evaluation has not been checked due to circumstances
+    ALREADY_COMPLETED = "already_completed"  # valuation has been already completed by the user
 
 
 class ChallengeType(str, enum.Enum):
