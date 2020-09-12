@@ -208,7 +208,7 @@ class ChallengeSettings(BaseSettings):
 class DataBaseSettings(BaseSettings):
     url: SAURL = 'postgresql://postgres:postgres@localhost:6432/quiz-bot'
     pool_recycle: int = 500
-    pool_size: int = 6
+    pool_size: int = 4
     echo: bool = False
     application_name: str = socket.gethostname()
     connection_timeout: int = 5
