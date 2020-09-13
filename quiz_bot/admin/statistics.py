@@ -14,6 +14,7 @@ class ChallengeStatistics(BaseModel):
     participants: int
     pretenders: int
     max_scores: int
+    time_left: str
 
 
 class QuizStatistics(BaseModel):
@@ -36,11 +37,15 @@ class StatisticsCollector:
             challenges: List[ChallengeStatistics] = []
             for challenge_id in self._challenge_storage.get_challenge_ids(session):
                 max_scores = self._participant_storage.get_max_scores(session, challenge_id=challenge_id) or 0
+                time_left = self.get_left_time(challenge_id)
+                if time_left is None:
+                    raise RuntimeError("Should not be there!")
                 statistics = ChallengeStatistics(
                     number=challenge_id,
                     participants=self._participant_storage.get_participants_amount(session, challenge_id=challenge_id),
                     pretenders=self._participant_storage.get_pretenders_amount(session, challenge_id=challenge_id),
                     max_scores=max_scores,
+                    time_left=time_left,
                 )
                 challenges.append(statistics)
             return QuizStatistics(users=users, challenges=challenges)
@@ -54,4 +59,4 @@ class StatisticsCollector:
             left_time = datetime.timedelta(seconds=0)
         else:
             left_time = challenge.finish_after
-        return str(left_time)
+        return str(left_time).split(".")[0]
