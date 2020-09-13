@@ -41,5 +41,24 @@
                 {{challenge.max_scores}}
             </td>
         </tr>
+        <tr>
+            <td>
+                Time left
+            </td>
+            <td>
+                <p id="clock-{{ challenge.number }}"></p>
+            </td>
+        </tr>
     </table>
+
+    <script>
+        var clock = document.getElementById("clock-{{ challenge.number }}");
+
+        setInterval(() => {
+            fetch("{{ url_for('get_left_time') }}?challenge={{ challenge.number }}")
+            .then(response => {
+                    response.text().then(t => {clock.innerHTML = t})
+                });
+            }, 5000);
+    </script>
 {% endmacro %}

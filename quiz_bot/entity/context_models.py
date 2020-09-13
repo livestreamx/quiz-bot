@@ -1,5 +1,9 @@
+import datetime
+from typing import cast
+
 from pydantic_sqlalchemy import sqlalchemy_to_pydantic
 from quiz_bot import db
+from quiz_bot.utils import get_now
 
 
 class ContextUser(sqlalchemy_to_pydantic(db.User)):  # type: ignore
@@ -17,6 +21,14 @@ class ContextChallenge(sqlalchemy_to_pydantic(db.Challenge)):  # type: ignore
     @property
     def finished(self) -> bool:
         return self.finished_at is not None
+
+    @property
+    def finish_after(self) -> datetime.timedelta:
+        return cast(datetime.timedelta, self.created_at + self.duration - get_now())
+
+    @property
+    def out_of_date(self) -> bool:
+        return not self.finished and self.finish_after.total_seconds() < 0
 
 
 class ContextResult(sqlalchemy_to_pydantic(db.Result)):  # type: ignore

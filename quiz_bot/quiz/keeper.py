@@ -6,7 +6,6 @@ from quiz_bot.entity.context_models import ContextChallenge
 from quiz_bot.entity.types import AnyChallengeInfo
 from quiz_bot.quiz.checkers import AnyResultChecker, RegularResultChecker, StoryResultChecker
 from quiz_bot.storage import IResultStorage
-from quiz_bot.utils import get_now
 
 
 class EmptyChallengeKeeperError(RuntimeError):
@@ -53,15 +52,15 @@ class ChallengeKeeper:
 
     @property
     def finish_after(self) -> timedelta:
-        return cast(timedelta, self.data.created_at + self.info.duration - get_now())
+        return self.data.finish_after
 
     @property
     def finished(self) -> bool:
-        return self.data.finished_at is not None
+        return self.data.finished
 
     @property
     def out_of_date(self) -> bool:
-        return not self.finished and self.finish_after.total_seconds() < 0
+        return self.data.out_of_date
 
     def _get_checker(self) -> Union[Type[RegularResultChecker], Type[StoryResultChecker]]:
         if self.info.type is ChallengeType.REGULAR:

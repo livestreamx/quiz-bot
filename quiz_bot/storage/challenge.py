@@ -1,4 +1,5 @@
 import abc
+import datetime
 import logging
 from typing import Optional, Sequence, Tuple, cast
 
@@ -13,7 +14,9 @@ logger = logging.getLogger(__name__)
 
 class IChallengeStorage(abc.ABC):
     @abc.abstractmethod
-    def create_challenge(self, name: str, phase_amount: int, winner_amount: int) -> ContextChallenge:
+    def create_challenge(
+        self, name: str, phase_amount: int, winner_amount: int, duration: datetime.timedelta
+    ) -> ContextChallenge:
         pass
 
     @staticmethod
@@ -40,9 +43,13 @@ class IChallengeStorage(abc.ABC):
 
 
 class ChallengeStorage(IChallengeStorage):
-    def create_challenge(self, name: str, phase_amount: int, winner_amount: int) -> ContextChallenge:
+    def create_challenge(
+        self, name: str, phase_amount: int, winner_amount: int, duration: datetime.timedelta
+    ) -> ContextChallenge:
         with db.create_session() as session:
-            challenge = db.Challenge(name=name, phase_amount=phase_amount, winner_amount=winner_amount)
+            challenge = db.Challenge(
+                name=name, phase_amount=phase_amount, winner_amount=winner_amount, duration=duration
+            )
             session.add(challenge)
             session.flush()
             return cast(ContextChallenge, ContextChallenge.from_orm(challenge))

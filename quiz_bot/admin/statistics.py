@@ -1,8 +1,12 @@
-from typing import List
+import datetime
+import logging
+from typing import List, Optional
 
 from pydantic import BaseModel
 from quiz_bot import db
 from quiz_bot.storage import IChallengeStorage, IParticipantStorage, IUserStorage
+
+logger = logging.getLogger(__name__)
 
 
 class ChallengeStatistics(BaseModel):
@@ -40,3 +44,14 @@ class StatisticsCollector:
                 )
                 challenges.append(statistics)
             return QuizStatistics(users=users, challenges=challenges)
+
+    def get_left_time(self, challenge_id: int) -> Optional[str]:
+        challenge = self._challenge_storage.get_challenge(challenge_id)
+        if challenge is None:
+            logging.error("Challenge with ID '%s' not exists!", challenge_id)
+            return None
+        if challenge.finished or challenge.out_of_date:
+            left_time = datetime.timedelta(seconds=0)
+        else:
+            left_time = challenge.finish_after
+        return str(left_time)
