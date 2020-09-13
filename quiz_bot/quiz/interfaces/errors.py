@@ -1,0 +1,2 @@
+class NoUserFoundError(RuntimeError):
+    pass

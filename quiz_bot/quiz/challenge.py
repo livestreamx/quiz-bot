@@ -1,66 +1,58 @@
 import logging
-from typing import Optional, Sequence
+from typing import List, Optional, Sequence
 
 import telebot
 from quiz_bot.entity import (
     AnswerEvaluation,
-    ChallengeInfo,
+    AnyChallengeInfo,
     ChallengeSettings,
+    CheckedResult,
     ContextChallenge,
+    ContextParticipant,
     ContextUser,
     EvaluationStatus,
-    ExtendedChallenge,
+    PictureModel,
     QuizState,
-    WinnerResult,
+    RegularChallengeInfo,
+    UnexpectedChallengeAmountError,
 )
-from quiz_bot.entity.errors import UnexpectedChallengeAmountError
-from quiz_bot.quiz.checkers import IResultChecker
-from quiz_bot.quiz.errors import ChallengeNotFoundError, NullableCurrentChallengeError, UserIsNotWinnerError
-from quiz_bot.storage import IChallengeStorage, NoResultFoundError
+from quiz_bot.quiz.errors import ChallengeNotFoundError, NullableParticipantError
+from quiz_bot.quiz.keeper import ChallengeKeeper
+from quiz_bot.quiz.registrar import Registrar
+from quiz_bot.storage import IChallengeStorage
 
 logger = logging.getLogger(__name__)
 
 
 class ChallengeMaster:
     def __init__(
-        self, storage: IChallengeStorage, settings: ChallengeSettings, result_checker: IResultChecker,
+        self, storage: IChallengeStorage, settings: ChallengeSettings, registrar: Registrar, keeper: ChallengeKeeper,
     ) -> None:
         self._storage = storage
         self._settings = settings
-        self._result_checker = result_checker
-        self._current_challenge: Optional[ExtendedChallenge] = None
+        self._registrar = registrar
+        self._keeper = keeper
 
         self._sync_challenge()
-        if all(
-            [
-                self._settings.autostart,
-                self._current_challenge is None
-                or (self._current_challenge is not None and self._current_challenge.finished),
-            ]
-        ):
+        if all((self._settings.autostart, not self._keeper.has_data or self._keeper.finished,)):
             self.start_next_challenge()
 
     @property
-    def current_challenge(self) -> Optional[ExtendedChallenge]:
-        return self._current_challenge
+    def keeper(self) -> ChallengeKeeper:
+        return self._keeper
 
     @property
     def _is_last_challenge(self) -> bool:
-        return self._current_challenge is not None and self._current_challenge.number == self._settings.challenge_amount
+        return self._keeper.has_data and self._keeper.number == self._settings.challenge_amount
 
-    def _make_extended_model(self, challenge: ContextChallenge) -> ExtendedChallenge:
-        return ExtendedChallenge(
-            info=self._settings.get_challenge_model(challenge.id), data=challenge, number=challenge.id
-        )
-
-    def _set_current_challenge(self, challenge: ContextChallenge) -> None:
-        self._current_challenge = self._make_extended_model(challenge)
+    def _save_challenge_data(self, challenge: ContextChallenge) -> None:
+        self._keeper.set(data=challenge, info=self._settings.get_challenge_model(challenge.id))
 
     def _sync_challenge(self) -> None:
         actual_challenge = self._storage.get_actual_challenge()
         if actual_challenge is not None:
             logger.info("Actual challenge with ID %s", actual_challenge.id)
-            self._set_current_challenge(actual_challenge)
+            self._save_challenge_data(actual_challenge)
             return
 
         finished_challenge_ids = self._storage.get_finished_challenge_ids()
@@ -77,36 +69,37 @@ class ChallengeMaster:
         challenge = self._storage.get_challenge(finished_challenge_ids[-1])
         if challenge is None:
             raise ChallengeNotFoundError("Could not found finished challenge - WTF?")
-        self._set_current_challenge(challenge)
+        self._save_challenge_data(challenge)
 
-    @property
-    def quiz_state(self) -> QuizState:
+    def resolve_quiz_state(self) -> QuizState:
         self._sync_challenge()
-        if self._current_challenge is None:
+        if not self._keeper.has_data:
             return QuizState.NEW
-        if self._current_challenge.finished:
+        if self._keeper.finished:
             if self._is_last_challenge:
                 return QuizState.FINISHED
             return QuizState.WAIT_NEXT
         return QuizState.IN_PROGRESS
 
-    def _get_next_challenge_info(self) -> ChallengeInfo:
-        if self._current_challenge is None:
+    def _get_next_challenge_info(self) -> AnyChallengeInfo:
+        if not self._keeper.has_data:
             return self._settings.get_challenge_model(1)
-        return self._settings.get_challenge_model(self._current_challenge.number + 1)
+        return self._settings.get_challenge_model(self._keeper.number + 1)
 
     def start_next_challenge(self) -> None:
         next_challenge_info = self._get_next_challenge_info()
         next_challenge = self._storage.create_challenge(
             name=next_challenge_info.name,
-            phase_amount=len(next_challenge_info.questions),
+            phase_amount=next_challenge_info.phase_amount,
             winner_amount=next_challenge_info.max_winners,
         )
         logger.info("Next challenge: %s", next_challenge)
         self._sync_challenge()
 
-    def _get_evaluation(self, status: EvaluationStatus, replies: Optional[Sequence[str]] = ()) -> AnswerEvaluation:
-        return AnswerEvaluation(status=status, replies=replies, quiz_state=self.quiz_state)
+    def _get_evaluation(
+        self, status: EvaluationStatus, replies: Optional[Sequence[str]] = (), picture: Optional[PictureModel] = None
+    ) -> AnswerEvaluation:
+        return AnswerEvaluation(status=status, replies=replies, quiz_state=self.resolve_quiz_state(), picture=picture)
 
     def start_challenge_for_user(
         self,
@@ -114,102 +107,122 @@ class ChallengeMaster:
         status: EvaluationStatus = EvaluationStatus.NOT_CHECKED,
         additional_replies: Sequence[str] = (),
     ) -> AnswerEvaluation:
-        if self._current_challenge is None:
-            raise NullableCurrentChallengeError(
-                "Try to start challenge for User @%s result when challenge is not running!", user.nick_name
-            )
-        result = self._result_checker.prepare_user_result(user=user, challenge=self._current_challenge.data)
-        logger.warning("Started challenge ID %s for user @%s", self._current_challenge.number, user.nick_name)
-        replies = list(additional_replies) + [
-            self._settings.get_start_notification(
-                challenge_num=self._current_challenge.number,
-                challenge_name=self._current_challenge.info.name,
-                description=f"{self._current_challenge.info.description}",
-            ),
-            self._settings.get_next_answer_notification(
-                question=self._current_challenge.info.get_question(result.phase), question_num=result.phase,
-            ),
-        ]
-        return self._get_evaluation(status=status, replies=replies)
+        participant = self._registrar.get_participation_for_user(user=user, challenge=self._keeper.data)
+        if participant is None:
+            participant = self._registrar.create_participation_for_user(user=user, challenge=self._keeper.data)
+            result = self._keeper.checker.create_initial_phase(participant=participant)
+            logger.warning("Started challenge ID %s for user @%s", self._keeper.number, user.nick_name)
 
-    def _get_winner_result(self, user: ContextUser, challenge: ContextChallenge) -> WinnerResult:
-        winner_results = self._result_checker.get_winners(challenge)
-        for result in winner_results:
-            if user.id != result.user.id:
-                continue
-            return result
-        raise UserIsNotWinnerError("User @%s is not a winner!", user.nick_name)
-
-    def evaluate(self, user: ContextUser, message: telebot.types.Message) -> AnswerEvaluation:  # noqa: C901
-        if self._current_challenge is None:
-            raise NullableCurrentChallengeError(
-                "Try to evaluate answer for User @%s result when challenge is not running!", user.nick_name
-            )
-        if self._current_challenge.out_of_date:
-            self._storage.finish_actual_challenge()
-        try:
-            checked_result = self._result_checker.check_answer(
-                user=user, current_challenge=self._current_challenge, message=message
-            )
-        except NoResultFoundError:
-            logger.info(
-                "Not found any Result for User @%s with challenge ID %s!",
-                user.nick_name,
-                self._current_challenge.data.id,
-            )
-            return self._get_evaluation(status=EvaluationStatus.NOT_CHECKED)
-
-        if not checked_result.correct:
-            # If challenge is finished and user message has not been checked (because it is too late)
-            if self._current_challenge.finished and not checked_result.finish_condition_reached:
-                return self._get_evaluation(status=EvaluationStatus.NOT_CHECKED)
-            return self._get_evaluation(status=EvaluationStatus.INCORRECT)
-
-        if not checked_result.finished_for_user:
-            if checked_result.next_phase is None:
-                raise RuntimeError("Next phase should be specified for not last but correct result!")
-            return self._get_evaluation(
-                status=EvaluationStatus.CORRECT,
-                replies=[
+            replies = list(additional_replies) + [
+                self._settings.get_start_notification(
+                    challenge_num=self._keeper.number,
+                    challenge_name=self._keeper.info.name,
+                    description=f"{self._keeper.info.description}",
+                ),
+            ]
+            if isinstance(self._keeper.info, RegularChallengeInfo):
+                replies.append(
                     self._settings.get_next_answer_notification(
-                        question=self._current_challenge.info.get_question(checked_result.next_phase),
-                        question_num=checked_result.next_phase,
-                    ),
-                ],
-            )
+                        question=self._keeper.info.get_question(result.phase), question_num=result.phase,
+                    )
+                )
 
-        winner_result = self._get_winner_result(user=user, challenge=self._current_challenge.data)
-        winner_replies = [
-            self._settings.get_winner_notification(
-                challenge_name=self._current_challenge.info.name, winner_pos=winner_result.position
+            return self._get_evaluation(status=status, replies=replies, picture=self._keeper.info.picture,)
+        return self._get_evaluation(
+            status=status,
+            replies=[self._settings.get_already_started_notification(challenge_name=self._keeper.info.name)],
+        )
+
+    def _resolve_next_event(self, participant: ContextParticipant, result: CheckedResult) -> AnswerEvaluation:
+        status = EvaluationStatus.CORRECT
+
+        if result.next_phase is not None:
+            replies: List[str] = []
+            if isinstance(self._keeper.info, RegularChallengeInfo):
+                replies.append(
+                    self._settings.get_next_answer_notification(
+                        question=self._keeper.info.get_question(result.next_phase), question_num=result.next_phase,
+                    )
+                )
+            return self._get_evaluation(status=status, replies=replies)
+
+        self._registrar.finish_participation(participant)
+
+        pretender_replies = [
+            self._settings.get_pretender_notification(
+                challenge_name=self._keeper.info.name, scores=participant.scores, finished_at=participant.finished_at,
             )
         ]
-        if not checked_result.finish_condition_reached:
-            return self._get_evaluation(status=EvaluationStatus.CORRECT, replies=winner_replies)
+
+        has_all_winners = self._registrar.all_winners_exist(challenge=self._keeper.data)
+        if not has_all_winners:
+            return self._get_evaluation(status=status, replies=pretender_replies)
 
         self._storage.finish_actual_challenge()
         logger.info(
-            "Challenge #%s '%s' finished with all winners resolution!",
-            self._current_challenge.number,
-            self._current_challenge.info.name,
+            "Challenge #%s '%s' finished with all winners resolution!", self._keeper.number, self._keeper.info.name,
         )
         if not self._is_last_challenge and self._settings.autostart:
             self.start_next_challenge()
             return self.start_challenge_for_user(
-                user=user, status=EvaluationStatus.CORRECT, additional_replies=winner_replies
+                user=participant.user, status=status, additional_replies=pretender_replies
             )
-        return self._get_evaluation(status=EvaluationStatus.CORRECT, replies=winner_replies)
+        return self._get_evaluation(status=status, replies=pretender_replies)
+
+    def evaluate(self, user: ContextUser, message: telebot.types.Message) -> AnswerEvaluation:  # noqa: C901
+        if self._keeper.out_of_date:
+            self._storage.finish_actual_challenge()
+
+        participant = self._registrar.get_participation_for_user(user=user, challenge=self._keeper.data)
+        if participant is None:
+            logger.info(
+                "User @%s is not a Participant for challenge with ID %s!", user.nick_name, self._keeper.data.id,
+            )
+            return self._get_evaluation(status=EvaluationStatus.NOT_CHECKED)
+        if participant.completed_challenge:
+            logger.info(
+                "User @%s has already completed challenge with ID %s!", user.nick_name, self._keeper.data.id,
+            )
+            return self._get_evaluation(status=EvaluationStatus.ALREADY_COMPLETED)
+
+        if self._keeper.finished:
+            return self._get_evaluation(status=EvaluationStatus.INCORRECT)
+
+        checked_result = self._keeper.checker.check_answer(
+            participant=participant, data=self._keeper.data, info=self._keeper.info, message=message  # type: ignore
+        )
+        if not checked_result.correct:
+            return self._get_evaluation(status=EvaluationStatus.INCORRECT)
+
+        self._registrar.add_correct_answer(participant)
+        logger.info("Added +1 score for user '%s'!", user.nick_name)
+        return self._resolve_next_event(participant=participant, result=checked_result)
+
+    def skip_evaluation(self, user: ContextUser) -> AnswerEvaluation:
+        participant = self._registrar.get_participation_for_user(user=user, challenge=self._keeper.data)
+        if participant is None:
+            raise NullableParticipantError
+        unchecked_result = self._keeper.checker.skip_question(participant=participant, data=self._keeper.data)
+        return self._resolve_next_event(participant=participant, result=unchecked_result)
 
     def get_challenge_info(self, challenge_id: Optional[int] = None) -> str:
         if not isinstance(challenge_id, int):
             logger.info("Challenge ID was not specified, so use current challenge information.")
-            if self._current_challenge is None:
-                raise NullableCurrentChallengeError
-            challenge_id = self._current_challenge.number
+            challenge_id = self._keeper.number
 
         context_challenge = self._storage.get_challenge(challenge_id)
         if context_challenge is None:
             raise ChallengeNotFoundError(f"Challenge with ID {challenge_id} was not found!")
-        challenge = self._make_extended_model(context_challenge)
-        winner_results = self._result_checker.get_winners(challenge.data)
-        return self._settings.get_challenge_info(challenge=challenge, winner_results=winner_results)
+
+        self._save_challenge_data(context_challenge)
+        winner_results = self._registrar.get_winners(self._keeper.data)
+
+        if not self._keeper.finished:
+            results = self._settings.get_time_left_info(self._keeper.finish_after)
+        else:
+            results = (
+                "\n".join(self._settings.get_results_info(winner_results))
+                + "\n\n"
+                + self._settings.get_time_over_info(self._keeper.data)
+            )
+        return self._settings.get_challenge_info(number=self._keeper.number, info=self._keeper.info, results=results)

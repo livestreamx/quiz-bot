@@ -1,5 +1,6 @@
 # flake8: noqa
-from .bot import start
+from .admin import admin
+from .bot import chat, run
 from .challenge import challenge
 from .db import db
 from .group import app

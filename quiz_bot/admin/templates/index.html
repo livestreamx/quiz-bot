@@ -1,0 +1,32 @@
+{% import 'lib.html' as lib with context %}
+
+<title>{{page_name}}</title>
+{{ lib.render_style() }}
+<body>
+<h1 style="text-align: center; align-content: center">{{page_name}}</h1>
+<table>
+    <tr>
+        <td style="width: 40%; padding-left: 100px;">
+            <h2 style="text-align: center;">Statistics</h2>
+            <br><hr><br>
+            <h3 style="text-align: center">Total users: {{statistics.users}}</h3>
+            <br>
+            <table>
+                <tr>
+                    {% for challenge in statistics.challenges %}
+                        <td>
+                            {{ lib.render_challenge_table(challenge) }}
+                        </td>
+                    {% endfor %}
+                </tr>
+            </table>
+        </td>
+        <td style="width: 60%">
+            {% if picture_name %}
+                <img src="/files/{{picture_name}}" height="640px">
+            {% endif %}
+        </td>
+    </tr>
+</table>
+<meta http-equiv="refresh" content="20">
+</body>

@@ -2,15 +2,7 @@ class NotSupportedCallbackError(RuntimeError):
     pass
 
 
-class UserIsNotWinnerError(RuntimeError):
-    pass
-
-
 class ChallengeNotFoundError(RuntimeError):
-    pass
-
-
-class NullableCurrentChallengeError(RuntimeError):
     pass
 
 
@@ -22,5 +14,5 @@ class UnreachableMessageProcessingError(RuntimeError):
     pass
 
 
-class UnexpectedChallengeStateError(RuntimeError):
+class NullableParticipantError(RuntimeError):
     pass

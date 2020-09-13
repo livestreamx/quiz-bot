@@ -1,0 +1,45 @@
+{% macro render_style() %}
+    <style type="text/css" media="screen">
+        .challenge-table td {
+            padding: 5px;
+            margin: 20px;
+        }
+        .challenge-table {
+            border: 2px solid black;
+        }
+    </style>
+{% endmacro %}
+
+{% macro render_challenge_table(challenge) %}
+    <table class="challenge-table">
+        <tr>
+            <th colspan="2">
+                Challenge #{{challenge.number}}
+            </th>
+        </tr>
+        <tr>
+            <td>
+                Participants
+            </td>
+            <td>
+                {{challenge.participants}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Pretenders
+            </td>
+            <td>
+                {{challenge.pretenders}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Max score
+            </td>
+            <td>
+                {{challenge.max_scores}}
+            </td>
+        </tr>
+    </table>
+{% endmacro %}

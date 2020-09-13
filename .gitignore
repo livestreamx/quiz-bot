@@ -68,3 +68,5 @@ reference/
 
 # Work files
 *settings.json
+*.jpg
+*.png

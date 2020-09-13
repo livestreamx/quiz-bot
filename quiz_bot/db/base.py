@@ -27,7 +27,10 @@ def _get_query_cls(mapper: Type[Base], session: so.Session) -> so.Query:
             m = mapper[0]
         if isinstance(m, so.Mapper):
             m = m.entity
-        return m.__query_cls__(mapper, session)  # type: ignore
+        try:
+            return m.__query_cls__(mapper, session)  # type: ignore
+        except AttributeError:
+            pass
     return so.Query(mapper, session)
 
 

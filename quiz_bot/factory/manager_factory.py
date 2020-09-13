@@ -1,39 +1,42 @@
 from functools import cached_property
 
-from quiz_bot.clients import ChitchatClient, RemoteBotClient
-from quiz_bot.entity import ChallengeSettings, ChitchatSettings, InfoSettings, RemoteClientSettings
-from quiz_bot.quiz import ChallengeMaster, ClassicResultChecker, QuizManager, QuizNotifier, UserMarkupMaker
-from quiz_bot.quiz.checkers import IResultChecker
+from quiz_bot.clients import RemoteBotClient, ShoutboxClient
+from quiz_bot.entity import ChallengeSettings, InfoSettings, RemoteClientSettings, ShoutboxSettings
+from quiz_bot.quiz import ChallengeKeeper, ChallengeMaster, QuizManager, QuizNotifier, Registrar, UserMarkupMaker
 from quiz_bot.storage import (
+    AttemptsStorage,
     ChallengeStorage,
+    IAttemptsStorage,
     IChallengeStorage,
     IResultStorage,
     IUserStorage,
+    ParticipantStorage,
     ResultStorage,
     UserStorage,
 )
 
 
 class QuizManagerFactory:
-    def __init__(self, challenge_settings: ChallengeSettings, chitchat_settings: ChitchatSettings) -> None:
+    def __init__(self, challenge_settings: ChallengeSettings, shoutbox_settings: ShoutboxSettings) -> None:
         self._challenge_settings = challenge_settings
-        self._chitchat_settings = chitchat_settings
+        self._shoutbox_settings = shoutbox_settings
+        self._remote_bot_client = RemoteBotClient(RemoteClientSettings())
 
     @cached_property
     def _info_settings(self) -> InfoSettings:
         return InfoSettings()
 
     @cached_property
-    def _remote_bot_client(self) -> RemoteBotClient:
-        return RemoteBotClient(RemoteClientSettings())
-
-    @cached_property
-    def _chitchat_client(self) -> ChitchatClient:
-        return ChitchatClient(self._chitchat_settings)
+    def _shoutbox_client(self) -> ShoutboxClient:
+        return ShoutboxClient(self._shoutbox_settings)
 
     @cached_property
     def _user_storage(self) -> IUserStorage:
         return UserStorage()
+
+    @cached_property
+    def _attempts_storage(self) -> IAttemptsStorage:
+        return AttemptsStorage(skip_notification_attempt_num=self._info_settings.skip_question_notification_number)
 
     @cached_property
     def _challenge_storage(self) -> IChallengeStorage:
@@ -44,13 +47,20 @@ class QuizManagerFactory:
         return ResultStorage()
 
     @cached_property
-    def _result_checker(self) -> IResultChecker:
-        return ClassicResultChecker(result_storage=self._result_storage, challenge_settings=self._challenge_settings)
+    def _registrar(self) -> Registrar:
+        return Registrar(storage=ParticipantStorage())
+
+    @cached_property
+    def _challenge_keeper(self) -> ChallengeKeeper:
+        return ChallengeKeeper(result_storage=self._result_storage)
 
     @cached_property
     def challenge_master(self) -> ChallengeMaster:
         return ChallengeMaster(
-            storage=self._challenge_storage, settings=self._challenge_settings, result_checker=self._result_checker,
+            storage=self._challenge_storage,
+            settings=self._challenge_settings,
+            registrar=self._registrar,
+            keeper=self._challenge_keeper,
         )
 
     @cached_property
@@ -61,7 +71,8 @@ class QuizManagerFactory:
     def manager(self) -> QuizManager:
         return QuizManager(
             user_storage=self._user_storage,
-            chitchat_client=self._chitchat_client,
+            attempts_storage=self._attempts_storage,
+            shoutbox_client=self._shoutbox_client,
             settings=self._info_settings,
             markup_maker=self._interface_maker,
             challenge_master=self.challenge_master,

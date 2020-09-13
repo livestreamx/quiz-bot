@@ -1,7 +1,8 @@
 import abc
 import logging
-from typing import List, Optional, cast
+from typing import Optional, Sequence, Tuple, cast
 
+import sqlalchemy.orm as so
 from quiz_bot import db
 from quiz_bot.entity import ContextChallenge
 from quiz_bot.storage.errors import NoActualChallengeError
@@ -30,7 +31,11 @@ class IChallengeStorage(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_finished_challenge_ids(self) -> List[int]:
+    def get_finished_challenge_ids(self) -> Sequence[int]:
+        pass
+
+    @abc.abstractmethod
+    def get_challenge_ids(self, session: so.Session) -> Sequence[int]:
         pass
 
 
@@ -61,11 +66,17 @@ class ChallengeStorage(IChallengeStorage):
 
     def get_challenge(self, challenge_id: int) -> Optional[ContextChallenge]:
         with db.create_session() as session:
-            challenge = session.query(db.Challenge).filter(db.Challenge.id == challenge_id).one_or_none()
+            challenge = session.query(db.Challenge).get(challenge_id)
             if challenge is None:
                 return None
             return cast(ContextChallenge, ContextChallenge.from_orm(challenge))
 
-    def get_finished_challenge_ids(self) -> List[int]:
+    def get_finished_challenge_ids(self) -> Sequence[int]:
         with db.create_session() as session:
-            return cast(List[int], session.query(db.Challenge).get_finished_ids())
+            return cast(Sequence[int], session.query(db.Challenge).get_finished_ids())
+
+    def get_challenge_ids(self, session: so.Session) -> Sequence[int]:
+        ids: Sequence[Tuple[int]] = session.query(db.Challenge).with_entities(db.Challenge.id).order_by(
+            db.Challenge.id.asc()
+        ).all()
+        return [x[0] for x in ids]
