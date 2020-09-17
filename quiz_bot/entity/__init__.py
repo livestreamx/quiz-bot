@@ -24,5 +24,6 @@ from .settings import (
     MessageCloudSettings,
     RemoteClientSettings,
     ShoutboxSettings,
+    SymbolReplacementSettings,
 )
 from .types import AnyChallengeInfo, TChallengeInfo
