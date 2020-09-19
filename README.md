@@ -7,6 +7,7 @@ Telegram Quiz-bot for on-line competitions.
 * Based on SQLAlchemy with PostgreSQL.
 * CLI for easy starting & usage.
 * API based on Flask with index page for quiz overview.
+* External API `Shoutbox` for alternate processing of user replies.
 
 # Usage
 
@@ -23,6 +24,10 @@ You will have prepared database for application execution. `REMOTE_TOKEN` param 
 ## Start up
 
 Run Quiz-bot with following command:
+
+    app run -challenges=challenge_settings_example.json
+
+or with alternate messages processing service:
 
     app run -challenges=challenge_settings_example.json -shoutbox=shoutbox_settings_example.json
     
