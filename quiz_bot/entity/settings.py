@@ -2,7 +2,7 @@ import datetime
 import logging
 import socket
 from random import choice
-from typing import List, Optional, Sequence, Union
+from typing import List, Mapping, Optional, Sequence, Union
 
 import pytz
 from pydantic import BaseSettings, conint, validator
@@ -53,6 +53,10 @@ class RemoteClientSettings(BaseSettings):
 
     class Config:
         env_prefix = 'REMOTE_'
+
+
+class SymbolReplacementSettings(BaseSettings):
+    mapping: Mapping[str, str] = {"ё": "е"}
 
 
 class InfoSettings(BaseSettings):

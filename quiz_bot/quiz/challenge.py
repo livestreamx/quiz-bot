@@ -92,6 +92,7 @@ class ChallengeMaster:
             name=next_challenge_info.name,
             phase_amount=next_challenge_info.phase_amount,
             winner_amount=next_challenge_info.max_winners,
+            duration=next_challenge_info.duration,
         )
         logger.info("Next challenge: %s", next_challenge)
         self._sync_challenge()

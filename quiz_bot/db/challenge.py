@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from typing import List, Optional, cast
 
 import sqlalchemy as sa
@@ -28,9 +29,11 @@ class Challenge(PrimaryKeyMixin, Base):
     name = sa.Column(sa.String, nullable=False, unique=True)
     phase_amount = sa.Column(sa.Integer, nullable=False)
     winner_amount = sa.Column(sa.Integer, nullable=False)
+    duration = sa.Column(sa.Interval, nullable=False)
     finished_at = sa.Column(sa.DateTime(timezone=True))
 
-    def __init__(self, name: str, phase_amount: int, winner_amount: int) -> None:
+    def __init__(self, name: str, phase_amount: int, winner_amount: int, duration: datetime.timedelta) -> None:
         self.name = name
         self.phase_amount = phase_amount
         self.winner_amount = winner_amount
+        self.duration = duration

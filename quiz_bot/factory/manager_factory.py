@@ -1,7 +1,13 @@
 from functools import cached_property
 
 from quiz_bot.clients import RemoteBotClient, ShoutboxClient
-from quiz_bot.entity import ChallengeSettings, InfoSettings, RemoteClientSettings, ShoutboxSettings
+from quiz_bot.entity import (
+    ChallengeSettings,
+    InfoSettings,
+    RemoteClientSettings,
+    ShoutboxSettings,
+    SymbolReplacementSettings,
+)
 from quiz_bot.quiz import ChallengeKeeper, ChallengeMaster, QuizManager, QuizNotifier, Registrar, UserMarkupMaker
 from quiz_bot.storage import (
     AttemptsStorage,
@@ -52,7 +58,7 @@ class QuizManagerFactory:
 
     @cached_property
     def _challenge_keeper(self) -> ChallengeKeeper:
-        return ChallengeKeeper(result_storage=self._result_storage)
+        return ChallengeKeeper(result_storage=self._result_storage, symbol_settings=SymbolReplacementSettings())
 
     @cached_property
     def challenge_master(self) -> ChallengeMaster:

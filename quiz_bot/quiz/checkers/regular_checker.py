@@ -32,8 +32,8 @@ class RegularResultChecker(BaseResultChecker[RegularChallengeInfo], AnswerMatchi
         message: telebot.types.Message,
     ) -> CheckedResult:
         current_result = self._result_storage.get_last_result(participant_id=participant.id)
-        expectations = info.get_answer_variants(current_result.phase)
-        if not self._match(answer=message.text, expectations=expectations):
+        expectations = {self._replace_symbols(x) for x in info.get_answer_variants(current_result.phase)}
+        if not self._match(answer=self._replace_symbols(message.text), expectations=expectations):
             logger.debug(
                 "User '%s' given incorrect answer for phase %s, challenge %s",
                 participant.user.nick_name,
