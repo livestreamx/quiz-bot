@@ -1,0 +1,45 @@
+{
+  "autostart": false,
+  "timezone": "Europe/Moscow",
+  "challenges": [
+    {
+      "name": "Very interesting competition",
+      "description": "Very <b>interesting</b> description \uD83D\uDE09",
+      "questions": [
+        "Who is the python father?",
+        "What year was python development started?"
+      ],
+      "answers": [
+        ["Guido", "Rossum"],
+        "1989"
+      ],
+      "max_winners": 3,
+      "duration": "P0DT0H15M0S",
+      "type": "regular"
+    },
+    {
+      "name": "Yet another interesting competition",
+      "description": "Yet another interesting description for BDD scenario writing competition",
+      "items": [
+        {
+          "step": "Given",
+          "construction": "I am",
+          "text": "{username}"
+        },
+        {
+          "step": "When",
+          "construction": "I text",
+          "text": "something"
+        },
+        {
+          "step": "Then",
+          "construction": "bot answers",
+          "text": "such an interesting phrase"
+        }
+      ],
+      "type": "story",
+      "max_winners": 1,
+      "duration": "P0DT0H05M0S"
+    }
+  ]
+}
